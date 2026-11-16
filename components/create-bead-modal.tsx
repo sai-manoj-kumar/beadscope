@@ -18,6 +18,7 @@ import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { BEAD_TYPES, type BeadType } from "@/lib/schema";
+import { enabledAgentNames } from "@/lib/agents";
 
 const inputClass =
   "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-[13.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
@@ -189,7 +190,7 @@ function CreateForm({
     [beads],
   );
   const assignees = Array.from(
-    new Set([actor, ...(beads.map((b) => b.assignee).filter(Boolean) as string[])]),
+    new Set([actor, ...enabledAgentNames(meta?.agents), ...(beads.map((b) => b.assignee).filter(Boolean) as string[])]),
   );
 
   function submit() {

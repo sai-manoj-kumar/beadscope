@@ -4,6 +4,8 @@ import { useApp } from "@/components/app-context";
 import { Icon } from "@/components/icons";
 import { useUpdateBead } from "@/hooks/use-beads";
 import { avatarColor, initials } from "@/lib/beads-view";
+import { AgentIcon } from "@/components/agent-icon";
+import { agentByName, enabledAgentNames } from "@/lib/agents";
 import type { Bead } from "@/lib/schema";
 
 /** Assignment is independent of the drawer's description and comment drafts. */
@@ -13,9 +15,11 @@ export function AssigneeField({ bead }: { bead: Bead }) {
   const [editing, setEditing] = React.useState(false);
   const [draft, setDraft] = React.useState("");
   const submitting = React.useRef(false);
+  // Matches disabled identities too, so beads already assigned to one keep its icon.
+  const assigneeAgent = agentByName(meta?.agents, bead.assignee);
   const listId = React.useId();
   const suggestions = Array.from(new Set(
-    [meta?.humanActor, ...beads.map(b => b.assignee)]
+    [meta?.humanActor, ...enabledAgentNames(meta?.agents), ...beads.map(b => b.assignee)]
       .map(name => name?.trim()).filter((name): name is string => !!name),
   )).sort((a, b) => a.localeCompare(b));
   const save = () => {
@@ -73,7 +77,11 @@ export function AssigneeField({ bead }: { bead: Bead }) {
           onClick={() => { setDraft(bead.assignee ?? ""); setEditing(true); }}
           className="flex h-9 min-w-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left hover:border-[var(--brand)]"
         >
-          <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white" style={{ background: avatarColor(bead.assignee ?? "") }}>{initials(bead.assignee ?? "")}</span>
+          {assigneeAgent ? (
+            <AgentIcon agent={assigneeAgent} size={18} />
+          ) : (
+            <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white" style={{ background: avatarColor(bead.assignee ?? "") }}>{initials(bead.assignee ?? "")}</span>
+          )}
           <span className="min-w-0 flex-1 truncate text-[13px]">{bead.assignee || "Unassigned"}</span>
           <Icon name="pencil" size={12} className="shrink-0 text-[var(--text-3)]" />
         </button>
