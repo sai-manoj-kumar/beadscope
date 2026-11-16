@@ -60,11 +60,28 @@ try {
     // bd-3c71.1 is assigned to "cursor-agent", which is an identity that is switched off: it still has its icon.
     await page.locator('button[aria-label="Change assignee"] [data-agent-icon="cursor"]').waitFor();
     await page.getByRole('button', { name: 'Change assignee' }).click();
-    return page.locator('datalist option').evaluateAll((os) => os.map((o) => o.value));
+    return page.getByRole('option').locator('span.truncate').allInnerTexts();
   };
   let names = await pickerNames();
   for (const n of ['claude-code', 'codex', 'my-agent']) assert.ok(names.includes(n), `${n} is offered: ${names}`);
   assert.ok(!names.includes('gemini'), 'an unchecked identity is not offered');
+
+  // The create modal's dropdown shows each agent with its icon too (a native select cannot).
+  await page.goto(`${base}/p/demo`);
+  await page.getByRole('heading', { name: 'Board', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Read Only Mode', exact: true }).waitFor({ state: 'detached' });
+  await page.keyboard.press('n');
+  await page.getByRole('dialog').waitFor();
+  await page.getByRole('combobox', { name: 'Assignee' }).click();
+  const choices = page.getByRole('listbox', { name: 'Assignee' }).getByRole('option');
+  const shown = await choices.locator('span.truncate').allInnerTexts();
+  assert.equal(shown[0], 'Unassigned');
+  assert.ok(shown.includes('codex') && shown.includes('claude-code') && !shown.includes('gemini'), String(shown));
+  assert.equal(await choices.locator('[data-agent-icon="codex"]').count(), 1, 'codex shows its icon in the create dropdown');
+  assert.equal(await choices.locator('[data-agent-icon="claude-code"]').count(), 1);
+  await choices.filter({ hasText: 'codex' }).click();
+  assert.match(await page.getByRole('combobox', { name: 'Assignee' }).innerText(), /codex/);
+  await page.keyboard.press('Escape');
 
   // 6. Unchecking removes it from the picker..
   await page.goto(`${base}/p/demo?view=settings`);

@@ -58,6 +58,9 @@ async function startServer(label, { readOnly }) {
   tempDirs.push(config);
   const env = { ...process.env, XDG_CONFIG_HOME: config, BEADS_DEMO: "1", POSTHOG_KEY: "", NEXT_TELEMETRY_DISABLED: "1" };
   delete env.BEADSCOPE_READ_ONLY;
+  // A Claude Code session runs with BEADS_ACTOR=claude-code. Left in, it would become the
+  // throwaway server's human actor and clash with the agent of the same name.
+  delete env.BEADS_ACTOR;
   if (readOnly) env.BEADSCOPE_READ_ONLY = "1";
   const child = spawn(process.execPath, [path.join(root, "bin", "beadscope.mjs"), "run", "--no-open", "--port", String(port)], {
     cwd: root,

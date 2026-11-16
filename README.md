@@ -107,6 +107,9 @@ Other ways to run it: [from a clone](#install-from-source) (to hack on it) and
   delete (`bd delete`, behind a confirm).
 - **Human-vs-agent attribution** — every bead and comment shows 👤 (human) or 🤖
   (agent), derived from a configurable human allowlist.
+- **Agents** — keep a list of agent identities (Claude Code and others, or your
+  own), assign beads to them from a dropdown with icons, and filter Focus to one
+  agent's queue. See [Agents](#agents-hand-a-bead-to-claude-code-or-another-agent).
 - **Settings** — repo path, human actor + allowlist, poll interval, and
   theme (System, which follows your OS and is the default, Light, Dark, or a named
   palette). Live polling keeps the board fresh when agents change data underneath you.
@@ -130,6 +133,48 @@ Active and blocked work is never capped, and archived beads stay excluded.
 These are temporary display controls for the current Focus visit. They don't
 change bead data or the project landing-view preference. Keyboard navigation,
 detail links, and read-only protections also work in the grouped layout.
+
+### Agents: hand a bead to Claude Code (or another agent)
+
+An *agent identity* is the name an AI agent works under: the `bd` actor it runs
+with, and the assignee you give it. Beadscope keeps a list of them under
+**Settings → Agents**.
+
+- **Pre-defined agents** — Claude Code (`claude-code`, on by default), Codex,
+  Cursor (`cursor-agent`), Gemini CLI and GitHub Copilot (all off by default).
+  Each has its own icon. You can rename or switch them off, but not delete them.
+- **Your own agents** — type a name under **+ add an agent** and pick a stock
+  emoji or a colour for it. Remove it whenever you like.
+- **The checkbox** decides whether an agent is offered when you assign a bead.
+  Changes save at once and need no restart.
+- **Assigning** — the assignee field in the bead drawer and the **New bead**
+  dialog list you first, then the checked agents with their icons, then any other
+  name already on a bead. You can still type any name in the drawer.
+- **Renaming an agent** changes the name it is offered under from then on. Beads
+  already assigned to the old name keep it.
+- **Focus → Agent** shows one agent's queue: the beads assigned to it that are in
+  flight, blocked and ready (at any priority). **Group by → Assignee** shows each
+  agent's icon beside its name.
+
+Beadscope only records the name. It does not start or message an agent, so the
+agent has to pick the work up itself. Run the agent with the same name as its
+`bd` actor, then it can find and take its beads:
+
+```bash
+BEADS_ACTOR=claude-code bd ready --assignee claude-code   # what is assigned to it
+BEADS_ACTOR=claude-code bd update <id> --claim            # take one
+```
+
+To make every Claude Code session in a project run as `claude-code`, put this in
+that project's `.claude/settings.local.json` (personal, not committed):
+
+```json
+{ "env": { "BEADS_ACTOR": "claude-code" } }
+```
+
+Agent names must be unique and can't be a name on the human allowlist (Settings →
+Attribution), because anything on that list shows as 👤 instead of 🤖.
+
 
 ## How it works
 

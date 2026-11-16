@@ -71,11 +71,11 @@ try {
   const comment = drawer.getByPlaceholder(/^Comment as/);
   await comment.fill("Keep this comment draft through reassignment.");
 
-  // Names offered by the datalist are useful defaults, but do not constrain assignment.
+  // Names offered in the suggestion list are useful defaults, but do not constrain assignment.
   await change().click();
   await editor().waitFor();
   assert.equal(await editor().getAttribute("placeholder"), "Unassigned");
-  const suggestions = await editor().evaluate((input) => [...(input.list?.options ?? [])].map((option) => option.value));
+  const suggestions = await drawer.getByRole("option").locator("span.truncate").allInnerTexts();
   assert.ok(suggestions.includes("Alice"), "existing assignees are suggested");
   assert.ok(suggestions.includes("Bob"), "every fixture assignee is suggested");
   assert.ok(suggestions.includes("reviewer"), "the current human actor is suggested");
