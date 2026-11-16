@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { execFileSync } from "node:child_process";
+import { defaultAgents, normalizeAgents, validateAgents, type AgentIdentity } from "./agents.ts";
 
 /**
  * Local app config (NOT stored in beads). Lives as a small JSON file under the
@@ -25,6 +26,8 @@ export interface ProjectEntry {
 export interface AppConfig {
   humanActor: string;
   humanAllowlist: string[];
+  /** Agent identities (the assignee picker choices); see lib/agents.ts. */
+  agents: AgentIdentity[];
   pollIntervalMs: number;
   projects: ProjectEntry[];
   /**
@@ -130,6 +133,7 @@ function defaults(): AppConfig {
   return {
     humanActor,
     humanAllowlist: [humanActor],
+    agents: defaultAgents(),
     // Fallback refresh interval. The SSE change stream (see lib/beads-watch)
     // drives fast updates; this interval only backstops a dropped stream.
     pollIntervalMs: 30000,
@@ -260,6 +264,7 @@ export function getConfig(): AppConfig {
       : staleActor && !storedAllowlist.includes(d.humanActor)
         ? [...storedAllowlist, d.humanActor]
         : storedAllowlist,
+    agents: normalizeAgents(onDisk?.agents),
     pollIntervalMs:
       typeof onDisk?.pollIntervalMs === "number" ? onDisk.pollIntervalMs : d.pollIntervalMs,
     projects: sanitizeProjects(onDisk?.projects),
@@ -306,10 +311,18 @@ export function closeActor(assignee: string | null | undefined): string {
 
 /** Update global settings (actor / allowlist / poll). Project registry has its own mutators. */
 export function saveConfig(
-  patch: Partial<Pick<AppConfig, "humanActor" | "humanAllowlist" | "pollIntervalMs" | "gamification">>,
+  patch: Partial<Pick<AppConfig, "humanActor" | "humanAllowlist" | "agents" | "pollIntervalMs" | "gamification">>,
 ): AppConfig {
-  const next = { ...getConfig(), ...patch };
+  const current = getConfig();
+  const next = { ...current, ...patch };
   if (patch.humanActor !== undefined) next.humanActorChosen = true;
+  // Check the names as sent (before normalizing quietly repairs an empty one), against
+  // the humans being saved, so an agent cannot take a human name.
+  if (patch.agents !== undefined || patch.humanActor !== undefined || patch.humanAllowlist !== undefined) {
+    const problem = validateAgents(patch.agents ?? next.agents, [next.humanActor, ...next.humanAllowlist]);
+    if (problem) throw new ConfigError(problem, "invalid_agents");
+  }
+  if (patch.agents !== undefined) next.agents = normalizeAgents(patch.agents);
   persist(next);
   return next;
 }

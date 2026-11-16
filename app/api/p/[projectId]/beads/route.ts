@@ -19,6 +19,7 @@ export async function GET(_req: Request, { params }: Ctx) {
         kind: store.kind,
         humanActor: cfg.humanActor,
         humanAllowlist: cfg.humanAllowlist,
+        agents: cfg.agents,
         pollIntervalMs: cfg.pollIntervalMs,
         gamification: cfg.gamification,
         readOnly: isReadOnly(_req),

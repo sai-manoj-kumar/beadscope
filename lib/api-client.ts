@@ -1,10 +1,13 @@
 import type { Bead, CreateInput, UpdateInput, DepType } from "./schema";
+import type { AgentIdentity } from "./agents";
 import type { UpdateStatus, UpdateResult, UpdateChannel, UpdateTarget } from "./update-types";
 
 export interface Meta {
   kind: "bd" | "demo";
   humanActor: string;
   humanAllowlist: string[];
+  /** Agent identities: enabled ones fill the assignee picker, all of them give assignees an icon. */
+  agents?: AgentIdentity[];
   pollIntervalMs: number;
   gamification?: boolean;
   /** Viewer mode (BEADSCOPE_READ_ONLY): the server refuses writes; the UI hides them. */
@@ -95,6 +98,7 @@ export interface DoctorResponse {
   config: {
     humanActor: string;
     humanAllowlist: string[];
+    agents: AgentIdentity[];
     pollIntervalMs: number;
   };
 }

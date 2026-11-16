@@ -15,6 +15,7 @@ import { KEYBOARD_SHORTCUT_GROUPS, isSubmitKey } from "@/lib/keyboard-shortcuts"
 import { KeyboardHelpDialog, ShortcutKeys } from "@/components/keyboard-help-dialog";
 
 import { UsageStatisticsSetting } from "@/components/usage-statistics";
+import { AgentsSettings } from "@/components/agents-settings";
 
 const inputClass =
   "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-[12.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
@@ -197,6 +198,10 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
         <div className="text-[11.5px] text-[var(--text-3)]">
           Attribution is global — it applies to every project.
         </div>
+      </Card>
+
+      <Card title="Agents">
+        <AgentsSettings agents={data.config.agents} />
       </Card>
 
       <Card title="Freshness & theme">

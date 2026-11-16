@@ -8,6 +8,18 @@ export const dynamic = "force-dynamic";
 const patchSchema = z.object({
   humanActor: z.string().optional(),
   humanAllowlist: z.array(z.string()).optional(),
+  agents: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(64),
+        name: z.string().max(200),
+        enabled: z.boolean(),
+        emoji: z.string().max(16).optional(),
+        color: z.string().max(16).optional(),
+      }),
+    )
+    .max(50)
+    .optional(),
   pollIntervalMs: z.number().int().min(1000).max(300000).optional(),
   gamification: z.boolean().optional(),
 });
