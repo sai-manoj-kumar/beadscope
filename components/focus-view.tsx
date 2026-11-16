@@ -3,6 +3,8 @@ import * as React from "react";
 import { useApp } from "@/components/app-context";
 import { Icon, typeIconName } from "@/components/icons";
 import { PriorityChip } from "@/components/board/bead-card";
+import { AgentIcon } from "@/components/agent-icon";
+import { agentByName } from "@/lib/agents";
 import { isBlocked, blockingDeps, relTime, fmtDateTime, typeColor, catColor } from "@/lib/beads-view";
 import type { Bead } from "@/lib/schema";
 
@@ -76,6 +78,7 @@ export function FocusView() {
   const [showRecent, setShowRecent] = React.useState(false);
   const [showAllRecent, setShowAllRecent] = React.useState(false);
   const [lane, setLane] = React.useState<string | null>(null); // null = all, "" = unlabeled
+  const [agent, setAgent] = React.useState<string | null>(null); // null = all; else an agent identity id
 
   const active = React.useMemo(
     () => beads.filter((b) => !(b.labels ?? []).includes(ARCHIVED)),
@@ -97,13 +100,20 @@ export function FocusView() {
   // hidden filter cannot strand the user on an empty screen.
   const selectedLane = lane && !lanes.includes(lane) ? null : lane;
 
+  // The agent chips list the enabled identities (Settings → Agents). A live
+  // update or a Settings change can switch the selected one off; fall back to
+  // All so the hidden filter cannot strand the user on an empty screen.
+  const enabledAgents = React.useMemo(() => (meta?.agents ?? []).filter((a) => a.enabled), [meta?.agents]);
+  const selectedAgent = enabledAgents.find((a) => a.id === agent) ?? null;
+
   const inLane = React.useCallback(
     (b: Bead) => {
+      if (selectedAgent && agentByName([selectedAgent], b.assignee)?.id !== selectedAgent.id) return false;
       if (!prefix || selectedLane === null) return true;
       const l = laneOf(b, prefix);
       return selectedLane === "" ? l === null : l === selectedLane;
     },
-    [prefix, selectedLane],
+    [prefix, selectedLane, selectedAgent],
   );
 
   const inFlight = React.useMemo(
@@ -117,9 +127,10 @@ export function FocusView() {
   const nextUp = React.useMemo(
     () =>
       active.filter(
-        (b) => b.status === "open" && b.priority <= 1 && !isBlocked(b, index) && inLane(b),
+        // One agent's queue shows everything assigned to it, not just P0/P1.
+        (b) => b.status === "open" && (selectedAgent !== null || b.priority <= 1) && !isBlocked(b, index) && inLane(b),
       ),
-    [active, index, inLane],
+    [active, index, inLane, selectedAgent],
   );
 
   const recentlyFinished = active.filter(b => b.status === "closed" && inLane(b))
@@ -128,7 +139,7 @@ export function FocusView() {
   const columns: FocusColumn[] = [
     { id: "flight", title: "In flight", hint: "in progress or hooked", items: inFlight },
     { id: "blocked", title: "Blocked", hint: "waiting on a dependency or marked blocked", items: blocked },
-    { id: "next", title: "Next up", hint: "ready · P0/P1", items: nextUp },
+    { id: "next", title: "Next up", hint: selectedAgent ? "ready · any priority" : "ready · P0/P1", items: nextUp },
     ...(showRecent ? [{ id: "recent", title: "Recently finished", hint: "latest completions", items: recentItems }] : []),
   ];
   const groups = groupBy === "assignee" ? assigneeGroups(columns) : [];
@@ -156,6 +167,21 @@ export function FocusView() {
           className="h-8 rounded-[8px] border border-border px-3 text-[12px] aria-pressed:border-[var(--brand)] aria-pressed:bg-[var(--brand-weak)] aria-pressed:text-[var(--brand)]">
           Recently finished
         </button>
+        {enabledAgents.length > 0 && (
+          <div role="group" aria-label="Agent queue" className="flex flex-wrap items-center gap-[6px]">
+            <span className="text-[12px] text-[var(--text-2)]">Agent</span>
+            <LaneChip label="All" selected={selectedAgent === null} onClick={() => setAgent(null)} />
+            {enabledAgents.map((a) => (
+              <LaneChip
+                key={a.id}
+                label={a.name}
+                icon={<AgentIcon agent={a} size={14} />}
+                selected={selectedAgent?.id === a.id}
+                onClick={() => setAgent(selectedAgent?.id === a.id ? null : a.id)}
+              />
+            ))}
+          </div>
+        )}
         {prefix && lanes.length > 0 && (
           <div className="flex flex-wrap items-center gap-[6px]">
             <LaneChip label="All" selected={selectedLane === null} onClick={() => setLane(null)} />
@@ -204,7 +230,10 @@ export function FocusView() {
               {groups.map(group => (
                 <section key={group.key} aria-label={`Assignee: ${group.label}`} className="flex gap-4 border-t border-border py-4">
                   <div className="w-[160px] shrink-0">
-                    <h2 className="break-words text-[13px] font-semibold">{group.label}</h2>
+                    <h2 className="flex items-center gap-[6px] break-words text-[13px] font-semibold">
+                      {agentByName(meta?.agents, group.label) && <AgentIcon agent={agentByName(meta?.agents, group.label)!} size={16} />}
+                      {group.label}
+                    </h2>
                     <p className="mt-1 text-[11px] text-[var(--text-3)]">{group.key === "none" ? "Not assigned" : "Assigned work"} · {group.columns.reduce((n, c) => n + c.items.length, 0)}</p>
                   </div>
                   {group.columns.map(c => <FocusColumnView key={c.id} column={c} grouped />)}
@@ -241,22 +270,25 @@ function LaneChip({
   label,
   selected,
   onClick,
+  icon,
 }: {
   label: string;
   selected: boolean;
   onClick: () => void;
+  icon?: React.ReactNode;
 }) {
   return (
     <button
       aria-pressed={selected}
       onClick={onClick}
-      className="rounded-full border px-[10px] py-[3px] text-[11.5px] font-[550] transition-colors"
+      className="inline-flex items-center gap-[6px] rounded-full border px-[10px] py-[3px] text-[11.5px] font-[550] transition-colors"
       style={
         selected
           ? { borderColor: "var(--brand)", background: "var(--brand-weak)", color: "var(--brand)" }
           : { borderColor: "var(--border)", background: "var(--surface)", color: "var(--text-2)" }
       }
     >
+      {icon}
       {label}
     </button>
   );

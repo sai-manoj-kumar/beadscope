@@ -51,6 +51,19 @@ bd export --all -o ~/bd-backups/<project>-$(date +%F).jsonl
 
 Git commits still work normally — this section is only about bead/Dolt data.
 
+## Work assigned to you
+
+The maintainer assigns beads to an agent from Beadscope (Settings → Agents lists the
+names; the assignee picker offers the ones that are switched on). The assignee is just the
+agent's `bd` actor name, and Claude Code's is `claude-code`.
+
+- Run with that name, so `bd` records your work under it: `BEADS_ACTOR=claude-code`.
+- Find your queue with `bd ready --assignee claude-code` (add `bd list --assignee claude-code
+  --status=in_progress` for work you already started).
+- Take a bead with `bd update <id> --claim`. Do not take one assigned to someone else, and do
+  not overwrite another actor's live claim (`--force`) unless the maintainer says so.
+- Beadscope's Focus view has an Agent filter that shows the same queue.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:1105d646 -->
 ## Beads Issue Tracker
 

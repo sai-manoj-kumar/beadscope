@@ -18,7 +18,7 @@ import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { BEAD_TYPES, type BeadType } from "@/lib/schema";
-import { enabledAgentNames } from "@/lib/agents";
+import { AssigneeSelect, useAssigneeNames } from "@/components/assignee-picker";
 
 const inputClass =
   "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-[13.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
@@ -189,9 +189,7 @@ function CreateForm({
         ),
     [beads],
   );
-  const assignees = Array.from(
-    new Set([actor, ...enabledAgentNames(meta?.agents), ...(beads.map((b) => b.assignee).filter(Boolean) as string[])]),
-  );
+  const assignees = useAssigneeNames();
 
   function submit() {
     if (!form.title.trim() || create.isPending) return;
@@ -382,17 +380,11 @@ function CreateForm({
         </label>
 
         <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-[6px]">
+          {/* A div, not a label: a label would forward a click on an option back to the button and reopen the list. */}
+          <div className="flex flex-col gap-[6px]">
             <span className={labelClass}>Assignee</span>
-            <select className={selectClass} value={form.assignee} onChange={(e) => set("assignee", e.target.value)}>
-              <option value="">Unassigned</option>
-              {assignees.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </label>
+            <AssigneeSelect value={form.assignee} onChange={(a) => set("assignee", a)} names={assignees} />
+          </div>
           <label className="flex flex-col gap-[6px]">
             <span className={labelClass}>Parent</span>
             {/* A datalist-backed input rather than a bare <select>: the option
