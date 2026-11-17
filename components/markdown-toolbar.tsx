@@ -39,17 +39,17 @@ type Item =
   | { kind: "btn"; title: string; fn: MarkdownTransform; icon?: string; glyph?: string; glyphClass?: string };
 
 const ITEMS: Item[] = [
-  { kind: "btn", title: "Bold (⌘B)", fn: bold, glyph: "B", glyphClass: "font-bold" },
+  { kind: "btn", title: "Bold (⌘B)", fn: bold, glyph: "B", glyphClass: "font-semibold" },
   { kind: "btn", title: "Italic (⌘I)", fn: italic, glyph: "I", glyphClass: "italic font-serif" },
-  { kind: "btn", title: "Inline code", fn: inlineCode, glyph: "</>", glyphClass: "font-mono text-[10px]" },
+  { kind: "btn", title: "Inline code", fn: inlineCode, glyph: "</>", glyphClass: "font-mono text-meta" },
   { kind: "sep" },
   { kind: "btn", title: "Heading", fn: heading, glyph: "H", glyphClass: "font-semibold" },
   { kind: "btn", title: "Bullet list", fn: bullet, icon: "list" },
-  { kind: "btn", title: "Checklist", fn: checklist, glyph: "☑", glyphClass: "text-[13px]" },
-  { kind: "btn", title: "Quote", fn: quote, glyph: "❝", glyphClass: "text-[13px]" },
+  { kind: "btn", title: "Checklist", fn: checklist, glyph: "☑", glyphClass: "text-body" },
+  { kind: "btn", title: "Quote", fn: quote, glyph: "❝", glyphClass: "text-body" },
   { kind: "sep" },
   { kind: "btn", title: "Link (⌘K)", fn: link, icon: "link" },
-  { kind: "btn", title: "Code block", fn: codeBlock, glyph: "{ }", glyphClass: "font-mono text-[10px]" },
+  { kind: "btn", title: "Code block", fn: codeBlock, glyph: "{ }", glyphClass: "font-mono text-meta" },
 ];
 
 export function MarkdownToolbar({
@@ -75,7 +75,7 @@ export function MarkdownToolbar({
             // applies to what the user had selected, not a collapsed cursor.
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => applyTransform(textareaRef.current, value, onChange, item.fn)}
-            className="flex h-7 min-w-7 items-center justify-center rounded-md border border-border bg-[var(--surface-2)] px-[6px] text-[12px] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+            className="flex h-7 min-w-7 items-center justify-center rounded-md border border-border bg-[var(--surface-2)] px-[6px] text-label text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
           >
             {item.icon ? (
               <Icon name={item.icon} size={14} />

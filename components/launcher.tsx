@@ -31,8 +31,8 @@ export function Launcher() {
           <Icon name="logo" size={19} />
         </div>
         <div className="flex-1 leading-[1.15]">
-          <div className="text-[16px] font-[680] tracking-[-.01em]">Beadscope</div>
-          <div className="text-[12px] text-[var(--text-3)]">
+          <div className="text-page-title font-semibold tracking-[-.01em]">Beadscope</div>
+          <div className="text-label text-[var(--text-3)]">
             Choose a beads project to view and manage
           </div>
         </div>
@@ -48,12 +48,12 @@ export function Launcher() {
 
       <div className="mx-auto w-full max-w-[860px] flex-1 p-[28px]">
         <div className="mb-[14px] flex items-center justify-between">
-          <h2 className="text-[13px] font-[650] uppercase tracking-[.03em] text-[var(--text-3)]">
+          <h2 className="text-body font-semibold uppercase tracking-[.03em] text-[var(--text-3)]">
             Projects
           </h2>
           <button
             onClick={() => setAddOpen(true)}
-            className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-[14px] text-[13px] font-semibold text-white"
+            className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-[14px] text-body font-semibold text-white"
             style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
           >
             <Plus size={15} />
@@ -77,7 +77,7 @@ export function Launcher() {
                 className="flex min-h-[112px] flex-col items-center justify-center gap-2 rounded-[13px] border border-dashed border-[var(--border-strong)] p-5 text-[var(--text-3)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
               >
                 <Plus size={20} />
-                <span className="text-[12.5px] font-[550]">Add your first project</span>
+                <span className="text-label font-medium">Add your first project</span>
               </button>
             )}
           </div>
@@ -120,11 +120,11 @@ function DemoCard() {
           <FlaskConical size={16} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[14px] font-[620]">Demo</div>
-          <div className="text-[11px] text-[var(--text-3)]">built-in</div>
+          <div className="truncate text-section font-semibold">Demo</div>
+          <div className="text-meta text-[var(--text-3)]">built-in</div>
         </div>
       </div>
-      <div className="text-[12px] text-[var(--text-3)]">
+      <div className="text-label text-[var(--text-3)]">
         Seeded sample data — explore every view without bd installed.
       </div>
     </CardShell>
@@ -150,8 +150,8 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
           <FolderGit2 size={16} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[14px] font-[620]">{project.name}</div>
-          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-3)]">
+          <div className="truncate text-section font-semibold">{project.name}</div>
+          <div className="flex items-center gap-1.5 text-meta text-[var(--text-3)]">
             <span
               className="h-[6px] w-[6px] rounded-full"
               style={{ background: project.hasBeads ? "#22c55e" : "#ef4444" }}
@@ -172,7 +172,7 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
           <Trash2 size={14} />
         </button>
       </div>
-      <div className="truncate font-mono text-[11px] text-[var(--text-3)]" dir="rtl" title={project.path ?? ""}>
+      <div className="truncate font-mono text-meta text-[var(--text-3)]" dir="rtl" title={project.path ?? ""}>
         {project.path}
       </div>
     </CardShell>

@@ -44,7 +44,7 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
       <button
         onClick={() => assist.mutate()}
         disabled={assist.isPending}
-        className="inline-flex h-8 items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-3 text-[12.5px] font-[550] text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
+        className="inline-flex h-8 items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
       >
         <Icon name="feature" size={14} style={{ color: "var(--brand)" }} />
         {assist.isPending ? "Refining with AI…" : "Refine with AI"}
@@ -52,7 +52,7 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
 
       {result && (
         <div className="mt-2 rounded-[10px] border bg-[var(--surface-2)] p-3" style={{ borderColor: "var(--brand)" }}>
-          <div className="mb-2 flex items-center gap-2 text-[12px] font-semibold text-[var(--brand)]">
+          <div className="mb-2 flex items-center gap-2 text-label font-semibold text-[var(--brand)]">
             <Icon name="feature" size={14} /> AI suggestion
             <span className="flex-1" />
             <button
@@ -64,17 +64,17 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
             </button>
           </div>
 
-          <div className="mb-1 text-[11px] uppercase tracking-[.03em] text-[var(--text-3)]">
+          <div className="mb-1 text-meta uppercase tracking-[.03em] text-[var(--text-3)]">
             Refined description
           </div>
           <DescriptionContent
             text={result.description}
             projectId={projectId}
-            className="rounded-[8px] border border-border bg-[var(--surface)] p-[10px_11px] text-[13px] text-[var(--text-2)]"
+            className="rounded-[8px] border border-border bg-[var(--surface)] p-[10px_11px] text-body text-[var(--text-2)]"
           />
 
           {result.labels.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-[6px] text-[11px]">
+            <div className="mt-2 flex flex-wrap items-center gap-[6px] text-meta">
               <span className="text-[var(--text-3)]">Suggested labels:</span>
               {result.labels.map((l) => (
                 <span key={l} className="rounded-md border border-border bg-[var(--surface)] px-[7px] py-px font-mono">
@@ -85,7 +85,7 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
           )}
 
           {result.duplicates.length > 0 && (
-            <div className="mt-2 text-[11px]">
+            <div className="mt-2 text-meta">
               <div className="text-[var(--text-3)]">Possible duplicates:</div>
               {result.duplicates.map((d) => (
                 <button
@@ -104,20 +104,20 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
           <div className="mt-3 flex justify-end gap-2">
             <button
               onClick={() => setResult(null)}
-              className="h-8 rounded-lg border border-border bg-[var(--surface)] px-3 text-[12.5px] font-[550] hover:bg-[var(--surface-2)]"
+              className="h-8 rounded-lg border border-border bg-[var(--surface)] px-3 text-label font-medium hover:bg-[var(--surface-2)]"
             >
               Reject
             </button>
             <button
               onClick={applyDescription}
               disabled={update.isPending}
-              className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-[12.5px] font-[550] text-white disabled:opacity-50"
+              className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
               style={{ background: "var(--brand)" }}
             >
               <Icon name="check" size={14} /> Apply description
             </button>
           </div>
-          <div className="mt-1 text-[10.5px] text-[var(--text-3)]">
+          <div className="mt-1 text-meta text-[var(--text-3)]">
             Labels and duplicates are advisory — only the description is written, on confirm.
           </div>
         </div>

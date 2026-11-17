@@ -60,8 +60,8 @@ export function ProjectSwitcher({
         >
           {dot}
           <div className="min-w-0 flex-1 leading-[1.15]">
-            <div className="truncate text-[13px] font-[600] text-[var(--text)]">{currentName}</div>
-            <div className="text-[10.5px] text-[var(--text-3)]">
+            <div className="truncate text-body font-semibold text-[var(--text)]">{currentName}</div>
+            <div className="text-meta text-[var(--text-3)]">
               {isDemo ? "sample data" : isLive ? "bd · live" : "bd · project"}
             </div>
           </div>

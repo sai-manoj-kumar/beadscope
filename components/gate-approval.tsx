@@ -45,7 +45,7 @@ export function GateApproval({ id }: { id: string }) {
           aria-expanded={showNote}
           aria-controls={noteId}
           onClick={() => setShowNote(!showNote)}
-          className="text-[11.5px] text-[var(--text-3)] hover:text-[var(--text)] disabled:opacity-50"
+          className="text-meta text-[var(--text-3)] hover:text-[var(--text)] disabled:opacity-50"
         >
           {showNote ? "Hide approval note" : "Add approval note"}
         </button>
@@ -53,7 +53,7 @@ export function GateApproval({ id }: { id: string }) {
           type="button"
           disabled={readOnly || approval.isPending}
           onClick={approve}
-          className="flex h-8 flex-shrink-0 items-center gap-[6px] rounded-lg px-3 text-[12.5px] font-[550] text-white disabled:opacity-50"
+          className="flex h-8 flex-shrink-0 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="check" size={14} /> Approve
@@ -74,7 +74,7 @@ export function GateApproval({ id }: { id: string }) {
           disabled={readOnly || approval.isPending}
           maxLength={8000}
           rows={2}
-          className="w-full min-w-[180px] rounded-lg border border-border bg-[var(--surface)] p-2 text-[12px] text-[var(--text)] disabled:opacity-50"
+          className="w-full min-w-[180px] rounded-lg border border-border bg-[var(--surface)] p-2 text-label text-[var(--text)] disabled:opacity-50"
         />
       )}
     </div>

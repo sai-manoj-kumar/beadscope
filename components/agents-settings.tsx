@@ -16,7 +16,7 @@ import {
 import { api, type DoctorResponse } from "@/lib/api-client";
 
 const nameInputClass =
-  "h-[32px] min-w-0 flex-1 rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-[12.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
+  "h-[32px] min-w-0 flex-1 rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-label text-[var(--text)] outline-none focus:border-[var(--brand)]";
 
 /**
  * Agent identities: which agents Beadscope offers in the assignee picker.
@@ -68,7 +68,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
 
   return (
     <div className="flex flex-col gap-[10px]">
-      <div className="text-[11.5px] text-[var(--text-3)]">
+      <div className="text-meta text-[var(--text-3)]">
         Checked agents are offered when assigning a bead. The name is what <span className="font-mono">bd</span>{" "}
         records, so it should match the <span className="font-mono">BEADS_ACTOR</span> that agent runs with.
         Renaming does not change beads already assigned to the old name.
@@ -106,7 +106,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                   className={`${nameInputClass} font-mono`}
                 />
                 {preset ? (
-                  <span className="hidden w-[96px] shrink-0 truncate text-[11.5px] text-[var(--text-3)] sm:block">
+                  <span className="hidden w-[96px] shrink-0 truncate text-meta text-[var(--text-3)] sm:block">
                     {preset.label}
                   </span>
                 ) : (
@@ -116,7 +116,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                       aria-expanded={openPicker === agent.id}
                       aria-label={`Choose icon for ${agent.name}`}
                       onClick={() => setOpenPicker((p) => (p === agent.id ? null : agent.id))}
-                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-[12px] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
                     >
                       Icon
                     </button>
@@ -125,7 +125,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                       aria-label={`Remove ${agent.name}`}
                       disabled={save.isPending}
                       onClick={() => commit(agents.filter((a) => a.id !== agent.id))}
-                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-[12px] text-[var(--text-3)] hover:text-[#ef4444]"
+                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-label text-[var(--text-3)] hover:text-[#ef4444]"
                     >
                       Remove
                     </button>
@@ -142,7 +142,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                         aria-label={`Emoji ${emoji}`}
                         aria-pressed={agent.emoji === emoji}
                         onClick={() => change(agent.id, { emoji })}
-                        className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border text-[16px] hover:bg-[var(--surface-3)]"
+                        className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border text-page-title hover:bg-[var(--surface-3)]"
                         style={{ borderColor: agent.emoji === emoji ? "var(--brand)" : "transparent" }}
                       >
                         {emoji}
@@ -165,7 +165,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                         />
                       );
                     })}
-                    <span className="text-[11px] text-[var(--text-3)]">Colour shows the initials</span>
+                    <span className="text-meta text-[var(--text-3)]">Colour shows the initials</span>
                   </div>
                 </div>
               )}
@@ -192,7 +192,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
           type="button"
           onClick={add}
           disabled={!newName.trim() || save.isPending}
-          className="h-[32px] shrink-0 rounded-[8px] border border-border px-[12px] text-[12.5px] text-[var(--text-2)] hover:bg-[var(--surface-2)] disabled:opacity-50"
+          className="h-[32px] shrink-0 rounded-[8px] border border-border px-[12px] text-label text-[var(--text-2)] hover:bg-[var(--surface-2)] disabled:opacity-50"
         >
           Add agent
         </button>

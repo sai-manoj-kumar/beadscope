@@ -44,10 +44,10 @@ export function InsightsView() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="text-[15px] font-[650]">Insights</h1>
-        <span className="text-[12px] text-[var(--text-3)]">· flow metrics, human vs agent</span>
+        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Insights</h1>
+        <span className="text-label text-[var(--text-3)]">· flow metrics, human vs agent</span>
         <span className="flex-1" />
-        <label className="flex items-center gap-[6px] text-[12px] text-[var(--text-2)]">
+        <label className="flex items-center gap-[6px] text-label text-[var(--text-2)]">
           <input
             type="checkbox"
             checked={split}
@@ -61,7 +61,7 @@ export function InsightsView() {
             <button
               key={r}
               onClick={() => setDays(r)}
-              className={`px-[10px] py-[5px] text-[12px] ${
+              className={`px-[10px] py-[5px] text-label ${
                 days === r ? "bg-[var(--brand)] text-white" : "bg-[var(--surface-2)] text-[var(--text-2)]"
               }`}
             >
@@ -73,9 +73,9 @@ export function InsightsView() {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
         {isLoading && !data ? (
-          <div className="p-8 text-center text-[13px] text-[var(--text-3)]">Loading insights…</div>
+          <div className="p-8 text-center text-body text-[var(--text-3)]">Loading insights…</div>
         ) : !data ? (
-          <div className="p-8 text-center text-[13px] text-[var(--text-3)]">No data.</div>
+          <div className="p-8 text-center text-body text-[var(--text-3)]">No data.</div>
         ) : (
           <Dashboard data={data} split={split} />
         )}
@@ -107,7 +107,7 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
       </div>
 
       {!data.hasEvents && (
-        <div className="rounded-[8px] border border-border bg-[var(--surface-2)] px-3 py-2 text-[12px] text-[var(--text-3)]">
+        <div className="rounded-[8px] border border-border bg-[var(--surface-2)] px-3 py-2 text-label text-[var(--text-3)]">
           No interaction log found for this project — metrics are derived from bead
           created/closed timestamps (best effort).
         </div>
@@ -117,15 +117,15 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data.throughput} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11 }} stroke="var(--text-3)" />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--text-3)" />
+            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" />
+            <YAxis allowDecimals={false} stroke="var(--text-3)" />
             <Tooltip
-              contentStyle={{ fontSize: 12, background: "var(--surface)", border: "1px solid var(--border)" }}
+              contentStyle={{ fontSize: "var(--fs-label)", background: "var(--surface)", border: "1px solid var(--border)" }}
               labelFormatter={shortDate}
             />
             {split ? (
               <>
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />
                 <Bar dataKey="human" stackId="a" fill={HUMAN} name="Human" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="agent" stackId="a" fill={AGENT} name="Agent" radius={[3, 3, 0, 0]} />
               </>
@@ -140,13 +140,13 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={data.createdClosed} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="date" tickFormatter={shortDate} tick={{ fontSize: 11 }} stroke="var(--text-3)" />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="var(--text-3)" />
+            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" />
+            <YAxis allowDecimals={false} stroke="var(--text-3)" />
             <Tooltip
-              contentStyle={{ fontSize: 12, background: "var(--surface)", border: "1px solid var(--border)" }}
+              contentStyle={{ fontSize: "var(--fs-label)", background: "var(--surface)", border: "1px solid var(--border)" }}
               labelFormatter={shortDate}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />
             <Line type="monotone" dataKey="created" stroke="#64748b" strokeWidth={2} dot={false} name="Created" />
             <Line type="monotone" dataKey="closed" stroke="#16a34a" strokeWidth={2} dot={false} name="Closed" />
           </LineChart>
@@ -164,15 +164,15 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
 
         <Panel title="Aging work in progress">
           {data.aging.length === 0 ? (
-            <div className="py-6 text-center text-[12px] text-[var(--text-3)]">Nothing in progress.</div>
+            <div className="py-6 text-center text-label text-[var(--text-3)]">Nothing in progress.</div>
           ) : (
             <div className="flex flex-col gap-[6px]">
               {data.aging.map((a) => (
-                <div key={a.id} className="flex items-center gap-2 text-[12.5px]">
-                  <span className="font-mono text-[11px] text-[var(--text-3)]">{a.id}</span>
+                <div key={a.id} className="flex items-center gap-2 text-label">
+                  <span className="font-mono text-meta text-[var(--text-3)]">{a.id}</span>
                   <span className="flex-1 truncate text-[var(--text-2)]">{a.title}</span>
                   <span
-                    className="rounded-full px-[7px] py-px text-[11px] font-semibold"
+                    className="rounded-full px-[7px] py-px text-meta font-semibold"
                     style={{
                       color: a.days >= 7 ? "#ef4444" : "var(--text-2)",
                       background: a.days >= 7 ? "#ef444418" : "var(--surface-2)",
@@ -201,19 +201,19 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                   style={{ borderColor: over ? "#ef4444" : "var(--border)" }}
                 >
                   <div>
-                    <div className="flex items-center gap-[6px] text-[12.5px] font-[550]">
+                    <div className="flex items-center gap-[6px] text-label font-medium">
                       <span className="h-[8px] w-[8px] rounded-full" style={{ background: c.color }} />
                       {c.name}
                     </div>
                     <div
-                      className="text-[18px] font-[650]"
+                      className="text-page-title font-semibold"
                       style={{ color: over ? "#ef4444" : "var(--text)" }}
                     >
                       {c.count}
-                      {over && <span className="ml-1 text-[11px] font-medium">over limit</span>}
+                      {over && <span className="ml-1 text-meta font-medium">over limit</span>}
                     </div>
                   </div>
-                  <label className="flex flex-col items-end gap-[3px] text-[10.5px] text-[var(--text-3)]">
+                  <label className="flex flex-col items-end gap-[3px] text-meta text-[var(--text-3)]">
                     limit
                     <input
                       type="number"
@@ -221,14 +221,14 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                       value={limit || ""}
                       placeholder="0"
                       onChange={(e) => setLimit(c.id, Math.max(0, Number(e.target.value) || 0))}
-                      className="h-7 w-14 rounded-md border border-border bg-[var(--surface)] px-2 text-right text-[12px] text-[var(--text)] outline-none"
+                      className="h-7 w-14 rounded-md border border-border bg-[var(--surface)] px-2 text-right text-label text-[var(--text)] outline-none"
                     />
                   </label>
                 </div>
               );
             })}
         </div>
-        <div className="text-[11px] text-[var(--text-3)]">
+        <div className="text-meta text-[var(--text-3)]">
           Limits are per-device (stored in this browser). 0 = no limit.
         </div>
       </Panel>
@@ -239,8 +239,8 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[12px] border border-border bg-[var(--surface)] p-4">
-      <div className="text-[11px] uppercase tracking-[.03em] text-[var(--text-3)]">{label}</div>
-      <div className="mt-1 text-[22px] font-[650] tracking-[-.02em]">{value}</div>
+      <div className="text-meta uppercase tracking-[.03em] text-[var(--text-3)]">{label}</div>
+      <div className="mt-1 text-page-title font-semibold tracking-[-.02em]">{value}</div>
     </div>
   );
 }
@@ -248,7 +248,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3 rounded-[13px] border border-border bg-[var(--surface)] p-[16px_18px]">
-      <div className="text-[13px] font-semibold">{title}</div>
+      <div className="text-body font-semibold">{title}</div>
       {children}
     </section>
   );
@@ -256,12 +256,12 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 
 function CycleRow({ label, stat }: { label: string; stat: { p50: number; p90: number; count: number } }) {
   return (
-    <div className="flex items-center justify-between rounded-[9px] bg-[var(--surface-2)] px-3 py-2 text-[12.5px]">
-      <span className="font-[550] text-[var(--text-2)]">{label}</span>
+    <div className="flex items-center justify-between rounded-[9px] bg-[var(--surface-2)] px-3 py-2 text-label">
+      <span className="font-medium text-[var(--text-2)]">{label}</span>
       {stat.count === 0 ? (
         <span className="text-[var(--text-3)]">no closed beads</span>
       ) : (
-        <span className="flex items-center gap-3 font-mono text-[12px]">
+        <span className="flex items-center gap-3 font-mono text-label">
           <span title="median">p50 {hrs(stat.p50)}</span>
           <span title="90th percentile" className="text-[var(--text-3)]">p90 {hrs(stat.p90)}</span>
           <span className="text-[var(--text-3)]">· {stat.count}</span>

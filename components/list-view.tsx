@@ -152,8 +152,8 @@ export function ListView() {
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
         <div className="mr-1 flex flex-col gap-px">
-          <h1 className="m-0 text-base font-[650] tracking-[-.01em]">List</h1>
-          <span className="text-[11.5px] text-[var(--text-3)]">
+          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">List</h1>
+          <span className="text-meta text-[var(--text-3)]">
             {rows.length} beads · drag to set run-order
           </span>
         </div>
@@ -171,7 +171,7 @@ export function ListView() {
         {!readOnly && (
           <button
             onClick={() => openCreate()}
-            className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] px-[14px] text-[13px] font-[550] text-white"
+            className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] px-[14px] text-body font-medium text-white"
             style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
           >
             <Icon name="plus" size={15} />
@@ -182,9 +182,9 @@ export function ListView() {
 
       <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[12px_22px]">
         {loading && beads.length === 0 ? (
-          <div className="text-[13px] text-[var(--text-3)]">Loading beads…</div>
+          <div className="text-body text-[var(--text-3)]">Loading beads…</div>
         ) : rows.length === 0 ? (
-          <div className="flex h-[200px] items-center justify-center text-[13px] text-[var(--text-3)]">
+          <div className="flex h-[200px] items-center justify-center text-body text-[var(--text-3)]">
             No beads match.
           </div>
         ) : (
@@ -204,10 +204,10 @@ export function ListView() {
                             className="h-[7px] w-[7px] rounded-[2px]"
                             style={{ background: meta.color }}
                           />
-                          <span className="text-[11px] font-semibold uppercase tracking-[.04em] text-[var(--text-3)]">
+                          <span className="text-meta font-semibold uppercase tracking-[.04em] text-[var(--text-3)]">
                             {meta.name}
                           </span>
-                          <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-[10.5px] text-[var(--text-3)]">
+                          <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
                             {countByCol.get(col) ?? 0}
                           </span>
                         </div>
@@ -307,15 +307,15 @@ function Row({
       />
       <CopyableId
         id={bead.id}
-        className="w-[150px] flex-shrink-0 truncate font-mono text-[11.5px] text-[var(--text-3)]"
+        className="w-[150px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]"
       />
-      <span className="min-w-0 flex-1 truncate text-[13.5px] font-[550] text-[var(--text)]">
+      <span className="min-w-0 flex-1 truncate text-body font-medium text-[var(--text)]">
         {bead.title}
       </span>
       {labels.map((l) => (
         <span
           key={l}
-          className="hidden flex-shrink-0 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-[10.5px] text-[var(--text-3)] lg:inline"
+          className="hidden flex-shrink-0 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-meta text-[var(--text-3)] lg:inline"
         >
           {l}
         </span>
@@ -325,7 +325,7 @@ function Row({
       {childCount > 0 && (
         <span
           title={`${childCount} subtask${childCount === 1 ? "" : "s"}`}
-          className="hidden flex-shrink-0 items-center gap-[4px] rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-[10.5px] text-[var(--text-3)] lg:flex"
+          className="hidden flex-shrink-0 items-center gap-[4px] rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-meta text-[var(--text-3)] lg:flex"
         >
           <Icon name="list" size={10} className="flex-shrink-0" />
           {childCount}
@@ -344,7 +344,7 @@ function Row({
             else onOpenDetail(parent.id);
           }}
           title={`${parent.id} · ${parent.title} · P${parent.priority}`}
-          className="hidden max-w-[150px] flex-shrink-0 items-center gap-[4px] rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-[10.5px] text-[var(--text-3)] hover:border-[var(--brand)] hover:text-[var(--brand)] lg:flex"
+          className="hidden max-w-[150px] flex-shrink-0 items-center gap-[4px] rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-meta text-[var(--text-3)] hover:border-[var(--brand)] hover:text-[var(--brand)] lg:flex"
         >
           <Icon
             name={parent.issue_type === "epic" ? "target" : typeIconName(parent.issue_type)}
@@ -362,18 +362,18 @@ function Row({
       </span>
       <span className="hidden min-w-0 max-w-[130px] flex-shrink-0 items-center gap-[6px] md:flex">
         <span
-          className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold text-white"
+          className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
           style={{ background: avatarColor(bead.assignee ?? "") }}
         >
           {initials(bead.assignee ?? "")}
         </span>
-        <span className="truncate text-[11.5px] text-[var(--text-2)]">
+        <span className="truncate text-meta text-[var(--text-2)]">
           {bead.assignee || "Unassigned"}
         </span>
       </span>
       <span
         title={fmtDateTime(bead.updated_at)}
-        className="hidden w-[64px] flex-shrink-0 text-right font-mono text-[11px] text-[var(--text-3)] xl:inline"
+        className="hidden w-[64px] flex-shrink-0 text-right font-mono text-meta text-[var(--text-3)] xl:inline"
       >
         {relTime(bead.updated_at)}
       </span>

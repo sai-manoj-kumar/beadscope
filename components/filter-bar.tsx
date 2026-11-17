@@ -66,7 +66,7 @@ export function FilterBar({
             value={filters.search}
             onChange={(e) => set({ search: e.target.value })}
             placeholder="Search beads…  (/)"
-            className="w-full min-w-0 border-none bg-transparent text-[13px] text-[var(--text)] outline-none"
+            className="w-full min-w-0 border-none bg-transparent text-body text-[var(--text)] outline-none"
           />
         </label>
       </div>
@@ -124,7 +124,7 @@ export function FilterBar({
         <button
           onClick={() => onShowArchived(!showArchived)}
           title="Toggle archived"
-          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[11px] text-[12.5px] font-medium"
+          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[11px] text-label font-medium"
           style={{
             border: `1px solid ${showArchived ? "var(--brand)" : "var(--border)"}`,
             background: showArchived ? "var(--brand-weak)" : "var(--surface-2)",
@@ -138,7 +138,7 @@ export function FilterBar({
           <button
             onClick={clearAll}
             title="Clear all filters"
-            className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-[12.5px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+            className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
           >
             <Icon name="x" size={14} />
             <span>Clear · {active}</span>

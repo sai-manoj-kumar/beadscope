@@ -16,7 +16,7 @@ import {
 
 /** Chip styling shared with the list rows and drawer so labels read alike. */
 const labelChipClass =
-  "flex-shrink-0 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-[10.5px] text-[var(--text-3)]";
+  "flex-shrink-0 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-meta text-[var(--text-3)]";
 
 /**
  * Label chips with a "+N" overflow indicator. `archived` is state, not a tag —
@@ -125,8 +125,8 @@ export function EpicsView({
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex flex-shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
         <div className="flex-1">
-          <h1 className="m-0 text-base font-[650] tracking-[-.01em]">Epics</h1>
-          <span className="text-[11.5px] text-[var(--text-3)]">
+          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Epics</h1>
+          <span className="text-meta text-[var(--text-3)]">
             {epics.length}
             {hideClosed && allEpics.length !== epics.length ? ` of ${allEpics.length}` : ""} epics ·
             progress = closed ÷ children
@@ -135,7 +135,7 @@ export function EpicsView({
         <button
           onClick={() => setHideClosed((v) => !v)}
           title={hideClosed ? "Show closed epics and children" : "Hide closed epics and children"}
-          className="flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-[12.5px] font-[550] text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+          className="flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
         >
           <Icon name={hideClosed ? "check" : "x"} size={14} />
           <span>{hideClosed ? "Show Closed" : "Hide Closed"}</span>
@@ -143,7 +143,7 @@ export function EpicsView({
         <button
           disabled={readOnly}
           onClick={() => openCreate({ type: "epic" })}
-          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[14px] text-[13px] font-[550] text-white"
+          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[14px] text-body font-medium text-white"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="plus" size={15} />
@@ -209,23 +209,23 @@ export function EpicsView({
                         so without it a heavily-labelled epic would spill past
                         the progress block instead of clipping. */}
                     <div className="flex min-w-0 items-center gap-[9px] overflow-hidden">
-                      <span className="flex-shrink-0 font-mono text-[11.5px] text-[var(--text-3)]">
+                      <span className="flex-shrink-0 font-mono text-meta text-[var(--text-3)]">
                         {e.id}
                       </span>
                       <StatusChip status={e.status} />
                       <PriorityChip p={e.priority} />
                       <LabelChips labels={e.labels ?? []} max={3} />
                     </div>
-                    <div className="mt-[3px] text-[15px] font-semibold tracking-[-.01em]">
+                    <div className="mt-[3px] text-section font-semibold tracking-[-.01em]">
                       {e.title}
                     </div>
                   </div>
                   <div className="flex w-[200px] flex-shrink-0 flex-col items-end gap-[7px]">
                     <div className="flex items-baseline gap-[6px]">
-                      <span className="font-mono text-[17px] font-[650] tracking-[-.02em]">
+                      <span className="font-mono text-page-title font-semibold tracking-[-.02em]">
                         {pct}%
                       </span>
-                      <span className="text-[11.5px] text-[var(--text-3)]">
+                      <span className="text-meta text-[var(--text-3)]">
                         {closed}/{total} done
                       </span>
                     </div>
@@ -251,7 +251,7 @@ export function EpicsView({
                     }}
                     aria-label={`Open details for ${e.id}`}
                     title={`Open details for ${e.id}`}
-                    className="flex h-7 flex-shrink-0 items-center gap-[5px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-[11.5px] font-[550] text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                    className="flex h-7 flex-shrink-0 items-center gap-[5px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-meta font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                   >
                     <Icon name="list" size={12} className="flex-shrink-0" />
                     <span>Details</span>
@@ -305,7 +305,7 @@ export function EpicsView({
                             className="h-2 w-2 flex-shrink-0 rounded-full"
                             style={{ background: catColor(k.status) }}
                           />
-                          <span className="w-[74px] flex-shrink-0 font-mono text-[11px] text-[var(--text-3)]">
+                          <span className="w-[74px] flex-shrink-0 font-mono text-meta text-[var(--text-3)]">
                             {k.id}
                           </span>
                           <Icon
@@ -314,14 +314,14 @@ export function EpicsView({
                             className="flex-shrink-0"
                             style={{ color: typeColor(k.issue_type) }}
                           />
-                          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium">
+                          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-body font-medium">
                             {k.title}
                           </span>
                           <LabelChips labels={k.labels ?? []} max={2} />
                           <PriorityChip p={k.priority} />
                           <OriginBadge origin={o} title={originTitle(k.created_by, o)} />
                           <span
-                            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold text-white"
+                            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
                             style={{ background: avatarColor(k.assignee ?? "") }}
                           >
                             {initials(k.assignee ?? "")}
@@ -332,7 +332,7 @@ export function EpicsView({
                     <button
                       disabled={readOnly}
           onClick={() => openCreate({ parent: e.id })}
-                      className="m-[2px] flex w-[calc(100%-4px)] items-center gap-[7px] rounded-[9px] p-[9px_12px] text-[12.5px] font-[550] text-[var(--brand)] hover:bg-[var(--surface)]"
+                      className="m-[2px] flex w-[calc(100%-4px)] items-center gap-[7px] rounded-[9px] p-[9px_12px] text-label font-medium text-[var(--brand)] hover:bg-[var(--surface)]"
                     >
                       <Icon name="plus" size={14} />
                       <span>Add child to this epic</span>
@@ -343,7 +343,7 @@ export function EpicsView({
             );
           })}
           {epics.length === 0 && (
-            <div className="rounded-[14px] border border-dashed border-border p-10 text-center text-[13px] text-[var(--text-3)]">
+            <div className="rounded-[14px] border border-dashed border-border p-10 text-center text-body text-[var(--text-3)]">
               No epics yet. Create one with type “epic”.
             </div>
           )}
@@ -357,7 +357,7 @@ function StatusChip({ status }: { status: string }) {
   const c = catColor(status);
   return (
     <span
-      className="inline-flex items-center rounded-full px-2 py-px text-[10.5px] font-semibold tracking-[.01em]"
+      className="inline-flex items-center rounded-full px-2 py-px text-meta font-semibold tracking-[.01em]"
       style={{ color: c, background: `${c}1c`, border: `1px solid ${c}33` }}
     >
       {statusLabel(status)}

@@ -62,8 +62,8 @@ function Browser({ onClose }: { onClose: () => void }) {
           <FolderOpen size={16} />
         </div>
         <div className="flex-1">
-          <DialogTitle className="text-[15px] font-[650]">Add a project</DialogTitle>
-          <DialogDescription className="text-[11.5px] text-[var(--text-3)]">
+          <DialogTitle className="text-section font-semibold">Add a project</DialogTitle>
+          <DialogDescription className="text-meta text-[var(--text-3)]">
             Pick a folder that contains a <span className="font-mono">.beads</span> directory
           </DialogDescription>
         </div>
@@ -101,7 +101,7 @@ function Browser({ onClose }: { onClose: () => void }) {
           autoComplete="off"
           placeholder="Type or paste a path, then press Enter"
           aria-label="Folder path"
-          className={`min-w-0 flex-1 rounded-lg border bg-[var(--surface)] px-[10px] py-[6px] font-mono text-[12px] text-[var(--text)] outline-none focus:border-[var(--brand)] ${
+          className={`min-w-0 flex-1 rounded-lg border bg-[var(--surface)] px-[10px] py-[6px] font-mono text-label text-[var(--text)] outline-none focus:border-[var(--brand)] ${
             errMsg ? "border-[#d97706]" : "border-border"
           }`}
         />
@@ -116,16 +116,16 @@ function Browser({ onClose }: { onClose: () => void }) {
         ) : errMsg ? (
           <div className="flex h-[180px] flex-col items-center justify-center gap-2 px-6 text-center">
             <AlertTriangle size={20} className="text-[#d97706]" />
-            <p className="text-[12.5px] text-[var(--text-2)]">{errMsg}</p>
+            <p className="text-label text-[var(--text-2)]">{errMsg}</p>
             <button
               onClick={() => setPath(undefined)}
-              className="rounded-md border border-border px-2.5 py-1 text-[12px] hover:bg-[var(--surface-2)]"
+              className="rounded-md border border-border px-2.5 py-1 text-label hover:bg-[var(--surface-2)]"
             >
               Go home
             </button>
           </div>
         ) : data && data.entries.length === 0 ? (
-          <div className="flex h-[180px] items-center justify-center text-[12.5px] text-[var(--text-3)]">
+          <div className="flex h-[180px] items-center justify-center text-label text-[var(--text-3)]">
             No subfolders here
           </div>
         ) : (
@@ -140,11 +140,11 @@ function Browser({ onClose }: { onClose: () => void }) {
                 size={16}
                 className={entry.hasBeads ? "text-[var(--brand)]" : "text-[var(--text-3)]"}
               />
-              <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--text)]">
+              <span className="min-w-0 flex-1 truncate text-body text-[var(--text)]">
                 {entry.name}
               </span>
               {entry.hasBeads && (
-                <span className="rounded-full bg-[var(--brand-weak)] px-2 py-0.5 font-mono text-[10.5px] font-[550] text-[var(--brand)]">
+                <span className="rounded-full bg-[var(--brand-weak)] px-2 py-0.5 font-mono text-meta font-medium text-[var(--brand)]">
                   beads
                 </span>
               )}
@@ -155,7 +155,7 @@ function Browser({ onClose }: { onClose: () => void }) {
 
       {/* Footer */}
       <div className="flex items-center gap-[10px] border-t border-border p-[14px_18px]">
-        <div className="flex-1 text-[11.5px] text-[var(--text-3)]">
+        <div className="flex-1 text-meta text-[var(--text-3)]">
           {data?.hasBeads ? (
             <span className="flex items-center gap-1.5 text-[var(--text-2)]">
               <Check size={13} className="text-[#22c55e]" />
@@ -167,14 +167,14 @@ function Browser({ onClose }: { onClose: () => void }) {
         </div>
         <button
           onClick={onClose}
-          className="h-[36px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-[13px] font-[550] hover:bg-[var(--surface-3)]"
+          className="h-[36px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium hover:bg-[var(--surface-3)]"
         >
           Cancel
         </button>
         <button
           onClick={() => data?.path && add.mutate(data.path)}
           disabled={!data?.hasBeads || add.isPending}
-          className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           {add.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={15} />}

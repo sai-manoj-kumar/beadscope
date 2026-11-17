@@ -21,10 +21,10 @@ import { BEAD_TYPES, type BeadType } from "@/lib/schema";
 import { AssigneeSelect, useAssigneeNames } from "@/components/assignee-picker";
 
 const inputClass =
-  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-[13.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
+  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-body text-[var(--text)] outline-none focus:border-[var(--brand)]";
 const selectClass =
-  "h-[38px] cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[13px] text-[var(--text)] outline-none";
-const labelClass = "text-[12px] font-[550] text-[var(--text-2)]";
+  "h-[38px] cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-body text-[var(--text)] outline-none";
+const labelClass = "text-label font-medium text-[var(--text-2)]";
 
 interface FormState {
   type: BeadType;
@@ -249,10 +249,10 @@ function CreateForm({
           <Icon name="plus" size={16} />
         </div>
         <div className="flex-1">
-          <DialogTitle className="text-[15px] font-[650]">
+          <DialogTitle className="text-section font-semibold">
             {dialogTitle}
           </DialogTitle>
-          <DialogDescription className="font-mono text-[11.5px] text-[var(--text-3)]">
+          <DialogDescription className="font-mono text-meta text-[var(--text-3)]">
             bd create … --json
           </DialogDescription>
         </div>
@@ -346,7 +346,7 @@ function CreateForm({
               }
             />
             {drop.uploading && (
-              <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--text-3)]">
+              <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-meta text-[var(--text-3)]">
                 <Icon name="image" size={12} /> Uploading…
               </span>
             )}
@@ -364,7 +364,7 @@ function CreateForm({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="inline-flex items-center gap-[6px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[10px] py-[6px] text-[12px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+                className="inline-flex items-center gap-[6px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[10px] py-[6px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
               >
                 <Icon name="image" size={14} /> Attach image
               </button>
@@ -374,7 +374,7 @@ function CreateForm({
             <DescriptionContent
               text={form.description}
               projectId={projectId}
-              className="mt-1 rounded-[8px] border border-border bg-[var(--surface-2)] p-2 text-[12.5px] text-[var(--text-2)]"
+              className="mt-1 rounded-[8px] border border-border bg-[var(--surface-2)] p-2 text-label text-[var(--text-2)]"
             />
           )}
         </label>
@@ -433,14 +433,14 @@ function CreateForm({
             className="h-4 w-4 cursor-pointer"
             style={{ accentColor: "var(--brand)" }}
           />
-          <span className="text-[13px] text-[var(--text-2)]">
+          <span className="text-body text-[var(--text-2)]">
             Start in Backlog (<span className="font-mono">deferred</span>) instead of Ready
           </span>
         </label>
       </div>
 
       <div className="flex shrink-0 items-center gap-[10px] border-t border-border p-[15px_20px]">
-        <div className="flex flex-1 items-center gap-[7px] text-[11.5px] text-[var(--text-3)]">
+        <div className="flex flex-1 items-center gap-[7px] text-meta text-[var(--text-3)]">
           <Icon name="user" size={13} className="text-[var(--text-2)]" />
           <span>
             Stamped <span className="font-mono text-[var(--text-2)]">created_by={actor}</span>
@@ -448,14 +448,14 @@ function CreateForm({
         </div>
         <button
           onClick={onClose}
-          className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-[13px] font-[550] text-[var(--text)] hover:bg-[var(--surface-3)]"
+          className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium text-[var(--text)] hover:bg-[var(--surface-3)]"
         >
           Cancel
         </button>
         <button
           onClick={submit}
           disabled={!form.title.trim() || create.isPending}
-          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
         >
           <Icon name="check" size={15} />

@@ -35,7 +35,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
   const showList = focused && suggestions.length > 0;
   return (
     <div className="flex min-w-0 flex-col gap-[5px]">
-      <span className="text-[11px] font-[550] uppercase tracking-[.03em] text-[var(--text-3)]">Assignee</span>
+      <span className="text-meta font-medium uppercase tracking-[.03em] text-[var(--text-3)]">Assignee</span>
       {editing ? (
         <div className="flex flex-col gap-2">
           <input
@@ -72,7 +72,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
                 else setEditing(false);
               }
             }}
-            className="h-9 w-full min-w-0 rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[13px] outline-none focus:border-[var(--brand)]"
+            className="h-9 w-full min-w-0 rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-body outline-none focus:border-[var(--brand)]"
           />
           {showList && (
             <AssigneeSuggestions
@@ -83,10 +83,10 @@ export function AssigneeField({ bead }: { bead: Bead }) {
               onPick={name => { setDraft(name); setActive(-1); }}
             />
           )}
-          <span className="text-[11px] text-[var(--text-3)]">Choose or type a name. Leave blank to unassign.</span>
+          <span className="text-meta text-[var(--text-3)]">Choose or type a name. Leave blank to unassign.</span>
           <div className="flex gap-2">
-            <button type="button" aria-label="Save assignee" disabled={readOnly || update.isPending} onClick={() => save()} className="rounded-lg bg-[var(--brand)] px-3 py-1 text-[12px] text-white">Save</button>
-            <button type="button" aria-label="Cancel assignee edit" disabled={readOnly || update.isPending} onClick={() => setEditing(false)} className="rounded-lg border border-border px-3 py-1 text-[12px]">Cancel</button>
+            <button type="button" aria-label="Save assignee" disabled={readOnly || update.isPending} onClick={() => save()} className="rounded-lg bg-[var(--brand)] px-3 py-1 text-label text-white">Save</button>
+            <button type="button" aria-label="Cancel assignee edit" disabled={readOnly || update.isPending} onClick={() => setEditing(false)} className="rounded-lg border border-border px-3 py-1 text-label">Cancel</button>
           </div>
         </div>
       ) : (
@@ -100,7 +100,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
         >
           {/* An identity that is switched off keeps its icon, so older beads still read as an agent's. */}
           <AssigneeAvatar name={bead.assignee ?? ""} />
-          <span className="min-w-0 flex-1 truncate text-[13px]">{bead.assignee || "Unassigned"}</span>
+          <span className="min-w-0 flex-1 truncate text-body">{bead.assignee || "Unassigned"}</span>
           <Icon name="pencil" size={12} className="shrink-0 text-[var(--text-3)]" />
         </button>
       )}

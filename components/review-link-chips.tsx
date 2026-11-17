@@ -21,7 +21,7 @@ export function ReviewLinkChips({ links }: { links: string[] }) {
           ? `Attachment: ${link.split("/").at(-1)}` : link.replace(/^https?:\/\//i, "");
         return (
           <a key={link} href={href} target="_blank" rel="noopener noreferrer" title={href}
-            className="flex h-8 max-w-[300px] items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-[12px] text-[var(--brand)] hover:underline">
+            className="flex h-8 max-w-[300px] items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-label text-[var(--brand)] hover:underline">
             <Icon name="link" size={13} className="flex-shrink-0" />
             <span className="truncate">{label}</span>
           </a>

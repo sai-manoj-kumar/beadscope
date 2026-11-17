@@ -176,12 +176,12 @@ function PaletteBody({
                       ? "Pick a theme…"
                       : "Search beads or run a command…"
           }
-          className="h-12 flex-1 bg-transparent text-[14px] text-[var(--text)] outline-none placeholder:text-[var(--text-3)]"
+          className="h-12 flex-1 bg-transparent text-section text-[var(--text)] outline-none placeholder:text-[var(--text-3)]"
         />
       </div>
 
       <Command.List className="min-h-0 flex-1 overflow-y-auto p-2 pb-4">
-        <Command.Empty className="px-3 py-6 text-center text-[13px] text-[var(--text-3)]">
+        <Command.Empty className="px-3 py-6 text-center text-body text-[var(--text-3)]">
           No results.
         </Command.Empty>
 
@@ -366,7 +366,7 @@ function Item({
     <Command.Item
       value={value}
       onSelect={onSelect}
-      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-[13.5px] text-[var(--text)] data-[selected=true]:bg-[var(--surface-2)]"
+      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-body text-[var(--text)] data-[selected=true]:bg-[var(--surface-2)]"
     >
       {dotColor ? (
         <span className="h-[8px] w-[8px] flex-shrink-0 rounded-full" style={{ background: dotColor }} />
@@ -400,16 +400,16 @@ function BeadItem({
     <Command.Item
       value={`${valuePrefix}${bead.id} ${bead.title}`}
       onSelect={onSelect}
-      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-[13.5px] data-[selected=true]:bg-[var(--surface-2)]"
+      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-body data-[selected=true]:bg-[var(--surface-2)]"
     >
       <span
         className="h-[8px] w-[8px] flex-shrink-0 rounded-full"
         style={{ background: catColor(bead.status) }}
         title={statusLabel(bead.status)}
       />
-      <span className="flex-shrink-0 font-mono text-[11px] text-[var(--text-3)]">{bead.id}</span>
+      <span className="flex-shrink-0 font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
       <span className="flex-1 truncate text-[var(--text)]">{bead.title}</span>
-      <span className="flex-shrink-0 text-[10px] uppercase tracking-[.03em] text-[var(--text-3)]">
+      <span className="flex-shrink-0 text-meta uppercase tracking-[.03em] text-[var(--text-3)]">
         {typeLabel(bead.issue_type)}
       </span>
     </Command.Item>
