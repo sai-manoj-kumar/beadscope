@@ -20,6 +20,8 @@ import { useApp } from "@/components/app-context";
 import { PriorityChip, OriginBadge } from "@/components/board/bead-card";
 import { CopyableId } from "@/components/copyable-id";
 import { FilterBar } from "@/components/filter-bar";
+import { PageHeader } from "@/components/page-header";
+import { BrandButton } from "@/components/brand-button";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
 import { useSetStatus } from "@/hooks/use-beads";
 import { useUrlFilters } from "@/hooks/use-url-filters";
@@ -150,35 +152,22 @@ export function ListView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <div className="mr-1 flex flex-col gap-px">
-          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">List</h1>
-          <span className="text-meta text-[var(--text-3)]">
-            {rows.length} beads · drag to set run-order
-          </span>
-        </div>
-
-        <FilterBar
-          filters={filters}
-          onChange={setFilters}
-          labelOptions={labelOptions}
-          assigneeOptions={assigneeOptions}
-          showArchived={showArchived}
-          onShowArchived={setShowArchived}
-          onClearAllAction={clearFilters}
-        />
-
-        {!readOnly && (
-          <button
-            onClick={() => openCreate()}
-            className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] px-[14px] text-body font-medium text-white"
-            style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
-          >
-            <Icon name="plus" size={15} />
-            <span>New</span>
-          </button>
-        )}
-      </header>
+      <PageHeader
+        title="List"
+        subtitle={<>{rows.length} beads · drag to set run-order</>}
+        actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
+        controls={
+          <FilterBar
+            filters={filters}
+            onChange={setFilters}
+            labelOptions={labelOptions}
+            assigneeOptions={assigneeOptions}
+            showArchived={showArchived}
+            onShowArchived={setShowArchived}
+            onClearAllAction={clearFilters}
+          />
+        }
+      />
 
       <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[12px_22px]">
         {loading && beads.length === 0 ? (
