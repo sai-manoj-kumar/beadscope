@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
 const base = process.env.BEADSCOPE_TEST_URL;
+// The drawer writes ?bead= from an effect after it renders, so wait for the URL rather than reading it once.
+const beadParamIs = (page, id) =>
+  page.waitForFunction((want) => new URL(location.href).searchParams.get("bead") === want, id);
 assert.ok(base, "Set BEADSCOPE_TEST_URL to the running demo server");
 
 const bead = (id, title, extra = {}) => ({
@@ -58,20 +61,21 @@ try {
   // Parent and dependency navigation update the visible bead query; drawer Back restores it.
   await page.getByRole("dialog").getByText("Parent bead", { exact: true }).click();
   await page.getByRole("dialog").getByText("Parent bead", { exact: true }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get("bead"), "parent");
+  await beadParamIs(page, "parent");
   await page.getByTitle("Back to child").click();
   await page.getByRole("dialog").getByText("Child bead", { exact: true }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get("bead"), "child");
+  await beadParamIs(page, "child");
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
   await page.locator("article").filter({ hasText: "blocked" }).click();
   await page.getByRole("dialog").getByText("Blocked bead", { exact: true }).waitFor();
   await page.getByRole("dialog").getByText("Dependency bead", { exact: true }).click();
   await page.getByRole("dialog").getByText("Dependency bead", { exact: true }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get("bead"), "dependency");
+  await beadParamIs(page, "dependency");
   await page.getByTitle("Back to blocked").click();
   await page.getByRole("dialog").getByText("Blocked bead", { exact: true }).waitFor();
-  assert.equal(new URL(page.url()).searchParams.get("bead"), "blocked");
+  await beadParamIs(page, "blocked");
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+  await beadParamIs(page, null);
   const closed = new URL(page.url());
   assert.equal(closed.searchParams.get("bead"), null);
   assert.equal(closed.searchParams.get("custom"), "keep");

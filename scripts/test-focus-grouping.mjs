@@ -81,7 +81,8 @@ try {
   const childCard = row('Alice').getByRole('button', { name: 'child', exact: true });
   await childCard.focus(); await page.keyboard.press('Enter');
   await page.getByRole('dialog').waitFor();
-  assert.equal(new URL(page.url()).searchParams.get('bead'), 'child');
+  // ?bead= is written by an effect after the drawer renders, so wait for it.
+  await page.waitForFunction(() => new URL(location.href).searchParams.get('bead') === 'child');
   assert.equal(await page.getByRole('dialog').locator('select').first().isDisabled(), true);
   await page.getByTitle('Close', { exact: true }).click();
   // Normal polling must move cards between assignees and columns without toggling controls.

@@ -45,7 +45,8 @@ try {
  assert.equal(writes.length,0);
  await item('ready-a').focus(); await page.keyboard.press('Enter');
  await page.getByRole('dialog').getByRole('heading',{name:'Keyboard ready-a',exact:true}).waitFor();
- assert.equal(new URL(page.url()).searchParams.get('bead'),'ready-a');
+ // The URL is written by an effect after the drawer renders, so wait for it rather than reading once.
+ await page.waitForFunction(id=>new URL(location.href).searchParams.get('bead')===id,'ready-a');
  await close();
  await chord('f'); await page.getByRole('heading',{name:'Focus',exact:true}).waitFor();
  await page.keyboard.press('j');
