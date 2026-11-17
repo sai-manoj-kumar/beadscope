@@ -4,6 +4,8 @@ import { useApp } from "@/components/app-context";
 import { Icon, typeIconName } from "@/components/icons";
 import { PriorityChip } from "@/components/board/bead-card";
 import { AgentIcon } from "@/components/agent-icon";
+import { PageHeader } from "@/components/page-header";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { agentByName } from "@/lib/agents";
 import { isBlocked, blockingDeps, relTime, fmtDateTime, typeColor, catColor } from "@/lib/beads-view";
 import type { Bead } from "@/lib/schema";
@@ -146,29 +148,28 @@ export function FocusView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <div className="mr-1 flex flex-col gap-px">
-          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Focus</h1>
-          <span className="text-meta text-[var(--text-3)]">
+      <PageHeader
+        title="Focus"
+        subtitle={<>
             what&rsquo;s happening now · {inFlight.length} in flight · {blocked.length} blocked ·{" "}
             {nextUp.length} next up
-          </span>
-        </div>
-        <span className="flex-1" />
-        <label className="flex items-center gap-2 text-label text-[var(--text-2)]">
+        </>}
+        controls={<>
+        <span className="flex-1 max-md:hidden" />
+        <label className="flex items-center gap-2 text-label text-[var(--text-2)] tap-target">
           Group by
           <select value={groupBy} onChange={e => setGroupBy(e.target.value === "assignee" ? "assignee" : "none")}
-            className="h-8 rounded-[8px] border border-border bg-[var(--surface-2)] px-2 text-[var(--text)]">
+            className="h-8 rounded-[8px] border border-border bg-[var(--surface-2)] px-2 text-[var(--text)] max-md:h-11">
             <option value="none">None</option>
             <option value="assignee">Assignee</option>
           </select>
         </label>
         <button aria-pressed={showRecent} onClick={() => { setShowRecent(!showRecent); setShowAllRecent(false); }}
-          className="h-8 rounded-[8px] border border-border px-3 text-label aria-pressed:border-[var(--brand)] aria-pressed:bg-[var(--brand-weak)] aria-pressed:text-[var(--brand)]">
+          className="tap-target h-8 rounded-[8px] border border-border px-3 text-label aria-pressed:border-[var(--brand)] aria-pressed:bg-[var(--brand-weak)] aria-pressed:text-[var(--brand)]">
           Recently finished
         </button>
         {enabledAgents.length > 0 && (
-          <div role="group" aria-label="Agent queue" className="flex flex-wrap items-center gap-[6px]">
+          <div role="group" aria-label="Agent queue" className="flex flex-wrap items-center gap-[6px] max-md:basis-full">
             <span className="text-label text-[var(--text-2)]">Agent</span>
             <LaneChip label="All" selected={selectedAgent === null} onClick={() => setAgent(null)} />
             {enabledAgents.map((a) => (
@@ -183,7 +184,7 @@ export function FocusView() {
           </div>
         )}
         {prefix && lanes.length > 0 && (
-          <div className="flex flex-wrap items-center gap-[6px]">
+          <div className="flex flex-wrap items-center gap-[6px] max-md:basis-full">
             <LaneChip label="All" selected={selectedLane === null} onClick={() => setLane(null)} />
             {lanes.map((l) => (
               <LaneChip
@@ -200,13 +201,14 @@ export function FocusView() {
             />
           </div>
         )}
-      </header>
+        </>}
+      />
 
       {showRecent && (
-        <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border px-[22px] py-2 text-label text-[var(--text-2)]">
+        <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border px-[22px] py-2 text-label text-[var(--text-2)] max-md:px-4">
           <span aria-live="polite">Showing {recentItems.length} of {recentlyFinished.length} completed beads</span>
           {recentlyFinished.length > RECENT_LIMIT && (
-            <button onClick={() => setShowAllRecent(!showAllRecent)} className="rounded px-2 py-1 font-medium text-[var(--brand)] hover:bg-[var(--brand-weak)]">
+            <button onClick={() => setShowAllRecent(!showAllRecent)} className="tap-target rounded px-2 py-1 font-medium text-[var(--brand)] hover:bg-[var(--brand-weak)]">
               {showAllRecent ? `Show latest ${RECENT_LIMIT}` : `Show all ${recentlyFinished.length} completed`}
             </button>
           )}
@@ -214,22 +216,22 @@ export function FocusView() {
         </div>
       )}
       {groupBy === "none" ? (
-        <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px]">
-          <div className="flex h-full min-h-0 gap-4">
+        <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px] max-md:overflow-x-hidden max-md:overflow-y-auto max-md:p-[8px_16px_24px]">
+          <div className="flex h-full min-h-0 gap-4 max-md:h-auto max-md:flex-col max-md:gap-1">
             {columns.map(c => <FocusColumnView key={c.id} column={c} />)}
           </div>
         </div>
       ) : (
-        <div className="bd-scroll min-h-0 flex-1 overflow-auto p-[18px_22px]">
+        <div className="bd-scroll min-h-0 flex-1 overflow-auto p-[18px_22px] max-md:p-[8px_16px_24px]">
           {groups.length === 0 ? <p className="p-4 text-body text-[var(--text-3)]">No matching work. Try another lane or include recently finished work.</p> : (
-            <div className="min-w-max">
-              <div className="sticky top-0 z-10 mb-2 flex gap-4 bg-[var(--bg)] py-2" aria-hidden="true">
+            <div className="min-w-max max-md:min-w-0">
+              <div className="sticky top-0 z-10 mb-2 flex gap-4 bg-[var(--bg)] py-2 max-md:hidden" aria-hidden="true">
                 <div className="w-[160px] shrink-0 text-label font-medium text-[var(--text-3)]">Assignee</div>
                 {columns.map(c => <div key={c.id} className="w-[280px] shrink-0 text-body font-semibold">{c.title} <span className="font-normal text-[var(--text-3)]">· {c.items.length}</span></div>)}
               </div>
               {groups.map(group => (
-                <section key={group.key} aria-label={`Assignee: ${group.label}`} className="flex gap-4 border-t border-border py-4">
-                  <div className="w-[160px] shrink-0">
+                <section key={group.key} aria-label={`Assignee: ${group.label}`} className="flex gap-4 border-t border-border py-4 max-md:flex-col max-md:gap-2">
+                  <div className="w-[160px] shrink-0 max-md:w-full">
                     <h2 className="flex items-center gap-[6px] break-words text-body font-semibold">
                       {agentByName(meta?.agents, group.label) && <AgentIcon agent={agentByName(meta?.agents, group.label)!} size={16} />}
                       {group.label}
@@ -248,14 +250,30 @@ export function FocusView() {
 }
 
 function FocusColumnView({ column, grouped = false }: { column: FocusColumn; grouped?: boolean }) {
+  // Phones stack the columns and fold each one; an empty one starts folded so it does not
+  // take a screen of blank space.
+  const mobile = useIsMobile();
+  const [folded, setFolded] = React.useState<boolean | null>(null);
+  const isFolded = mobile && !grouped && (folded ?? column.items.length === 0);
+  const listId = React.useId();
   return (
     <section data-focus-column={column.id} aria-label={grouped ? column.title : undefined}
-      className={grouped ? "w-[280px] shrink-0" : "flex h-full min-h-0 w-[320px] shrink-0 flex-col"}>
-      {!grouped && <div className="mb-2 flex flex-wrap items-baseline gap-2 px-1">
-        <h2 className="m-0 text-body font-semibold text-[var(--text)]">{column.title}</h2>
-        <span className="text-meta text-[var(--text-3)]">{column.items.length} · {column.hint}</span>
+      className={grouped ? "w-[280px] shrink-0 max-md:w-full" : "flex h-full min-h-0 w-[320px] shrink-0 flex-col max-md:h-auto max-md:w-full max-md:shrink"}>
+      {!grouped && <div className="relative mb-2 flex flex-wrap items-baseline gap-2 px-1 max-md:min-h-11 max-md:flex-nowrap max-md:items-center">
+        {/* The button is just the title, so the heading reads "Blocked"; on phones it stretches over the whole row. */}
+        <h2 className="m-0 text-body font-semibold text-[var(--text)]">
+          {mobile ? (
+            <button type="button" aria-expanded={!isFolded} aria-controls={listId} aria-label={`${column.title} lane`}
+              onClick={() => setFolded(!isFolded)}
+              className="tap-target flex items-center text-left after:absolute after:inset-0">
+              {column.title}
+            </button>
+          ) : column.title}
+        </h2>
+        <span className="text-meta text-[var(--text-3)] max-md:min-w-0 max-md:truncate">{column.items.length} · {column.hint}</span>
+        <Icon name="chevron" size={14} className={`pointer-events-none ml-auto text-[var(--text-3)] transition-transform md:hidden ${isFolded ? "-rotate-90" : ""}`} />
       </div>}
-      <div className={`rounded-[12px] border border-border bg-[var(--surface-2)] p-2 ${grouped ? "min-h-[70px]" : "bd-scroll min-h-0 flex-1 overflow-y-auto"}`}>
+      <div id={listId} hidden={isFolded} className={`rounded-[12px] border border-border bg-[var(--surface-2)] p-2 ${isFolded ? "hidden" : ""} ${grouped ? "min-h-[70px]" : "bd-scroll min-h-0 flex-1 overflow-y-auto max-md:overflow-visible"}`}>
         {column.items.length === 0 ? <div className="p-4 text-center text-label text-[var(--text-3)]">Nothing here.</div> : (
           <div className="flex flex-col gap-2">{column.items.map(b => (
             <FocusCard key={b.id} bead={b} showBlockers={column.id === "blocked"} />
@@ -281,7 +299,7 @@ function LaneChip({
     <button
       aria-pressed={selected}
       onClick={onClick}
-      className="inline-flex items-center gap-[6px] rounded-full border px-[10px] py-[3px] text-meta font-medium transition-colors"
+      className="tap-target inline-flex items-center gap-[6px] rounded-full border px-[10px] py-[3px] text-meta font-medium transition-colors"
       style={
         selected
           ? { borderColor: "var(--brand)", background: "var(--brand-weak)", color: "var(--brand)" }
@@ -337,7 +355,7 @@ function FocusCard({ bead, showBlockers }: { bead: Bead; showBlockers?: boolean 
       <div className="text-label font-medium leading-[1.35] text-[var(--text)] [text-wrap:pretty]">
         {bead.title}
       </div>
-      <div className="mt-[6px] flex items-center gap-[8px] text-meta text-[var(--text-3)]">
+      <div className="mt-[6px] flex flex-wrap items-center gap-x-[8px] gap-y-1 text-meta text-[var(--text-3)]">
         <span title={fmtDateTime(timestamp)}>{relTime(timestamp)}</span>
         {blockers.length > 0 && (
           <span className="truncate font-mono" title={`blocked by ${blockers.join(", ")}`}>
