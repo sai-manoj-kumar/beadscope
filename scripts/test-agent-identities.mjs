@@ -70,7 +70,12 @@ try {
   await page.goto(`${base}/p/demo`);
   await page.getByRole('heading', { name: 'Board', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Read Only Mode', exact: true }).waitFor({ state: 'detached' });
-  await page.keyboard.press('n');
+  // The heading renders before React attaches the keyboard handler, so a key pressed too early is lost: press again until the dialog opens.
+  await page.waitForFunction(() => {
+    if (document.querySelector('[role="dialog"]')) return true;
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', bubbles: true }));
+    return false;
+  }, null, { polling: 250, timeout: 20000 });
   await page.getByRole('dialog').waitFor();
   await page.getByRole('combobox', { name: 'Assignee' }).click();
   const choices = page.getByRole('listbox', { name: 'Assignee' }).getByRole('option');
