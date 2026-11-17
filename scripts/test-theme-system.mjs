@@ -71,7 +71,9 @@ try {
   const p3 = await ctx2.newPage();
   await p3.addInitScript(() => localStorage.setItem('beadscope.theme.other', 'nord'));
   await p3.goto(`${base}/p/other?view=epics`);
-  const nordButton = p3.getByRole('button', { name: /^Theme: / }).filter({ visible: true });
+  // The server renders the default label; the stored palette applies once the page hydrates.
+  const nordButton = p3.getByRole('button', { name: 'Theme: Nord — click for System' }).filter({ visible: true });
+  await nordButton.waitFor();
   assert.equal(await nordButton.getAttribute('title'), 'Theme: Nord — click for System');
   await nordButton.click();
   assert.equal(await p3.evaluate(() => localStorage.getItem('beadscope.theme.other')), 'system');
