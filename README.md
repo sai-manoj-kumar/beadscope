@@ -367,8 +367,9 @@ project picker. Requires Node 20+.
 | `beadscope status` | Show the URL and PID; exits 1 if it is not running. |
 | `beadscope logs [-f] [-n N]` | Show the server log (`-f` to follow). |
 | `beadscope run` | Run in the foreground instead; Ctrl+C stops it. |
+| `beadscope add [path]` | Add a beads repo (a folder with a `.beads` directory) to the Beadscope that is already running, and print its project URL. Uses the current folder unless you give a path. It never starts a server, so it also works when something else (a login service, Docker) runs Beadscope; add `--port` if it is not on 3000. |
 
-Flags for `start` and `run`: `-p, --port <n>` · `--host <h>` · `--no-open`. Run
+Flags for `start`, `run` and `add`: `-p, --port <n>` · `--host <h>` · `--no-open`. Run
 `beadscope` with no command (or `--help`) for usage.
 
 The background server's PID and log are kept in
