@@ -1,6 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
-import { listProjects, addProject, DEMO_PROJECT } from "@/lib/config";
+import { listProjects, addProject, hasBeads as configHasBeads, DEMO_PROJECT } from "@/lib/config";
 import type { ProjectEntry, DemoProject } from "@/lib/config";
 import { ok, fail } from "@/lib/api";
 import { z } from "zod";
@@ -11,7 +9,7 @@ function annotate(p: ProjectEntry | DemoProject) {
   let hasBeads = true;
   if (p.path !== null) {
     try {
-      hasBeads = fs.existsSync(path.join(p.path, ".beads"));
+      hasBeads = configHasBeads(p.path);
     } catch {
       hasBeads = false;
     }

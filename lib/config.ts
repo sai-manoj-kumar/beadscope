@@ -145,9 +145,21 @@ function defaults(): AppConfig {
 
 // ---- helpers -------------------------------------------------------------
 
-function hasBeads(p: string): boolean {
+/**
+ * Whether `p` holds a beads workspace. bd also keeps per-user state (a machine-id
+ * and an event queue) in `~/.beads`; that folder is not a workspace, so it must not
+ * make the home directory look like a project. A workspace has a config.yaml or
+ * metadata.json next to its database.
+ */
+export function hasBeads(p: string): boolean {
   try {
-    return fs.existsSync(path.join(p, ".beads"));
+    const dir = path.join(p, ".beads");
+    if (!fs.existsSync(dir)) return false;
+    const isUserStateDir =
+      fs.existsSync(path.join(dir, "machine-id")) &&
+      !fs.existsSync(path.join(dir, "config.yaml")) &&
+      !fs.existsSync(path.join(dir, "metadata.json"));
+    return !isUserStateDir;
   } catch {
     return false;
   }

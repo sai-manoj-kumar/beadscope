@@ -5,7 +5,7 @@
 Beadscope runs as a login service (launchd), not through `beadscope start`.
 
 - **Service:** `~/Library/LaunchAgents/com.saimanoj.beadscope.plist` (label `com.saimanoj.beadscope`). It
-  runs `beadscope run --port 3000` from this checkout's `.next` build, restarts itself if it dies, and logs
+  runs `beadscope run --port 3000 --no-open` from this checkout's `.next` build, restarts itself if it dies, and logs
   to `~/Library/Logs/beadscope.log`.
 - **Reachable from:** `http://localhost:3000/` and `http://beadscope.local:3000/` on the Mac only. It listens on
   `localhost`, never on the network. Do not start it with `--host 0.0.0.0`: Beadscope has no login.
