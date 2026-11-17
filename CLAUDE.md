@@ -40,3 +40,12 @@ Text uses five named sizes and three weights, defined once in `app/globals.css` 
 - Sizes: `text-page-title`, `text-section`, `text-body`, `text-label`, `text-meta`. Weights: `font-normal`, `font-medium`, `font-semibold`.
 - Never write `text-[13px]`, `text-sm`, `font-[650]` or an inline `fontSize`. `scripts/test-type-system.mjs` (run in CI) fails on them. Every page title is the same `<h1>`.
 - Form fields are 16px on phones so iOS Safari does not zoom. Geist Mono is for ids and code only.
+
+## Phone layout
+
+Phones are anything under 768px (Tailwind `md`). Use `md:` / `max-md:` in CSS; use `useIsMobile()` (`hooks/use-is-mobile.ts`, query in `lib/breakpoints.ts`) only when behaviour changes, not just styling.
+
+- Tap targets are at least 44px on phones: add the `tap-target` utility to small icon buttons.
+- A deliberate sideways scroller must carry `data-allow-x-scroll`; nothing else may stick out past the right edge.
+- Look at a view the way the tests do: `node scripts/mobile-audit.mjs http://localhost:3000/p/<project> [views...]` (390px; `MOBILE_WIDTH=360` to change). It lists overflow, text under 14px, fields under 16px and targets under 44px.
+- `scripts/test-mobile-layout.mjs` enforces this. When a view is finished, add it to `NO_OVERFLOW` / `TAP_TARGETS_OK` there so it cannot regress.
