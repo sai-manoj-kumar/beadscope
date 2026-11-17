@@ -73,10 +73,17 @@ try {
     await page.mouse.down();
     await page.mouse.move(from.x + 8, from.y + 8, { steps: 2 });
   };
+  // A card dragged from near the right edge can auto-scroll the board while the pointer travels, which moves
+  // the target. Re-aim until the target stops moving.
   const hoverCard = async (id) => {
-    const to = await center(card(id));
-    await page.mouse.move(to.x, to.y, { steps: 12 });
-    await page.waitForTimeout(150);
+    let to = await center(card(id));
+    for (let attempt = 0; attempt < 5; attempt++) {
+      await page.mouse.move(to.x, to.y, { steps: 12 });
+      await page.waitForTimeout(150);
+      const now = await center(card(id));
+      if (Math.abs(now.x - to.x) < 2 && Math.abs(now.y - to.y) < 2) return to;
+      to = now;
+    }
     return to;
   };
   const previewUnderPointer = (point, title) =>
