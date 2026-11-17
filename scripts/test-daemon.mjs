@@ -1,4 +1,4 @@
-// Tests for the `beadscope start | stop | status | logs | run` launcher.
+// Tests for the `beadscope start | stop | status | logs | run | add` launcher.
 //
 // Needs no build and no node_modules: it copies bin/beadscope.mjs into a
 // throwaway package root next to a tiny stand-in for `next`, and points the
@@ -274,6 +274,81 @@ try {
     beadscope(["stop"]);
   }
   step("allowed hostnames are printed on start/status and remembered across shells");
+
+  // 12. `add [path]` registers a repo with a server that is already running, however it was started.
+  {
+    const apiPort = await freePort();
+    const received = path.join(tmp, "add-requests.jsonl");
+    const api = path.join(tmp, "fake-api.mjs");
+    fs.writeFileSync(
+      api,
+      `import http from "node:http"; import fs from "node:fs";
+http.createServer((req, res) => {
+  let body = ""; req.on("data", (c) => (body += c));
+  req.on("end", () => {
+    if (req.method !== "POST") return res.end("ok");
+    fs.appendFileSync(${JSON.stringify(received)}, JSON.stringify({ method: req.method, url: req.url, body: JSON.parse(body || "{}") }) + "\\n");
+    const dir = JSON.parse(body).path;
+    res.setHeader("Content-Type", "application/json");
+    if (dir.includes("blocked")) { res.statusCode = 403; return res.end(JSON.stringify({ error: "Project writes are blocked" })); }
+    res.statusCode = 201; res.end(JSON.stringify({ id: "proj-" + dir.split("/").pop(), name: dir.split("/").pop() }));
+  });
+}).listen(${apiPort}, "127.0.0.1");
+`,
+    );
+    const { spawn } = await import("node:child_process");
+    const server = spawn(process.execPath, [api], { stdio: "ignore" });
+    try {
+      for (let i = 0; i < 50 && (await refused(`http://127.0.0.1:${apiPort}/`)); i++) await new Promise((r) => setTimeout(r, 100));
+      const mk = (name, beads = true) => {
+        const d = path.join(tmp, name);
+        fs.mkdirSync(beads ? path.join(d, ".beads") : d, { recursive: true });
+        return fs.realpathSync(d);
+      };
+      const requests = () => (fs.existsSync(received) ? fs.readFileSync(received, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
+      const portArgs = ["--host", "127.0.0.1", "--port", String(apiPort)];
+
+      // A path argument: sent as an absolute path, and the project URL is printed.
+      const one = mk("repo-one");
+      let r = beadscope(["add", one, ...portArgs]);
+      assert.equal(r.status, 0, r.stderr);
+      assert.match(r.stdout, /repo-one is in Beadscope → http:\/\/127\.0\.0\.1:\d+\/p\/proj-repo-one/);
+      assert.deepEqual(requests().at(-1), { method: "POST", url: "/api/projects", body: { path: one } });
+
+      // No argument: the folder the command ran in.
+      const two = mk("repo-two");
+      r = beadscope(["add", ...portArgs], { cwd: two });
+      assert.equal(r.status, 0, r.stderr);
+      assert.equal(requests().at(-1).body.path, two);
+
+      // A relative path is resolved against the folder the command ran in.
+      r = beadscope(["add", "repo-one", ...portArgs], { cwd: fs.realpathSync(tmp) });
+      assert.equal(r.status, 0, r.stderr);
+      assert.equal(requests().at(-1).body.path, one);
+
+      // A folder without .beads is refused before anything is sent.
+      const before = requests().length;
+      r = beadscope(["add", mk("plain-folder", false), ...portArgs]);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /No \.beads directory in/);
+      assert.match(r.stderr, /bd init/);
+      assert.equal(requests().length, before, "nothing is sent for a folder without .beads");
+
+      // The server's own refusal is shown, with a non-zero exit.
+      r = beadscope(["add", mk("blocked-repo"), ...portArgs]);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /Project writes are blocked/);
+
+      // No server there: say so and do not start one.
+      r = beadscope(["add", one, "--host", "127.0.0.1", "--port", String(await freePort())]);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /not running/);
+      assert.ok(!fs.existsSync(stateFile), "add never starts a server");
+    } finally {
+      server.kill();
+    }
+  }
+  step("add registers a repo with a running server, by path or from the current folder, and never starts one");
 
   console.log(`PASS: ${steps.length} groups\n  - ${steps.join("\n  - ")}`);
 } finally {

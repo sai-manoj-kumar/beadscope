@@ -45,7 +45,7 @@ const STOP_GRACE_MS = 4000;
 /** A server started this recently is trusted on its PID alone (still booting). */
 const STARTUP_GRACE_MS = 60000;
 
-const COMMANDS = ["start", "stop", "status", "logs", "run"];
+const COMMANDS = ["start", "stop", "status", "logs", "run", "add"];
 
 function printHelp(stream = process.stdout) {
   stream.write(`
@@ -66,8 +66,12 @@ Commands:
               -f, --follow    Keep printing new output (Ctrl+C to quit).
               -n, --lines <n> How many lines to show (default 50).
   run       Run the server in the foreground; Ctrl+C stops it.
+  add [path] Add a beads repo (a folder with a .beads directory) to the Beadscope
+            that is already running, then print its URL. Uses the current folder
+            unless you give a path. It never starts a server, so it works with
+            a Beadscope run by a login service. Add --port if it is not on 3000.
 
-Options (start, run):
+Options (start, run, add):
   -p, --port <n>   Port to use (default 3000, or $PORT). Auto-picks a free
                    port if the default is busy; with an explicit --port it
                    fails instead of moving.
@@ -102,6 +106,8 @@ function parseArgs(argv) {
       opts.host = a.slice("--host=".length);
     } else if (!a.startsWith("-") && opts.command === undefined) {
       opts.command = a; // first bare word is the subcommand
+    } else if (!a.startsWith("-") && opts.arg === undefined) {
+      opts.arg = a; // second bare word: the folder for `add`
     }
   }
   opts.portExplicit = portExplicit;
@@ -247,39 +253,44 @@ function openBrowser(url) {
 }
 
 /** If invoked from a .beads project, register it and return its board path. */
+/** Register `dir` with the server at host:port (POST /api/projects). Resolves the project entry. */
+function registerProject(host, port, dir) {
+  const body = JSON.stringify({ path: dir });
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        host,
+        port,
+        path: "/api/projects",
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (c) => (data += c));
+        res.on("end", () => {
+          let json = null;
+          try {
+            json = JSON.parse(data);
+          } catch {
+            /* not JSON: reported below */
+          }
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300 && json) resolve(json);
+          else reject(new Error((json && json.error) || `add project failed (${res.statusCode})`));
+        });
+      },
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+/** Where to send the browser: the project for the folder `start` ran in, else the picker. */
 async function targetPath(host, port) {
   try {
     if (!fs.existsSync(path.join(invocationCwd, ".beads"))) return "/";
-    const body = JSON.stringify({ path: invocationCwd });
-    const entry = await new Promise((resolve, reject) => {
-      const req = http.request(
-        {
-          host,
-          port,
-          path: "/api/projects",
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) },
-        },
-        (res) => {
-          let data = "";
-          res.on("data", (c) => (data += c));
-          res.on("end", () => {
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              try {
-                resolve(JSON.parse(data));
-              } catch (e) {
-                reject(e);
-              }
-            } else {
-              reject(new Error(`add project failed (${res.statusCode})`));
-            }
-          });
-        },
-      );
-      req.on("error", reject);
-      req.write(body);
-      req.end();
-    });
+    const entry = await registerProject(host, port, invocationCwd);
     return entry && entry.id ? `/p/${encodeURIComponent(entry.id)}` : "/";
   } catch {
     return "/"; // fall back to the picker
@@ -613,6 +624,36 @@ async function cmdLogs(opts) {
   }, 500);
 }
 
+/** `beadscope add [path]`: register a repo with the Beadscope that is already running. */
+async function cmdAdd(opts) {
+  const raw = opts.arg ?? ".";
+  const dir = path.resolve(invocationCwd, raw === "~" ? os.homedir() : raw.replace(/^~\//, os.homedir() + "/"));
+  if (!fs.existsSync(path.join(dir, ".beads"))) {
+    console.error(`No .beads directory in ${dir}. Run \`bd init\` there first.`);
+    process.exit(1);
+  }
+
+  // A server started with `start` is found from its state file. One that something else runs
+  // (a login service) has none, so fall back to the default host and port, or --port.
+  const running = opts.portExplicit ? null : await getRunning();
+  const host = running ? running.host : opts.host;
+  const port = running ? running.port : opts.port;
+  if (!(await portInUse(host, port))) {
+    console.error(`Beadscope is not running at http://${host}:${port}/.`);
+    console.error("Start it with `beadscope start`, or pass --port if it is on another port.");
+    process.exit(1);
+  }
+
+  try {
+    const entry = await registerProject(host, port, dir);
+    const url = new URL(`/p/${encodeURIComponent(entry.id)}`, `http://${host}:${port}`).href;
+    console.log(`\n  ${entry.name} is in Beadscope → ${url}\n`);
+  } catch (err) {
+    console.error(`Could not add ${dir}: ${err.message}`);
+    process.exit(1);
+  }
+}
+
 async function cmdRun(opts) {
   ensureBuild();
 
@@ -709,6 +750,8 @@ async function main() {
       return cmdLogs(opts);
     case "run":
       return cmdRun(opts);
+    case "add":
+      return cmdAdd(opts);
     default:
       console.error(
         `Unknown command: ${JSON.stringify(opts.command)} (expected one of: ${COMMANDS.join(", ")})`,
