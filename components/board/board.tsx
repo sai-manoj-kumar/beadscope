@@ -14,7 +14,6 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Icon } from "@/components/icons";
 import { useApp } from "@/components/app-context";
 import { useSetStatus } from "@/hooks/use-beads";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
@@ -23,6 +22,8 @@ import { useUrlFilters } from "@/hooks/use-url-filters";
 import { useUrlState } from "@/hooks/use-url-state";
 import { isBlocked, childrenCountMap } from "@/lib/beads-view";
 import { FilterBar } from "@/components/filter-bar";
+import { PageHeader } from "@/components/page-header";
+import { BrandButton } from "@/components/brand-button";
 import { matchesFilters, labelOptionsFrom, assigneeOptionsFrom } from "@/lib/filters";
 import {
   BOARD_COLUMNS as COLUMNS,
@@ -197,14 +198,11 @@ export function Board() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <div className="mr-1 flex flex-col gap-px">
-          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Board</h1>
-          <span className="text-meta text-[var(--text-3)]">
-            {visible.length} beads · live from <span className="font-mono">bd list</span>
-          </span>
-        </div>
-
+      <PageHeader
+        title="Board"
+        subtitle={<>{visible.length} beads · live from <span className="font-mono">bd list</span></>}
+        actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
+        controls={<>
         <FilterBar
           filters={filters}
           onChange={setFilters}
@@ -216,7 +214,7 @@ export function Board() {
         />
 
         <label
-          className="flex h-9 flex-shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-label text-[var(--text-2)]"
+          className="flex h-9 flex-shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-label text-[var(--text-2)] tap-target max-md:order-3"
           title={
             boardPrefs.sortMode === "manual"
               ? "Drag to reorder cards or move them between status columns"
@@ -240,18 +238,8 @@ export function Board() {
             <option value="manual">Manual</option>
           </select>
         </label>
-
-        {!readOnly && (
-          <button
-            onClick={() => openCreate()}
-            className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] px-[14px] text-body font-medium text-white"
-            style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
-          >
-            <Icon name="plus" size={15} />
-            <span>New</span>
-          </button>
-        )}
-      </header>
+        </>}
+      />
 
       <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px]">
         {loading && beads.length === 0 ? (

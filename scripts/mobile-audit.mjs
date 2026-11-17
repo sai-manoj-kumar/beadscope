@@ -57,7 +57,7 @@ export function pageAudit() {
   for (const el of document.querySelectorAll(targetSelector)) {
     if (!visible(el)) continue;
     if (el.tagName === "A" && getComputedStyle(el).display === "inline") continue; // a link inside a sentence
-    const box = ["checkbox", "radio"].includes(el.type) ? el.closest("label") || el : el;
+    const box = ["checkbox", "radio"].includes(el.type) || ["INPUT", "SELECT", "TEXTAREA"].includes(el.tagName) ? el.closest("label") || el : el; // a field inside a label is tapped through the label
     const r = box.getBoundingClientRect();
     if (r.width < 44 || r.height < 44) smallTargets.push(`${label(el)} ${Math.round(r.width)}x${Math.round(r.height)}`);
   }

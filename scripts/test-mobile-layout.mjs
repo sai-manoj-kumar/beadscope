@@ -12,7 +12,7 @@ import { VIEWS, auditView } from "./mobile-audit.mjs";
 const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 
-const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish"]);
+const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish", "list"]);
 const TAP_TARGETS_OK = new Set([]);
 const WIDTHS = [360, 390, 430];
 

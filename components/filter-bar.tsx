@@ -31,6 +31,8 @@ export function FilterBar({
   onClearAllAction?: () => void;
 }) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
+  const [facetsOpen, setFacetsOpen] = React.useState(false);
+  const facetsId = React.useId();
 
   // Count active filters (each non-empty facet + a non-empty search + archived)
   // so we can offer a one-click reset (bead 3it).
@@ -54,8 +56,8 @@ export function FilterBar({
 
   return (
     <>
-      <div className="relative h-9 min-w-9 max-w-[280px] flex-1">
-        <label className="absolute inset-y-0 left-0 z-10 flex w-full cursor-text items-center gap-[7px] overflow-hidden rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] transition-[width] duration-150 focus-within:z-30 focus-within:w-[280px] focus-within:shadow-lg">
+      <div className="relative h-9 min-w-9 max-w-[280px] flex-1 max-md:order-1 max-md:h-11 max-md:max-w-none max-md:basis-full">
+        <label className="absolute inset-y-0 left-0 z-10 flex w-full cursor-text items-center gap-[7px] overflow-hidden rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] transition-[width] duration-150 focus-within:z-30 focus-within:w-[280px] focus-within:shadow-lg max-md:focus-within:w-full">
           <Icon
             name="search"
             size={15}
@@ -71,7 +73,24 @@ export function FilterBar({
         </label>
       </div>
 
-      <div className="flex items-center gap-[7px]">
+      {/* Phones: the facets sit behind one Filters button instead of a row wider than the screen. */}
+      <button
+        type="button"
+        aria-expanded={facetsOpen}
+        aria-controls={facetsId}
+        onClick={() => setFacetsOpen((o) => !o)}
+        className="flex h-11 flex-shrink-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] max-md:order-2 md:hidden"
+        style={active > 0 ? { borderColor: "var(--brand)", color: "var(--brand)" } : undefined}
+      >
+        <Icon name="settings" size={14} />
+        <span>{active > 0 ? `Filters · ${active}` : "Filters"}</span>
+        <Icon name="chevron" size={13} className={`opacity-60 transition-transform ${facetsOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <div
+        id={facetsId}
+        className={`${facetsOpen ? "flex" : "max-md:hidden md:flex"} flex-wrap items-center gap-[7px] max-md:order-4 max-md:basis-full`}
+      >
         <MultiSelectFilter
           label="Status"
           options={BEAD_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))}
@@ -124,7 +143,7 @@ export function FilterBar({
         <button
           onClick={() => onShowArchived(!showArchived)}
           title="Toggle archived"
-          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[11px] text-label font-medium"
+          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[11px] text-label font-medium tap-target"
           style={{
             border: `1px solid ${showArchived ? "var(--brand)" : "var(--border)"}`,
             background: showArchived ? "var(--brand-weak)" : "var(--surface-2)",
@@ -138,7 +157,7 @@ export function FilterBar({
           <button
             onClick={clearAll}
             title="Clear all filters"
-            className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+            className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] tap-target"
           >
             <Icon name="x" size={14} />
             <span>Clear · {active}</span>

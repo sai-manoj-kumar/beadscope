@@ -34,7 +34,7 @@ export function MultiSelectFilter({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-9 items-center gap-[6px] rounded-[9px] border px-[11px] text-label font-medium focus:outline-none"
+        className="flex h-9 items-center gap-[6px] rounded-[9px] border px-[11px] text-label font-medium focus:outline-none tap-target"
         style={{
           borderColor: active ? "var(--brand)" : "var(--border)",
           background: active ? "var(--brand-weak)" : "var(--surface-2)",
