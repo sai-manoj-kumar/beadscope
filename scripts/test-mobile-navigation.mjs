@@ -41,8 +41,13 @@ async function mobileCheck(width) {
     await assertNoPageOverflow(page, `${width}px initial`);
 
     const bodyLockBaseline = await page.evaluate(() => document.body.style.overflow);
-    await menu.click();
-    await page.getByRole("heading", { name: "Project and view navigation", exact: true }).waitFor();
+    // A tap before React hydrates does nothing, so tap again until the sheet opens.
+    const sheetTitle = page.getByRole("heading", { name: "Project and view navigation", exact: true });
+    for (let attempt = 0; attempt < 20 && !(await sheetTitle.isVisible()); attempt++) {
+      await menu.click();
+      await page.waitForTimeout(500);
+    }
+    await sheetTitle.waitFor();
     await page.setViewportSize({ width: 1280, height: 844 });
     await assertSheetClosed(page, `${width}px → 1280px resize`, { expectFocus: false });
     assert.equal(

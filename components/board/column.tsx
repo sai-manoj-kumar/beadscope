@@ -5,6 +5,8 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import type { Bead } from "@/lib/schema";
 import { BeadCard } from "./bead-card";
 import { cn } from "@/lib/utils";
+import { Icon } from "@/components/icons";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 export interface ColumnDef {
   id: string;
@@ -35,23 +37,45 @@ export function Column({
   dropTarget?: boolean;
 }) {
   const { setNodeRef } = useDroppable({ id: col.id, disabled: !col.droppable });
+  // Phones stack the columns and fold each one; the long Done column starts folded.
+  const mobile = useIsMobile();
+  const [folded, setFolded] = React.useState<boolean | null>(null);
+  const isFolded = mobile && (folded ?? col.id === "done");
+  const listId = React.useId();
 
   return (
-    <section className="flex w-[296px] min-h-0 flex-shrink-0 flex-col">
-      <div className="flex flex-shrink-0 items-center gap-2 px-1 pb-3">
-        <span className="h-[9px] w-[9px] rounded-[3px]" style={{ background: col.color }} />
-        <span className="text-body font-semibold tracking-[-.005em]">{col.name}</span>
-        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
-          {cards.length}
-        </span>
-        <span className="flex-1" />
+    <section className="flex w-[296px] min-h-0 flex-shrink-0 flex-col max-md:w-full max-md:flex-shrink">
+      <div className="flex flex-shrink-0 items-center gap-2 px-1 pb-3 max-md:pb-2">
+        <button
+          type="button"
+          aria-expanded={!isFolded}
+          aria-controls={listId}
+          disabled={!mobile}
+          onClick={() => setFolded(!isFolded)}
+          className="flex min-w-0 items-center gap-2 text-left max-md:min-h-11 max-md:flex-1 md:cursor-default"
+        >
+          <span className="h-[9px] w-[9px] flex-shrink-0 rounded-[3px]" style={{ background: col.color }} />
+          <span className="text-body font-semibold tracking-[-.005em]">{col.name}</span>
+          <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
+            {cards.length}
+          </span>
+          <Icon
+            name="chevron"
+            size={14}
+            className={`text-[var(--text-3)] transition-transform md:hidden ${isFolded ? "-rotate-90" : ""}`}
+          />
+        </button>
+        <span className="flex-1 max-md:hidden" />
         {control ?? <span className="font-mono text-meta text-[var(--text-3)]">{col.cmd}</span>}
       </div>
 
       <div
+        id={listId}
         ref={setNodeRef}
+        hidden={isFolded}
         className={cn(
-          "bd-scroll flex min-h-0 flex-1 flex-col gap-[10px] overflow-y-auto overflow-x-hidden rounded-xl p-[4px_4px_14px] transition-[background,outline]",
+          "bd-scroll flex min-h-0 flex-1 flex-col gap-[10px] overflow-y-auto overflow-x-hidden rounded-xl p-[4px_4px_14px] transition-[background,outline] max-md:overflow-visible max-md:p-[4px_0_14px]",
+          isFolded && "hidden",
           dropTarget
             ? "bg-[var(--brand-weak)] outline-2 outline-dashed outline-[var(--brand)] -outline-offset-2"
             : "outline-2 outline-transparent",

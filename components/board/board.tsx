@@ -30,6 +30,7 @@ import {
   sortBoardCards,
   type BoardSortMode,
 } from "@/lib/board-columns";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { BeadCardOverlay } from "./bead-card";
 import { Column } from "./column";
 import type { Bead } from "@/lib/schema";
@@ -77,9 +78,10 @@ export function Board() {
   // needn't tick) and kept out of render to satisfy the no-impure-call rule.
   const [now] = React.useState(() => Date.now());
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
+  // No sensors on phones, so nothing can start a drag (status changes in the drawer).
+  const mobile = useIsMobile();
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 5 } });
+  const sensors = useSensors(...(mobile ? [] : [pointerSensor]));
 
   // The card being dragged and the column under the pointer. The card renders in a
   // DragOverlay so it can travel across columns; in place it is confined to (and
@@ -241,7 +243,7 @@ export function Board() {
         </>}
       />
 
-      <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px]">
+      <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px] max-md:overflow-x-hidden max-md:overflow-y-auto max-md:p-[8px_16px_24px]">
         {loading && beads.length === 0 ? (
           <div className="text-body text-[var(--text-3)]">Loading beads…</div>
         ) : (
@@ -253,7 +255,7 @@ export function Board() {
             onDragEnd={onDragEnd}
             onDragCancel={endDrag}
           >
-            <div className="flex h-full min-h-0 gap-4">
+            <div className="flex h-full min-h-0 gap-4 max-md:h-auto max-md:flex-col max-md:gap-1">
               {shownColumns.map(({ col, cards }) => (
                 <Column
                   key={col.id}
@@ -270,7 +272,7 @@ export function Board() {
                           setDoneWindow(e.target.value === "" ? null : Number(e.target.value))
                         }
                         title="Show only beads closed within this window"
-                        className="cursor-pointer rounded-[7px] border border-border bg-[var(--surface-2)] px-[7px] py-[3px] text-meta text-[var(--text-2)] outline-none"
+                        className="tap-target cursor-pointer rounded-[7px] border border-border bg-[var(--surface-2)] px-[7px] py-[3px] text-meta text-[var(--text-2)] outline-none"
                       >
                         <option value="">All time</option>
                         <option value="7">Last 7 days</option>

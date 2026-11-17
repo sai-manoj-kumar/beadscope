@@ -6,6 +6,7 @@ import type { Bead } from "@/lib/schema";
 import { Icon, typeIconName } from "@/components/icons";
 import { useApp } from "@/components/app-context";
 import { CopyableId } from "@/components/copyable-id";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { beadOrigin, originTitle } from "@/lib/attribution";
 import {
   catColor,
@@ -23,17 +24,21 @@ import {
 
 export function BeadCard({ bead, childCount = 0 }: { bead: Bead; childCount?: number }) {
   const { openDetail, readOnly, selectedBeadId, selectBead } = useApp();
+  // Phones do not drag: status changes in the drawer, and a draggable card would swallow the
+  // touch that should scroll the page.
+  const mobile = useIsMobile();
+  const noDrag = readOnly || mobile;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bead.id,
-    disabled: readOnly,
+    disabled: noDrag,
   });
 
   return (
     <article
       ref={setNodeRef}
-      {...listeners}
-      {...(readOnly ? { role: "button", tabIndex: 0 } : attributes)}
-      {...(readOnly ? { onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+      {...(mobile ? {} : listeners)}
+      {...(noDrag ? { role: "button", tabIndex: 0 } : attributes)}
+      {...(noDrag ? { onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
         if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetail(bead.id); }
       } } : {})}
@@ -50,7 +55,7 @@ export function BeadCard({ bead, childCount = 0 }: { bead: Bead; childCount?: nu
         opacity: isDragging ? 0.4 : 1,
         zIndex: isDragging ? 10 : undefined,
       }}
-      className={`flex cursor-pointer touch-none flex-col gap-[9px] rounded-[11px] border bg-[var(--surface)] p-[12px_13px] shadow-[var(--shadow)] transition-[border-color] hover:border-2 hover:p-[11px_12px] focus-visible:outline-none ${
+      className={`flex cursor-pointer flex-col md:touch-none gap-[9px] rounded-[11px] border bg-[var(--surface)] p-[12px_13px] shadow-[var(--shadow)] transition-[border-color] hover:border-2 hover:p-[11px_12px] focus-visible:outline-none ${
         selectedBeadId === bead.id
           ? "border-[var(--brand)] hover:border-[var(--text-3)] ring-2 ring-[var(--brand)]/30"
           : "border-border hover:border-[var(--text-3)]"
@@ -78,6 +83,7 @@ export function BeadCardOverlay({ bead, childCount = 0 }: { bead: Bead; childCou
 }
 
 function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; childCount: number; preview?: boolean }) {
+  const mobile = useIsMobile();
   const { index, humanAllowlist } = useApp();
   const o = beadOrigin(bead, humanAllowlist);
   const parent = parentOf(bead, index);
@@ -95,7 +101,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
           style={{ background: catColor(bead.status) }}
           title={statusLabel(bead.status)}
         />
-        {preview ? (
+        {preview || mobile ? (
           <span className="font-mono text-meta tracking-[-.01em] text-[var(--text-3)]">{bead.id}</span>
         ) : (
           <CopyableId
