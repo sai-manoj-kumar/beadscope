@@ -3,6 +3,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { type BeadType } from "@/lib/schema";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useBeads } from "@/hooks/use-beads";
 import { useBeadsStream } from "@/hooks/use-beads-stream";
 import { useLastView } from "@/hooks/use-last-view";
@@ -30,6 +31,26 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from 
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { useNotificationActivation } from "@/hooks/use-notifications";
 import { Menu } from "lucide-react";
+
+/**
+ * Puts ?bead= back when it is missing while a bead is open. Next's router rewrites the URL to its
+ * own canonical copy when a pending transition (a view or filter change made just before) finishes,
+ * which can drop the param after AppShell wrote it. Next reports that through useSearchParams, so
+ * this runs again then. Only a missing param is restored: a URL that names a different bead is a
+ * history change in flight. It is its own component, inside its own Suspense boundary, because
+ * useSearchParams at the root of AppShell changes how the whole shell hydrates.
+ */
+function RestoreBeadParam({ openId }: { openId: string | null }) {
+  const searchParams = useSearchParams();
+  React.useEffect(() => {
+    if (!openId) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("bead")) return;
+    url.searchParams.set("bead", openId);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [openId, searchParams]);
+  return null;
+}
 
 export function AppShell({ projectId }: { projectId: string }) {
   const [view, setView] = useLastView();
@@ -325,6 +346,9 @@ export function AppShell({ projectId }: { projectId: string }) {
         toggleThemeAction={toggleTheme}
       />
       <NotificationWatcher projectId={projectId} />
+      <React.Suspense fallback={null}>
+        <RestoreBeadParam openId={openId} />
+      </React.Suspense>
     </AppProvider>
   );
 }
