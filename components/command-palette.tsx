@@ -152,7 +152,7 @@ function PaletteBody({
           <button
             onClick={goBack}
             title="Back"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+            className="tap-target flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
           >
             <Icon name="chevron" size={16} className="rotate-90" />
           </button>
@@ -366,7 +366,7 @@ function Item({
     <Command.Item
       value={value}
       onSelect={onSelect}
-      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-body text-[var(--text)] data-[selected=true]:bg-[var(--surface-2)]"
+      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] max-md:py-3 text-body text-[var(--text)] data-[selected=true]:bg-[var(--surface-2)]"
     >
       {dotColor ? (
         <span className="h-[8px] w-[8px] flex-shrink-0 rounded-full" style={{ background: dotColor }} />
@@ -400,7 +400,7 @@ function BeadItem({
     <Command.Item
       value={`${valuePrefix}${bead.id} ${bead.title}`}
       onSelect={onSelect}
-      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] text-body data-[selected=true]:bg-[var(--surface-2)]"
+      className="flex cursor-pointer items-center gap-[10px] rounded-[8px] px-3 py-[7px] max-md:py-3 text-body data-[selected=true]:bg-[var(--surface-2)]"
     >
       <span
         className="h-[8px] w-[8px] flex-shrink-0 rounded-full"

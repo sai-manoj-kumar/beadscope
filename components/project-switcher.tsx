@@ -56,7 +56,7 @@ export function ProjectSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Select project, current project ${currentName}`}
-          className="mb-[6px] flex w-full items-center gap-[9px] rounded-[10px] border border-border bg-[var(--surface-2)] px-[11px] py-[9px] text-left hover:bg-[var(--surface-3)] focus:outline-none"
+          className="mb-[6px] flex w-full items-center gap-[9px] rounded-[10px] border border-border bg-[var(--surface-2)] px-[11px] py-[9px] text-left hover:bg-[var(--surface-3)] focus:outline-none tap-target"
         >
           {dot}
           <div className="min-w-0 flex-1 leading-[1.15]">

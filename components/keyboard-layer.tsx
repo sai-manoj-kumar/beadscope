@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { OPEN_PALETTE_EVENT } from "@/lib/breakpoints";
 import type { DetailAction, View } from "@/components/app-context";
 import { CommandPalette, type PalettePage } from "@/components/command-palette";
 import { KeyboardHelpDialog } from "@/components/keyboard-help-dialog";
@@ -83,6 +84,12 @@ export function KeyboardLayer({
     ],
   );
   useAppKeyboardShortcuts(actions);
+  // The top bar button on phones asks for the palette with this event.
+  React.useEffect(() => {
+    const open = () => openPalette();
+    window.addEventListener(OPEN_PALETTE_EVENT, open);
+    return () => window.removeEventListener(OPEN_PALETTE_EVENT, open);
+  }, [openPalette]);
 
   return (
     <>

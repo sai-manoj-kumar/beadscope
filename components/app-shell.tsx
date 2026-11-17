@@ -30,7 +30,8 @@ import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { useNotificationActivation } from "@/hooks/use-notifications";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import { OPEN_PALETTE_EVENT } from "@/lib/breakpoints";
 
 /**
  * Puts ?bead= back when it is missing while a bead is open. Next's router rewrites the URL to its
@@ -244,7 +245,7 @@ export function AppShell({ projectId }: { projectId: string }) {
             <SheetTrigger
               type="button"
               aria-label="Open navigation and project menu"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-border bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] border border-border bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
             >
               <Menu size={18} aria-hidden="true" />
               <span className="sr-only">Open navigation and project menu</span>
@@ -271,6 +272,15 @@ export function AppShell({ projectId }: { projectId: string }) {
           <div className="min-w-0 flex-1 truncate text-label font-semibold text-[var(--text)]">
             Beadscope
           </div>
+          {/* The command palette (search, jump to a bead, change status) has no keyboard on a phone. */}
+          <button
+            type="button"
+            aria-label="Search and commands"
+            onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] border border-border bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+          >
+            <Search size={18} aria-hidden="true" />
+          </button>
         </div>
         <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar

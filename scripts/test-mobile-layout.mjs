@@ -13,7 +13,7 @@ const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 
 const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish", "list"]);
-const TAP_TARGETS_OK = new Set([]);
+const TAP_TARGETS_OK = new Set(["list", "activity", "achievements"]);
 const WIDTHS = [360, 390, 430];
 
 const browser = await chromium.launch({ executablePath: process.env.BEADSCOPE_BROWSER_EXECUTABLE || undefined });
