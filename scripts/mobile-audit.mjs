@@ -13,9 +13,10 @@
 //   smallTargets buttons, links and fields under 44px in either direction
 import { chromium } from "playwright";
 
-/** Runs in the page. Returns plain data. */
-export function pageAudit() {
+/** Runs in the page. Returns plain data. Pass a selector to audit one overlay (a dialog, the nav sheet) instead of the whole page. */
+export function pageAudit(rootSelector) {
   const vw = document.documentElement.clientWidth;
+  const scope = (rootSelector && document.querySelector(rootSelector)) || document.body;
   const label = (el) => {
     const text = (el.getAttribute("aria-label") || el.textContent || el.getAttribute("placeholder") || "").trim().replace(/\s+/g, " ").slice(0, 28);
     return `${el.tagName.toLowerCase()}${text ? ` "${text}"` : ""}`;
@@ -29,7 +30,7 @@ export function pageAudit() {
   const inAllowedScroller = (el) => !!el.closest("[data-allow-x-scroll]");
 
   const overflow = [];
-  for (const el of document.body.querySelectorAll("*")) {
+  for (const el of scope.querySelectorAll("*")) {
     if (el.closest("svg") && el.tagName.toLowerCase() !== "svg") continue;
     if (!visible(el) || inAllowedScroller(el)) continue;
     if (getComputedStyle(el).position === "fixed") continue;
@@ -38,7 +39,7 @@ export function pageAudit() {
   }
 
   const smallText = {};
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (!node.textContent.trim()) continue;
     const el = node.parentElement;
@@ -47,14 +48,14 @@ export function pageAudit() {
     if (size < 14) (smallText[size] ??= []).push(node.textContent.trim().slice(0, 24));
   }
 
-  const smallInputs = [...document.querySelectorAll("input, textarea, select")]
+  const smallInputs = [...scope.querySelectorAll("input, textarea, select")]
     .filter((el) => visible(el) && !["checkbox", "radio", "range", "file", "hidden"].includes(el.type))
     .filter((el) => parseFloat(getComputedStyle(el).fontSize) < 16)
     .map(label);
 
   const targetSelector = "button, a[href], [role=button], [role=tab], [role=menuitem], [role=option], [role=combobox], input, select, textarea, summary";
   const smallTargets = [];
-  for (const el of document.querySelectorAll(targetSelector)) {
+  for (const el of scope.querySelectorAll(targetSelector)) {
     if (!visible(el)) continue;
     if (el.tagName === "A" && getComputedStyle(el).display === "inline") continue; // a link inside a sentence
     const box = ["checkbox", "radio"].includes(el.type) || ["INPUT", "SELECT", "TEXTAREA"].includes(el.tagName) ? el.closest("label") || el : el; // a field inside a label is tapped through the label
@@ -96,4 +97,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const t of a.smallTargets.slice(0, 5)) console.log(`    small target: ${t}`);
   }
   await browser.close();
+}
+
+/** Audit just the open dialog / sheet / menu matching `selector` (default: any open dialog). */
+export function auditOverlay(page, selector = '[role="dialog"]') {
+  return page.evaluate(pageAudit, selector);
 }

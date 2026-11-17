@@ -9,7 +9,7 @@ import { APP_VERSION, BUILD_NUMBER, BUILD_SHA, commitUrl } from "@/lib/build-inf
  */
 export function BuildBadge() {
   return (
-    <div className="flex items-center gap-1 px-1 text-meta leading-none text-[var(--text-3)]">
+    <div className="flex items-center gap-1 px-1 text-meta leading-none text-[var(--text-3)] max-md:min-h-11">
       <span>v{APP_VERSION}</span>
       {BUILD_SHA && <><span>
         Build {BUILD_NUMBER || "—"} <span className="text-[var(--text-3)]">·</span>
@@ -19,7 +19,7 @@ export function BuildBadge() {
         target="_blank"
         rel="noopener noreferrer"
         title="View this commit’s comments on GitHub"
-        className="font-mono text-[var(--text-3)] underline-offset-2 hover:text-[var(--text)] hover:underline"
+        className="flex items-center font-mono text-[var(--text-3)] underline-offset-2 hover:text-[var(--text)] hover:underline max-md:min-h-11 max-md:min-w-11"
       >
         {BUILD_SHA}
       </a></>}

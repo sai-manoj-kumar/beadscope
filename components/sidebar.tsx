@@ -102,7 +102,7 @@ export function Sidebar({
               key={n.key}
               onClick={() => onView(n.key)}
               className={cn(
-                "flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left text-body transition-colors",
+                "flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left text-body transition-colors tap-target",
                 active
                   ? "bg-[var(--brand-weak)] font-semibold text-[var(--brand)]"
                   : "font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
@@ -150,7 +150,7 @@ export function Sidebar({
           </div>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex w-full items-center gap-[10px] rounded-[9px] border border-border bg-[var(--surface)] px-[10px] py-2 text-left text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus:outline-none">
+          <DropdownMenuTrigger className="flex w-full items-center gap-[10px] rounded-[9px] border border-border bg-[var(--surface)] px-[10px] py-2 text-left text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus:outline-none tap-target">
             <Icon name="bug" size={16} className="flex-shrink-0" />
             <span className="flex-1">Report / request</span>
             <Icon name="chevron" size={14} className="flex-shrink-0 text-[var(--text-3)]" />
@@ -183,7 +183,7 @@ export function Sidebar({
             onClick={toggle}
             title={themeButton.title}
             aria-label={themeButton.title}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] tap-target"
           >
             <Icon name={themeButton.icon} size={15} />
           </button>

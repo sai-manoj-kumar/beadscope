@@ -74,7 +74,7 @@ function Browser({ onClose }: { onClose: () => void }) {
         <button
           onClick={() => setPath(undefined)}
           title="Home"
-          className="flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+          className="tap-target flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
         >
           <Home size={14} />
         </button>
@@ -82,7 +82,7 @@ function Browser({ onClose }: { onClose: () => void }) {
           onClick={() => data?.parent && setPath(data.parent)}
           disabled={!data?.parent}
           title="Up one level"
-          className="flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] disabled:opacity-40"
+          className="tap-target flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] disabled:opacity-40"
         >
           <ArrowUp size={14} />
         </button>
@@ -101,7 +101,7 @@ function Browser({ onClose }: { onClose: () => void }) {
           autoComplete="off"
           placeholder="Type or paste a path, then press Enter"
           aria-label="Folder path"
-          className={`min-w-0 flex-1 rounded-lg border bg-[var(--surface)] px-[10px] py-[6px] font-mono text-label text-[var(--text)] outline-none focus:border-[var(--brand)] ${
+          className={`min-w-0 flex-1 rounded-lg border bg-[var(--surface)] px-[10px] py-[6px] max-md:min-h-11 font-mono text-label text-[var(--text)] outline-none focus:border-[var(--brand)] ${
             errMsg ? "border-[#d97706]" : "border-border"
           }`}
         />
@@ -119,7 +119,7 @@ function Browser({ onClose }: { onClose: () => void }) {
             <p className="text-label text-[var(--text-2)]">{errMsg}</p>
             <button
               onClick={() => setPath(undefined)}
-              className="rounded-md border border-border px-2.5 py-1 text-label hover:bg-[var(--surface-2)]"
+              className="tap-target rounded-md border border-border px-2.5 py-1 text-label hover:bg-[var(--surface-2)]"
             >
               Go home
             </button>
@@ -134,7 +134,7 @@ function Browser({ onClose }: { onClose: () => void }) {
               key={entry.path}
               onDoubleClick={() => setPath(entry.path)}
               onClick={() => setPath(entry.path)}
-              className="flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left hover:bg-[var(--surface-2)]"
+              className="flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left tap-target hover:bg-[var(--surface-2)]"
             >
               <Folder
                 size={16}
@@ -167,14 +167,14 @@ function Browser({ onClose }: { onClose: () => void }) {
         </div>
         <button
           onClick={onClose}
-          className="h-[36px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium hover:bg-[var(--surface-3)]"
+          className="tap-target h-[36px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium hover:bg-[var(--surface-3)]"
         >
           Cancel
         </button>
         <button
           onClick={() => data?.path && add.mutate(data.path)}
           disabled={!data?.hasBeads || add.isPending}
-          className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
+          className="tap-target flex h-[36px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           {add.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={15} />}
