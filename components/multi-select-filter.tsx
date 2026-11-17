@@ -34,7 +34,7 @@ export function MultiSelectFilter({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex h-9 items-center gap-[6px] rounded-[9px] border px-[11px] text-[12.5px] font-medium focus:outline-none"
+        className="flex h-9 items-center gap-[6px] rounded-[9px] border px-[11px] text-label font-medium focus:outline-none"
         style={{
           borderColor: active ? "var(--brand)" : "var(--border)",
           background: active ? "var(--brand-weak)" : "var(--surface-2)",
@@ -43,7 +43,7 @@ export function MultiSelectFilter({
       >
         <span>{label}</span>
         {active && (
-          <span className="rounded-full bg-[var(--brand)] px-[6px] text-[10.5px] font-semibold leading-[16px] text-white">
+          <span className="rounded-full bg-[var(--brand)] px-[6px] text-meta font-semibold leading-[16px] text-white">
             {selected.length}
           </span>
         )}

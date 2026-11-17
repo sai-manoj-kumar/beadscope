@@ -237,7 +237,7 @@ export function AppShell({ projectId }: { projectId: string }) {
         openEpic,
       }}
     >
-      <div className="flex h-full flex-col overflow-hidden bg-background text-foreground text-sm">
+      <div className="flex h-full flex-col overflow-hidden bg-background text-foreground text-body">
         <ReadOnlyBanner />
         <div className="flex shrink-0 items-center gap-2 border-b border-border bg-[var(--surface)] px-3 py-2 md:hidden">
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
@@ -268,7 +268,7 @@ export function AppShell({ projectId }: { projectId: string }) {
               />
             </SheetContent>
           </Sheet>
-          <div className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-[var(--text)]">
+          <div className="min-w-0 flex-1 truncate text-label font-semibold text-[var(--text)]">
             Beadscope
           </div>
         </div>
@@ -284,11 +284,11 @@ export function AppShell({ projectId }: { projectId: string }) {
           {errorMessage && view !== "settings" ? (
             <div className="flex flex-1 items-center justify-center p-8">
               <div className="max-w-md rounded-lg border border-destructive/40 bg-destructive/5 p-6 text-center">
-                <p className="text-sm font-medium text-destructive">Couldn’t open this project</p>
-                <p className="mt-2 text-sm text-muted-foreground">{errorMessage}</p>
+                <p className="text-body font-medium text-destructive">Couldn’t open this project</p>
+                <p className="mt-2 text-body text-muted-foreground">{errorMessage}</p>
                 <Link
                   href="/"
-                  className="mt-4 inline-block rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+                  className="mt-4 inline-block rounded-md border px-3 py-1.5 text-body hover:bg-accent"
                 >
                   ← Back to projects
                 </Link>

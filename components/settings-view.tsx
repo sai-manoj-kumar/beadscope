@@ -18,7 +18,7 @@ import { UsageStatisticsSetting } from "@/components/usage-statistics";
 import { AgentsSettings } from "@/components/agents-settings";
 
 const inputClass =
-  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-[12.5px] text-[var(--text)] outline-none focus:border-[var(--brand)]";
+  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-label text-[var(--text)] outline-none focus:border-[var(--brand)]";
 
 export function SettingsView() {
   const { projectId } = useApp();
@@ -32,8 +32,8 @@ export function SettingsView() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex-shrink-0 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <h1 className="m-0 text-base font-[650] tracking-[-.01em]">Settings</h1>
-        <span className="text-[11.5px] text-[var(--text-3)]">
+        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Settings</h1>
+        <span className="text-meta text-[var(--text-3)]">
           Local config · stored under the OS config dir, not in beads
         </span>
       </header>
@@ -42,7 +42,7 @@ export function SettingsView() {
         {data ? (
           <SettingsForm key={key} data={data} />
         ) : (
-          <div className="text-[13px] text-[var(--text-3)]">Loading…</div>
+          <div className="text-body text-[var(--text-3)]">Loading…</div>
         )}
       </div>
     </div>
@@ -55,8 +55,8 @@ function DefaultViewSetting() {
     <Card title="Default view">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <div id="default-focus-label" className="text-[13px]">Use Focus as the default view</div>
-          <p id="default-focus-description" className="m-0 mt-1 text-[11.5px] text-[var(--text-3)]">
+          <div id="default-focus-label" className="text-body">Use Focus as the default view</div>
+          <p id="default-focus-description" className="m-0 mt-1 text-meta text-[var(--text-3)]">
             Off opens projects in Board. Turn on to open in Focus instead, showing
             current work, blockers, and high-priority next steps. Links to a specific
             view open that view, including on reload. Switching views does not change this setting.
@@ -72,7 +72,7 @@ function DefaultViewSetting() {
             try { save(!enabled); }
             catch { toast.error("Could not save the default view. Browser storage may be unavailable."); }
           }}
-          className="flex h-[34px] shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-[12.5px] hover:bg-[var(--surface-3)]"
+          className="flex h-[34px] shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)]"
         >
           <Icon name={enabled ? "check" : "x"} size={14} />
           <span>{enabled ? "On" : "Off"}</span>
@@ -128,12 +128,12 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
     <div className="mx-auto flex max-w-[620px] flex-col gap-[18px]">
       <Card title="Project">
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[12px] text-[var(--text-2)]">{data.project?.name ?? "—"}</span>
-          <span className="break-all font-mono text-[12px] text-[var(--text-3)]">
+          <span className="text-label text-[var(--text-2)]">{data.project?.name ?? "—"}</span>
+          <span className="break-all font-mono text-label text-[var(--text-3)]">
             {isDemo ? "built-in sample data (no path)" : data.repoPath}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-[var(--text-2)]">
+        <div className="flex items-center gap-2 text-label text-[var(--text-2)]">
           <Icon
             name={data.ok ? "check" : "x"}
             size={14}
@@ -145,14 +145,14 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
               : `${data.message}${data.version ? ` · ${data.version}` : ""}`}
           </span>
         </div>
-        <div className="text-[11.5px] text-[var(--text-3)]">
+        <div className="text-meta text-[var(--text-3)]">
           Use the project menu on desktop or open the mobile Menu to switch projects.
         </div>
       </Card>
 
       <Card title="Attribution">
         <label className="flex flex-col gap-[6px]">
-          <span className="text-[12px] text-[var(--text-2)]">
+          <span className="text-label text-[var(--text-2)]">
             Human actor (stamps <span className="font-mono">BEADS_ACTOR</span>)
           </span>
           <input
@@ -163,14 +163,14 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
           />
         </label>
         <div className="flex flex-col gap-[7px]">
-          <span className="text-[12px] text-[var(--text-2)]">
+          <span className="text-label text-[var(--text-2)]">
             Human allowlist · others render as agent
           </span>
           <div className="flex flex-wrap gap-[7px]">
             {allowlist.map((n) => (
               <span
                 key={n}
-                className="inline-flex items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-[9px] py-1 text-[12px]"
+                className="inline-flex items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-[9px] py-1 text-label"
               >
                 {n}
                 <button
@@ -191,11 +191,11 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
                 }
               }}
               placeholder="+ add name, Enter"
-              className="w-[120px] rounded-lg border border-dashed border-[var(--border-strong)] bg-transparent px-[9px] py-1 text-[12px] text-[var(--text)] outline-none"
+              className="w-[120px] rounded-lg border border-dashed border-[var(--border-strong)] bg-transparent px-[9px] py-1 text-label text-[var(--text)] outline-none"
             />
           </div>
         </div>
-        <div className="text-[11.5px] text-[var(--text-3)]">
+        <div className="text-meta text-[var(--text-3)]">
           Attribution is global — it applies to every project.
         </div>
       </Card>
@@ -207,8 +207,8 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
       <Card title="Freshness & theme">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[13px]">Fallback refresh interval</div>
-            <div className="text-[11.5px] text-[var(--text-3)]">
+            <div className="text-body">Fallback refresh interval</div>
+            <div className="text-meta text-[var(--text-3)]">
               Live changes stream in instantly; this only backstops a dropped stream
             </div>
           </div>
@@ -224,15 +224,15 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
               aria-label="Fallback refresh interval in seconds"
               className={`${inputClass} w-[72px] text-right font-mono`}
             />
-            <span className="font-mono text-[13px] text-[var(--text-3)]">s</span>
+            <span className="font-mono text-body text-[var(--text-3)]">s</span>
           </div>
         </div>
         <div className="flex flex-col gap-[10px]">
           <div>
-            <div className="text-[13px]">Theme</div>
-            <div className="text-[11.5px] text-[var(--text-3)]">
+            <div className="text-body">Theme</div>
+            <div className="text-meta text-[var(--text-3)]">
               Saved per project — each project remembers its own theme on this device.
-              Currently <span className="font-[550] text-[var(--text-2)]">{choice === SYSTEM_CHOICE.id ? `System (${theme.name})` : theme.name}</span>.
+              Currently <span className="font-medium text-[var(--text-2)]">{choice === SYSTEM_CHOICE.id ? `System (${theme.name})` : theme.name}</span>.
             </div>
           </div>
           <div className="grid grid-cols-2 gap-[8px] sm:grid-cols-3">
@@ -255,10 +255,10 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
                     ))}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-[550] text-[var(--text)]">
+                    <span className="block truncate text-label font-medium text-[var(--text)]">
                       {t.name}
                     </span>
-                    <span className="block text-[10.5px] capitalize text-[var(--text-3)]">
+                    <span className="block text-meta capitalize text-[var(--text-3)]">
                       {t.id === SYSTEM_CHOICE.id ? "follows OS" : t.mode}
                     </span>
                   </span>
@@ -283,7 +283,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
         <button
           onClick={() => save.mutate()}
           disabled={save.isPending}
-          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="check" size={15} />
@@ -301,7 +301,7 @@ function KeyboardShortcutsCard() {
       <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
         {KEYBOARD_SHORTCUT_GROUPS.map((group) => (
           <section key={group.topic}>
-            <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-[.08em] text-[var(--text-3)]">
+            <h3 className="mb-1.5 text-meta font-semibold uppercase tracking-[.08em] text-[var(--text-3)]">
               {group.topic}
             </h3>
             <div className="flex flex-col gap-1">
@@ -310,7 +310,7 @@ function KeyboardShortcutsCard() {
                   key={`${group.topic}-${shortcut.keys.join("-")}-${shortcut.label}`}
                   className="flex min-h-7 items-center justify-between gap-4"
                 >
-                  <span className="text-[12.5px] text-[var(--text-2)]">{shortcut.label}</span>
+                  <span className="text-label text-[var(--text-2)]">{shortcut.label}</span>
                   <ShortcutKeys keys={shortcut.keys} sequence={shortcut.sequence} />
                 </div>
               ))}
@@ -319,7 +319,7 @@ function KeyboardShortcutsCard() {
         ))}
       </div>
       <div className="flex items-center justify-between gap-4">
-        <span className="text-[11.5px] text-[var(--text-3)]">
+        <span className="text-meta text-[var(--text-3)]">
           Shortcuts are disabled while typing in a field. Press{" "}
           <kbd className="rounded border border-border bg-[var(--surface-2)] px-1.5 py-0.5 font-mono">
             ?
@@ -328,7 +328,7 @@ function KeyboardShortcutsCard() {
         </span>
         <button
           onClick={() => setHelpOpen(true)}
-          className="h-[30px] flex-shrink-0 rounded-[8px] border border-border px-3 text-[12.5px] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+          className="h-[30px] flex-shrink-0 rounded-[8px] border border-border px-3 text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
         >
           Open reference
         </button>
@@ -348,8 +348,8 @@ function BoardCard() {
     <Card title="Board">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <div className="text-[13px]">Blocked column</div>
-          <div className="text-[11.5px] text-[var(--text-3)]">
+          <div className="text-body">Blocked column</div>
+          <div className="text-meta text-[var(--text-3)]">
             Hide the Blocked column when nothing is blocked, or keep it pinned.
           </div>
         </div>
@@ -360,7 +360,7 @@ function BoardCard() {
               <button
                 key={o.value}
                 onClick={() => setPrefs({ ...prefs, blockedColumn: o.value })}
-                className="rounded-[7px] px-[11px] py-[6px] text-[12px] font-[550] transition-colors"
+                className="rounded-[7px] px-[11px] py-[6px] text-label font-medium transition-colors"
                 style={{
                   background: active ? "var(--brand)" : "transparent",
                   color: active ? "#fff" : "var(--text-2)",
@@ -383,8 +383,8 @@ function UpdatesCard() {
     <Card title="Software updates">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <div className="text-[13px]">Check for new versions</div>
-          <div className="text-[11.5px] text-[var(--text-3)]">
+          <div className="text-body">Check for new versions</div>
+          <div className="text-meta text-[var(--text-3)]">
             Check GitHub every five minutes and show new versions in the sidebar.
             This choice applies to this browser.
           </div>
@@ -394,13 +394,13 @@ function UpdatesCard() {
           aria-label="Check for new versions"
           aria-checked={on}
           onClick={() => setPrefs({ ...prefs, checkUpdates: !on })}
-          className="flex h-[34px] flex-shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-[12.5px] hover:bg-[var(--surface-3)]"
+          className="flex h-[34px] flex-shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)]"
         >
           <Icon name={on ? "check" : "x"} size={14} />
           <span>{on ? "Enabled" : "Disabled"}</span>
         </button>
       </div>
-      <label className="mt-4 flex items-center justify-between gap-4 text-[13px]">
+      <label className="mt-4 flex items-center justify-between gap-4 text-body">
         Update channel
         <select aria-label="Update channel" value={prefs.updateChannel}
           onChange={e => setPrefs({ ...prefs, updateChannel: e.target.value === "development" ? "development" : "stable" })}
@@ -409,7 +409,7 @@ function UpdatesCard() {
           <option value="development">Development (main)</option>
         </select>
       </label>
-      <p className="mt-2 text-[11.5px] text-[var(--text-3)]">
+      <p className="mt-2 text-meta text-[var(--text-3)]">
         Stable follows published versions and includes release notes. Development follows the latest
         commits on main and requires a Git checkout. Updates only install when you choose Update now.
       </p>
@@ -434,8 +434,8 @@ function GamificationCard() {
     <Card title="Gamification">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[13px]">Productivity XP &amp; levels</div>
-          <div className="text-[11.5px] text-[var(--text-3)]">
+          <div className="text-body">Productivity XP &amp; levels</div>
+          <div className="text-meta text-[var(--text-3)]">
             Earn XP for closing beads (weighted by priority and how many they unblock);
             a level/progress bar appears in the sidebar. Derived from bd history — opt-in.
           </div>
@@ -443,7 +443,7 @@ function GamificationCard() {
         <button
           onClick={() => save.mutate(!enabled)}
           disabled={save.isPending}
-          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-[12.5px] hover:bg-[var(--surface-3)] disabled:opacity-50"
+          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)] disabled:opacity-50"
         >
           <Icon name={enabled ? "check" : "x"} size={14} />
           <span>{enabled ? "Enabled" : "Disabled"}</span>
@@ -475,7 +475,7 @@ function NotificationsCard() {
         className="h-4 w-4 cursor-pointer disabled:opacity-40"
         style={{ accentColor: "var(--brand)" }}
       />
-      <span className={`text-[13px] ${prefs.enabled ? "text-[var(--text-2)]" : "text-[var(--text-3)]"}`}>
+      <span className={`text-body ${prefs.enabled ? "text-[var(--text-2)]" : "text-[var(--text-3)]"}`}>
         {label}
       </span>
     </label>
@@ -485,8 +485,8 @@ function NotificationsCard() {
     <Card title="Notifications">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-[13px]">Desktop &amp; toast notifications</div>
-          <div className="text-[11.5px] text-[var(--text-3)]">
+          <div className="text-body">Desktop &amp; toast notifications</div>
+          <div className="text-meta text-[var(--text-3)]">
             {unsupported
               ? "This browser does not support desktop notifications."
               : "Get notified when an agent finishes or blocks a bead, or escalates one to you."}
@@ -495,14 +495,14 @@ function NotificationsCard() {
         <button
           onClick={toggleEnabled}
           disabled={unsupported}
-          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-[12.5px] hover:bg-[var(--surface-3)] disabled:opacity-50"
+          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)] disabled:opacity-50"
         >
           <Icon name={prefs.enabled ? "check" : "x"} size={14} />
           <span>{prefs.enabled ? "Enabled" : "Disabled"}</span>
         </button>
       </div>
       {prefs.enabled && permission === "denied" && (
-        <div className="text-[11.5px] text-[#ef4444]">
+        <div className="text-meta text-[#ef4444]">
           Desktop permission is blocked in your browser — you will still see in-app toasts.
           Re-enable notifications for this site in your browser settings for desktop alerts.
         </div>
@@ -512,7 +512,7 @@ function NotificationsCard() {
         {cat("blocked", "A bead becomes blocked")}
         {cat("escalation", "A bead is escalated to you (Needs You)")}
       </div>
-      <div className="text-[11.5px] text-[var(--text-3)]">
+      <div className="text-meta text-[var(--text-3)]">
         Per-device — stored in this browser, not in beads. Your own (human) actions never notify.
       </div>
     </Card>
@@ -522,7 +522,7 @@ function NotificationsCard() {
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-[14px] rounded-[13px] border border-border bg-[var(--surface)] p-[18px_20px]">
-      <div className="text-[13.5px] font-semibold">{title}</div>
+      <div className="text-body font-semibold">{title}</div>
       {children}
     </section>
   );

@@ -42,14 +42,14 @@ export function NeedsYouView() {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2 border-b border-border px-6 py-4">
         <Icon name="user" size={18} className="text-[var(--text-2)]" />
-        <h1 className="text-[15px] font-[650]">Needs You</h1>
-        <span className="text-[12px] text-[var(--text-3)]">
+        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Needs You</h1>
+        <span className="text-label text-[var(--text-3)]">
           · {total === 0 ? "nothing waiting" : `${total} waiting on you`}
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {total === 0 ? (
-          <div className="p-10 text-center text-[13px] text-[var(--text-3)]">
+          <div className="p-10 text-center text-body text-[var(--text-3)]">
             🎉 Nothing needs you right now. Agents flag beads here with{" "}
             <span className="font-mono">bd human</span>, and human-approval gates
             (<span className="font-mono">bd gate create --type human</span>) show
@@ -82,7 +82,7 @@ function CardDescription({ bead }: { bead: Bead }) {
     <DescriptionContent
       text={bead.description}
       projectId={projectId}
-      className="mb-3 text-[12.5px] leading-[1.5] text-[var(--text-2)]"
+      className="mb-3 text-label leading-[1.5] text-[var(--text-2)]"
     />
   );
 }
@@ -90,13 +90,13 @@ function CardDescription({ bead }: { bead: Bead }) {
 function ReviewLinks({ bead }: { bead: Bead }) {
   const links = reviewLinks(bead);
   if (!links.length) return (
-    <p className="mb-3 text-[12px] text-[var(--text-3)]">
+    <p className="mb-3 text-label text-[var(--text-3)]">
       No supporting links found. Review the bead details before deciding.
     </p>
   );
   return (
     <div className="mb-3">
-      <div className="mb-1 text-[11px] font-semibold text-[var(--text-3)]">Links &amp; attachments</div>
+      <div className="mb-1 text-meta font-semibold text-[var(--text-3)]">Links &amp; attachments</div>
       <ReviewLinkChips links={links} />
     </div>
   );
@@ -127,28 +127,28 @@ function GateCard({ gate }: { gate: Bead }) {
         <Icon name="gate" size={15} style={{ color: "var(--brand)" }} />
         <button
           onClick={() => openDetail(gate.id)}
-          className="font-mono text-[11px] text-[var(--text-3)] hover:text-[var(--text)]"
+          className="font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
         >
           {gate.id}
         </button>
-        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-[1px] text-[10px] font-[650] uppercase tracking-wide text-[var(--text-2)]">
+        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-[1px] text-meta font-semibold uppercase tracking-wide text-[var(--text-2)]">
           Approval gate
         </span>
         <span className="flex-1" />
-        <span title={fmtDateTime(gate.updated_at)} className="text-[11px] text-[var(--text-3)]">
+        <span title={fmtDateTime(gate.updated_at)} className="text-meta text-[var(--text-3)]">
           {relTime(gate.updated_at)}
         </span>
       </div>
       <button
         onClick={() => openDetail(gate.id)}
-        className="mb-2 block text-left text-[14px] font-[600] leading-snug text-[var(--text)] hover:underline"
+        className="mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
       >
         {gate.title}
       </button>
       <CardDescription bead={gate} />
       <ReviewLinks bead={gate} />
       {blocks.length > 0 && (
-        <p className="mb-3 text-[12px] leading-[1.5] text-[var(--text-2)]">
+        <p className="mb-3 text-label leading-[1.5] text-[var(--text-2)]">
           Approving unblocks{" "}
           {blocks.map((b, i) => (
             <React.Fragment key={b.id}>
@@ -198,19 +198,19 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         <Icon name={typeIconName(bead.issue_type)} size={14} style={{ color: typeColor(bead.issue_type) }} />
         <button
           onClick={() => openDetail(bead.id)}
-          className="font-mono text-[11px] text-[var(--text-3)] hover:text-[var(--text)]"
+          className="font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
         >
           {bead.id}
         </button>
         <OriginBadge origin={o} title={o === "human" ? "Human" : "Agent"} />
         <span className="flex-1" />
-        <span title={fmtDateTime(bead.updated_at)} className="text-[11px] text-[var(--text-3)]">
+        <span title={fmtDateTime(bead.updated_at)} className="text-meta text-[var(--text-3)]">
           {relTime(bead.updated_at)}
         </span>
       </div>
       <button
         onClick={() => openDetail(bead.id)}
-        className="mb-2 block text-left text-[14px] font-[600] leading-snug text-[var(--text)] hover:underline"
+        className="mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
       >
         {bead.title}
       </button>
@@ -227,20 +227,20 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         }}
         rows={2}
         placeholder="Answer the agent's question… (posts a comment; the bead stays open)"
-        className="mb-2 w-full resize-y rounded-[9px] border border-border bg-[var(--surface-2)] p-[9px_11px] text-[13px] leading-[1.5] text-[var(--text)] outline-none focus:border-[var(--brand)]"
+        className="mb-2 w-full resize-y rounded-[9px] border border-border bg-[var(--surface-2)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none focus:border-[var(--brand)]"
       />
       <div className="flex items-center justify-end gap-2">
         <button
           disabled={readOnly || busy}
           onClick={() => dismiss.mutate({ id: bead.id })}
-          className="h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-[12.5px] font-[550] text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
+          className="h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
         >
           Dismiss
         </button>
         <button
           disabled={!canRespond}
           onClick={submit}
-          className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-[12.5px] font-[550] text-white disabled:opacity-50"
+          className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="check" size={14} /> Respond

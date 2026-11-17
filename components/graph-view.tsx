@@ -64,16 +64,16 @@ function BeadNode({ data }: NodeProps) {
       />
       <div className="mb-[5px] flex items-center gap-[6px]">
         <span className="h-2 w-2 rounded-full" style={{ background: catColor(bead.status) }} />
-        <span className="font-mono text-[10.5px] text-[var(--text-3)]">{bead.id}</span>
+        <span className="font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
         <span className="flex-1" />
         <Icon name={typeIconName(bead.issue_type)} size={12} style={{ color: typeColor(bead.issue_type) }} />
       </div>
       {outsideEpic && (
-        <div className="mb-[5px] w-fit rounded-full bg-[var(--surface-3)] px-[6px] py-[2px] text-[9px] font-[650] uppercase tracking-[.04em] text-[var(--text-3)]">
+        <div className="mb-[5px] w-fit rounded-full bg-[var(--surface-3)] px-[6px] py-[2px] text-meta font-semibold uppercase tracking-[.04em] text-[var(--text-3)]">
           Outside epic
         </div>
       )}
-      <div className="break-words text-[12px] font-[550] leading-[1.3] text-[var(--text)] [overflow-wrap:anywhere] [text-wrap:pretty]">
+      <div className="break-words text-label font-medium leading-[1.3] text-[var(--text)] [overflow-wrap:anywhere] [text-wrap:pretty]">
         {bead.title.replace(/\s*\([^)]*\)\s*/, "")}
       </div>
       <Handle
@@ -307,8 +307,8 @@ export function GraphView() {
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
         <div className="flex-1">
-          <h1 className="m-0 text-base font-[650] tracking-[-.01em]">Dependency graph</h1>
-          <span className="text-[11.5px] text-[var(--text-3)]">
+          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Dependency graph</h1>
+          <span className="text-meta text-[var(--text-3)]">
             {effectiveEpicId
               ? spotlight
                 ? "Left → right: prerequisite → dependent · select to spotlight active blocking chains; double-click for details"
@@ -339,7 +339,7 @@ export function GraphView() {
             setFocusId(null);
           }}
           title="Scope the graph to an epic and its descendants"
-          className="h-9 max-w-[280px] flex-shrink-0 cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[12.5px] font-[550] text-[var(--text-2)] outline-none hover:bg-[var(--surface-3)]"
+          className="h-9 max-w-[280px] flex-shrink-0 cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-label font-medium text-[var(--text-2)] outline-none hover:bg-[var(--surface-3)]"
         >
           <option value="">All beads</option>
           {epics.map((epic) => (
@@ -348,12 +348,12 @@ export function GraphView() {
             </option>
           ))}
         </select>
-        <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--text-2)]">
+        <label className="flex cursor-pointer items-center gap-2 text-label text-[var(--text-2)]">
           <input type="checkbox" checked={spotlight} className="accent-[var(--brand)]"
             onChange={e => { setSpotlight(e.target.checked); setFocusId(null); }} />
           Spotlight dependencies
         </label>
-        <label className="flex cursor-pointer items-center gap-2 text-[12px] text-[var(--text-2)]">
+        <label className="flex cursor-pointer items-center gap-2 text-label text-[var(--text-2)]">
           <input
             type="checkbox"
             checked={liveOnly}
@@ -365,7 +365,7 @@ export function GraphView() {
         <button
           onClick={center}
           title="Center the graph on all issues"
-          className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-[12.5px] font-[550] text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+          className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
         >
           <Icon name="target" size={15} />
           <span>Center</span>
@@ -374,12 +374,12 @@ export function GraphView() {
           <div className="flex h-9 basis-full items-center">
             {focus && focusId ? (
               <button onClick={() => setFocusId(null)} title="Clear the dependency spotlight"
-                className="flex h-9 items-center gap-2 rounded-[9px] bg-[var(--brand-weak)] px-3 text-[12px] text-[var(--brand)]">
+                className="flex h-9 items-center gap-2 rounded-[9px] bg-[var(--brand-weak)] px-3 text-label text-[var(--brand)]">
                 <span className="font-mono">{focusId}</span>
                 <span>{focus.up} upstream · {focus.down} downstream</span>
                 <Icon name="x" size={13} />
               </button>
-            ) : <span className="text-[12px] text-[var(--text-3)]">Choose a bead to highlight its blocking chains.</span>}
+            ) : <span className="text-label text-[var(--text-3)]">Choose a bead to highlight its blocking chains.</span>}
           </div>
         )}
       </header>
@@ -410,10 +410,10 @@ export function GraphView() {
         {nodes.length === 0 && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
             <div className="pointer-events-auto max-w-[360px] rounded-[12px] border border-border bg-[var(--surface)] p-[16px_18px] text-center shadow-[var(--shadow)]">
-              <div className="text-[13px] font-[650] text-[var(--text)]">
+              <div className="text-body font-semibold text-[var(--text)]">
                 {liveOnly && considered > 0 ? "No live dependencies" : "No beads to show"}
               </div>
-              <p className="m-0 mt-[6px] text-[12px] leading-[1.5] text-[var(--text-2)]">
+              <p className="m-0 mt-[6px] text-label leading-[1.5] text-[var(--text-2)]">
                 {considered === 0
                   ? "There are no non-archived beads in this project."
                   : "The current filter hides all beads. Show all beads to inspect completed work or create new dependencies."}
@@ -421,7 +421,7 @@ export function GraphView() {
               {liveOnly && considered > 0 && (
                 <button
                   onClick={() => setLiveOnly(false)}
-                  className="mt-3 rounded-lg border border-border px-3 py-1.5 text-[12px] hover:bg-[var(--surface-2)]"
+                  className="mt-3 rounded-lg border border-border px-3 py-1.5 text-label hover:bg-[var(--surface-2)]"
                 >
                   Show all beads
                 </button>
@@ -429,7 +429,7 @@ export function GraphView() {
             </div>
           </div>
         )}
-        <div className="pointer-events-none absolute bottom-[18px] left-1/2 flex -translate-x-1/2 gap-[18px] rounded-[11px] border border-border bg-[var(--surface)] p-[9px_16px] text-[11.5px] text-[var(--text-2)] shadow-[var(--shadow)]">
+        <div className="pointer-events-none absolute bottom-[18px] left-1/2 flex -translate-x-1/2 gap-[18px] rounded-[11px] border border-border bg-[var(--surface)] p-[9px_16px] text-meta text-[var(--text-2)] shadow-[var(--shadow)]">
           <span className="flex items-center gap-[6px]">
             <span className="h-[2px] w-[18px] bg-[#ef4444]" />
             blocks

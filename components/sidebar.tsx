@@ -86,7 +86,7 @@ export function Sidebar({
         >
           <Icon name="logo" size={17} />
         </div>
-        <div className="text-sm font-[650] leading-[1.15] tracking-[-.01em]">
+        <div className="text-body font-semibold leading-[1.15] tracking-[-.01em]">
           Beadscope
         </div>
       </div>
@@ -102,7 +102,7 @@ export function Sidebar({
               key={n.key}
               onClick={() => onView(n.key)}
               className={cn(
-                "flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left text-[13.5px] transition-colors",
+                "flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left text-body transition-colors",
                 active
                   ? "bg-[var(--brand-weak)] font-semibold text-[var(--brand)]"
                   : "font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]",
@@ -111,11 +111,11 @@ export function Sidebar({
               <Icon name={n.icon} size={17} className="flex-shrink-0" />
               <span className="flex-1">{n.label}</span>
               {n.key === "epics" && epicCount > 0 && (
-                <span className="font-mono text-[11px] text-[var(--text-3)]">{epicCount}</span>
+                <span className="font-mono text-meta text-[var(--text-3)]">{epicCount}</span>
               )}
               {n.key === "needsyou" && needsYouCount > 0 && (
                 <span
-                  className="min-w-[18px] rounded-full px-[6px] py-px text-center text-[11px] font-semibold text-white"
+                  className="min-w-[18px] rounded-full px-[6px] py-px text-center text-meta font-semibold text-white"
                   style={{ background: "var(--brand)" }}
                 >
                   {needsYouCount}
@@ -129,8 +129,8 @@ export function Sidebar({
       <div className="mt-auto flex flex-col gap-[10px]">
         {meta?.gamification && game.data && (
           <div className="rounded-[10px] border border-border bg-[var(--surface)] px-[11px] py-[9px]">
-            <div className="flex items-center justify-between text-[11.5px]">
-              <span className="font-[650]">Level {game.data.you.level}</span>
+            <div className="flex items-center justify-between text-meta">
+              <span className="font-semibold">Level {game.data.you.level}</span>
               <span className="font-mono text-[var(--text-3)]">{game.data.you.xp} XP</span>
             </div>
             <div className="mt-[6px] h-[6px] overflow-hidden rounded-full bg-[var(--surface-3)]">
@@ -142,7 +142,7 @@ export function Sidebar({
                 }}
               />
             </div>
-            <div className="mt-[4px] text-[10.5px] text-[var(--text-3)]">
+            <div className="mt-[4px] text-meta text-[var(--text-3)]">
               {game.data.you.closed} closed ·{" "}
               {Math.max(0, game.data.you.span - game.data.you.intoLevel)} XP to L
               {game.data.you.level + 1}
@@ -150,7 +150,7 @@ export function Sidebar({
           </div>
         )}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex w-full items-center gap-[10px] rounded-[9px] border border-border bg-[var(--surface)] px-[10px] py-2 text-left text-[12.5px] font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus:outline-none">
+          <DropdownMenuTrigger className="flex w-full items-center gap-[10px] rounded-[9px] border border-border bg-[var(--surface)] px-[10px] py-2 text-left text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] focus:outline-none">
             <Icon name="bug" size={16} className="flex-shrink-0" />
             <span className="flex-1">Report / request</span>
             <Icon name="chevron" size={14} className="flex-shrink-0 text-[var(--text-3)]" />
@@ -170,14 +170,14 @@ export function Sidebar({
 
         <div className="flex items-center gap-2 px-1">
           <div
-            className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+            className="flex h-6 w-6 items-center justify-center rounded-full text-meta font-semibold text-white"
             style={{ background: avatarColor(actor) }}
           >
             {initials(actor)}
           </div>
           <div className="flex-1 leading-[1.15]">
-            <div className="text-[12.5px] font-[550]">{actor}</div>
-            <div className="text-[11px] text-[var(--text-3)]">human actor</div>
+            <div className="text-label font-medium">{actor}</div>
+            <div className="text-meta text-[var(--text-3)]">human actor</div>
           </div>
           <button
             onClick={toggle}

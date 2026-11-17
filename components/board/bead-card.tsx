@@ -96,11 +96,11 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
           title={statusLabel(bead.status)}
         />
         {preview ? (
-          <span className="font-mono text-[11.5px] tracking-[-.01em] text-[var(--text-3)]">{bead.id}</span>
+          <span className="font-mono text-meta tracking-[-.01em] text-[var(--text-3)]">{bead.id}</span>
         ) : (
           <CopyableId
             id={bead.id}
-            className="font-mono text-[11.5px] tracking-[-.01em] text-[var(--text-3)]"
+            className="font-mono text-meta tracking-[-.01em] text-[var(--text-3)]"
           />
         )}
         <span className="flex-1" />
@@ -108,12 +108,12 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         <OriginBadge origin={o} title={originTitle(bead.created_by, o)} />
       </div>
 
-      <div className="text-[13.5px] font-[550] leading-[1.35] tracking-[-.006em] text-[var(--text)] [text-wrap:pretty]">
+      <div className="text-body font-medium leading-[1.35] tracking-[-.006em] text-[var(--text)] [text-wrap:pretty]">
         {bead.title}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-[5px] text-[11.5px] text-[var(--text-2)]">
+        <span className="inline-flex items-center gap-[5px] text-meta text-[var(--text-2)]">
           <Icon
             name={typeIconName(bead.issue_type)}
             size={13}
@@ -124,7 +124,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         {visLabels.map((l) => (
           <span
             key={l}
-            className="rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-[10.5px] text-[var(--text-3)]"
+            className="rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px font-mono text-meta text-[var(--text-3)]"
           >
             {l}
           </span>
@@ -134,12 +134,12 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
       <div className="mt-px flex items-center gap-[10px] border-t border-border pt-[9px]">
         <span className="inline-flex min-w-0 items-center gap-[6px]">
           <span
-            className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-[9.5px] font-semibold text-white"
+            className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
             style={{ background: avatarColor(bead.assignee ?? "") }}
           >
             {initials(bead.assignee ?? "")}
           </span>
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-[var(--text-2)]">
+          <span className="overflow-hidden text-ellipsis whitespace-nowrap text-meta text-[var(--text-2)]">
             {bead.assignee || "Unassigned"}
           </span>
         </span>
@@ -147,7 +147,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         {depCount > 0 && (
           <span
             title="dependencies"
-            className="inline-flex items-center gap-[3px] font-mono text-[11px]"
+            className="inline-flex items-center gap-[3px] font-mono text-meta"
             style={{ color: blocked ? "#ef4444" : "var(--text-3)" }}
           >
             <Icon name="link" size={13} />
@@ -157,7 +157,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         {commentCount > 0 && (
           <span
             title="comments"
-            className="inline-flex items-center gap-[3px] font-mono text-[11px] text-[var(--text-3)]"
+            className="inline-flex items-center gap-[3px] font-mono text-meta text-[var(--text-3)]"
           >
             <Icon name="comment" size={13} />
             {commentCount}
@@ -166,7 +166,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         {checklist.total > 0 && (
           <span
             title="checklist progress"
-            className="inline-flex items-center gap-[3px] font-mono text-[11px]"
+            className="inline-flex items-center gap-[3px] font-mono text-meta"
             style={{ color: checklist.done === checklist.total ? "#16a34a" : "var(--text-3)" }}
           >
             <Icon name="check" size={13} />
@@ -182,8 +182,8 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
             title={`${parent.id} · ${parent.title}`}
             className={
               parent.issue_type === "epic"
-                ? "inline-flex max-w-[96px] items-center gap-1 rounded-md bg-[var(--brand-weak)] px-[6px] py-px text-[10.5px] font-[550] text-[var(--brand)]"
-                : "inline-flex max-w-[96px] items-center gap-1 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-[10.5px] font-[550] text-[var(--text-3)]"
+                ? "inline-flex max-w-[96px] items-center gap-1 rounded-md bg-[var(--brand-weak)] px-[6px] py-px text-meta font-medium text-[var(--brand)]"
+                : "inline-flex max-w-[96px] items-center gap-1 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-meta font-medium text-[var(--text-3)]"
             }
           >
             <Icon
@@ -202,7 +202,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
         {childCount > 0 && (
           <span
             title={`${childCount} subtask${childCount === 1 ? "" : "s"}`}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-[10.5px] font-[550] text-[var(--text-3)]"
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-[var(--surface-2)] px-[6px] py-px text-meta font-medium text-[var(--text-3)]"
           >
             <Icon name="list" size={11} className="flex-shrink-0" />
             {childCount}
@@ -217,7 +217,7 @@ export function PriorityChip({ p }: { p: number }) {
   const c = prioColor(p);
   return (
     <span
-      className="inline-flex flex-shrink-0 items-center rounded-md px-[7px] py-[3px] text-[10.5px] font-semibold leading-none tracking-[.01em]"
+      className="inline-flex flex-shrink-0 items-center rounded-md px-[7px] py-[3px] text-meta font-semibold leading-none tracking-[.01em]"
       style={{ color: c, background: `${c}1f`, border: `1px solid ${c}33` }}
     >
       {prioLabel(p)}
@@ -238,13 +238,11 @@ export function OriginBadge({
   return (
     <span
       title={title}
-      className="inline-flex flex-shrink-0 items-center justify-center gap-[5px] rounded-md"
+      className={`inline-flex flex-shrink-0 items-center justify-center gap-[5px] rounded-md `}
       style={
         withLabel
           ? {
               padding: "3px 9px",
-              fontSize: "11.5px",
-              fontWeight: 550,
               color: human ? "var(--text-2)" : "var(--brand)",
               background: human ? "var(--surface-2)" : "var(--brand-weak)",
               border: `1px solid ${human ? "var(--border)" : "transparent"}`,

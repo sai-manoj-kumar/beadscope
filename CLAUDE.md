@@ -32,3 +32,11 @@ Beadscope runs as a login service (launchd), not through `beadscope start`.
 - **Actor name:** Claude Code sessions here run with `BEADS_ACTOR=claude-code`. Never put it in the service's
   environment: it would become Beadscope's human actor and clash with the agent of the same name. For any
   throwaway server started by hand, use `env -u BEADS_ACTOR`.
+
+## Type system
+
+Text uses five named sizes and three weights, defined once in `app/globals.css` (`--fs-*`, with phone sizes under 768px).
+
+- Sizes: `text-page-title`, `text-section`, `text-body`, `text-label`, `text-meta`. Weights: `font-normal`, `font-medium`, `font-semibold`.
+- Never write `text-[13px]`, `text-sm`, `font-[650]` or an inline `fontSize`. `scripts/test-type-system.mjs` (run in CI) fails on them. Every page title is the same `<h1>`.
+- Form fields are 16px on phones so iOS Safari does not zoom. Geist Mono is for ids and code only.

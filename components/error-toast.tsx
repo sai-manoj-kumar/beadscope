@@ -18,10 +18,10 @@ function CommandLine({ cmd, note }: { cmd: string; note: string }) {
   const [copied, setCopied] = React.useState(false);
   return (
     <div className="flex items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-[var(--surface-2)] px-[7px] py-[3px] font-mono text-[11px] text-[var(--text-2)]">
+      <code className="min-w-0 flex-1 truncate rounded-md border border-border bg-[var(--surface-2)] px-[7px] py-[3px] font-mono text-meta text-[var(--text-2)]">
         {cmd}
       </code>
-      <span className="flex-shrink-0 text-[10.5px] text-[var(--text-3)]">{note}</span>
+      <span className="flex-shrink-0 text-meta text-[var(--text-3)]">{note}</span>
       <button
         type="button"
         onClick={() => {
@@ -53,8 +53,8 @@ function SchemaMigrationMessage({ detail }: { detail?: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="flex w-full flex-col gap-[7px]">
-      <div className="text-[13px] font-[650]">Your beads database needs a one-time upgrade</div>
-      <p className="m-0 text-[12px] leading-[1.5] text-[var(--text-2)]">
+      <div className="text-body font-semibold">Your beads database needs a one-time upgrade</div>
+      <p className="m-0 text-label leading-[1.5] text-[var(--text-2)]">
         Your <span className="font-mono">bd</span> tool is newer than this project&rsquo;s database,
         so writes are paused until they&rsquo;re reconciled.{" "}
         <strong>Your data is safe and nothing has been lost.</strong> In a terminal, from this
@@ -62,7 +62,7 @@ function SchemaMigrationMessage({ detail }: { detail?: string }) {
       </p>
       <CommandLine cmd={MIGRATE_BACKUP} note="safety copy" />
       <CommandLine cmd={MIGRATE_CMD} note="one-time" />
-      <p className="m-0 text-[11.5px] leading-[1.45] text-[var(--text-3)]">
+      <p className="m-0 text-meta leading-[1.45] text-[var(--text-3)]">
         Then reload. If this database is shared, run the migrate on{" "}
         <strong>one machine only</strong> — coordinate with anyone else using it first.
       </p>
@@ -71,12 +71,12 @@ function SchemaMigrationMessage({ detail }: { detail?: string }) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="self-start text-[11.5px] font-[550] text-[var(--text-3)] underline underline-offset-2 hover:text-[var(--text-2)]"
+            className="self-start text-meta font-medium text-[var(--text-3)] underline underline-offset-2 hover:text-[var(--text-2)]"
           >
             {open ? "Hide technical details" : "Show technical details"}
           </button>
           {open && (
-            <pre className="m-0 max-h-[180px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-[var(--surface-2)] p-2 font-mono text-[10.5px] leading-[1.45] text-[var(--text-3)]">
+            <pre className="m-0 max-h-[180px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-[var(--surface-2)] p-2 font-mono text-meta leading-[1.45] text-[var(--text-3)]">
               {detail}
             </pre>
           )}

@@ -40,12 +40,12 @@ export function Column({
     <section className="flex w-[296px] min-h-0 flex-shrink-0 flex-col">
       <div className="flex flex-shrink-0 items-center gap-2 px-1 pb-3">
         <span className="h-[9px] w-[9px] rounded-[3px]" style={{ background: col.color }} />
-        <span className="text-[13px] font-semibold tracking-[-.005em]">{col.name}</span>
-        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-[11.5px] text-[var(--text-3)]">
+        <span className="text-body font-semibold tracking-[-.005em]">{col.name}</span>
+        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
           {cards.length}
         </span>
         <span className="flex-1" />
-        {control ?? <span className="font-mono text-[10.5px] text-[var(--text-3)]">{col.cmd}</span>}
+        {control ?? <span className="font-mono text-meta text-[var(--text-3)]">{col.cmd}</span>}
       </div>
 
       <div
@@ -63,7 +63,7 @@ export function Column({
           ))}
         </SortableContext>
         {cards.length === 0 && (
-          <div className="rounded-[11px] border-[1.5px] border-dashed border-border p-[22px_12px] text-center text-[12px] text-[var(--text-3)]">
+          <div className="rounded-[11px] border-[1.5px] border-dashed border-border p-[22px_12px] text-center text-label text-[var(--text-3)]">
             No beads
           </div>
         )}
