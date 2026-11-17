@@ -21,6 +21,7 @@ import { PriorityChip, OriginBadge } from "@/components/board/bead-card";
 import { CopyableId } from "@/components/copyable-id";
 import { FilterBar } from "@/components/filter-bar";
 import { PageHeader } from "@/components/page-header";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { BrandButton } from "@/components/brand-button";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
 import { useSetStatus } from "@/hooks/use-beads";
@@ -154,7 +155,7 @@ export function ListView() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="List"
-        subtitle={<>{rows.length} beads · drag to set run-order</>}
+        subtitle={<>{rows.length} beads<span className="max-md:hidden"> · drag to set run-order</span></>}
         actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
         controls={
           <FilterBar
@@ -243,9 +244,11 @@ function Row({
   humanAllowlist: string[];
 }) {
   const { readOnly, selectedBeadId, selectBead } = useApp();
+  // Phones: no reordering by drag. It needs touch-action: none on every row, which stops the list scrolling.
+  const mobile = useIsMobile();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bead.id,
-    disabled: readOnly,
+    disabled: readOnly || mobile,
   });
   const o = beadOrigin(bead, humanAllowlist);
   const labels = (bead.labels ?? []).filter((l) => l !== "archived").slice(0, 2);
@@ -260,7 +263,7 @@ function Row({
     <div
       ref={setNodeRef}
       {...listeners}
-      {...(readOnly ? {} : attributes)}
+      {...(readOnly || mobile ? {} : attributes)}
       role="button"
       tabIndex={0}
       data-keyboard-bead-id={bead.id}
@@ -277,28 +280,34 @@ function Row({
         opacity: isDragging ? 0.4 : 1,
         zIndex: isDragging ? 10 : undefined,
       }}
-      className={`flex w-full cursor-pointer touch-none items-center gap-3 rounded-[10px] border bg-[var(--surface)] px-[13px] py-[9px] text-left transition-[border-color,box-shadow] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow)] focus-visible:outline-none ${
+      className={`flex w-full cursor-pointer items-center gap-3 rounded-[10px] border bg-[var(--surface)] px-[13px] py-[9px] text-left md:touch-none max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:py-3 transition-[border-color,box-shadow] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow)] focus-visible:outline-none ${
         selectedBeadId === bead.id
           ? "border-[var(--brand)] ring-2 ring-[var(--brand)]/30"
           : "border-border"
       }`}
     >
       <span
-        className="h-[9px] w-[9px] flex-shrink-0 rounded-full"
+        className="h-[9px] w-[9px] flex-shrink-0 rounded-full max-md:-order-2"
         style={{ background: blocked ? "#ef4444" : catColor(bead.status) }}
         title={blocked ? "Blocked" : statusLabel(bead.status)}
       />
       <Icon
         name={typeIconName(bead.issue_type)}
         size={15}
-        className="flex-shrink-0"
+        className="flex-shrink-0 max-md:-order-2"
         style={{ color: typeColor(bead.issue_type) }}
       />
-      <CopyableId
-        id={bead.id}
-        className="w-[150px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]"
-      />
-      <span className="min-w-0 flex-1 truncate text-body font-medium text-[var(--text)]">
+      {/* Phones: the title takes the first line (two at most) and the id, priority and
+          assignee sit on a second line, so the title is never squeezed by them. */}
+      {mobile ? (
+        <span className="ml-[41px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
+      ) : (
+        <CopyableId
+          id={bead.id}
+          className="w-[150px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]"
+        />
+      )}
+      <span className="min-w-0 flex-1 truncate text-body font-medium text-[var(--text)] max-md:-order-1 max-md:flex-[1_1_calc(100%-48px)] max-md:whitespace-normal max-md:line-clamp-2">
         {bead.title}
       </span>
       {labels.map((l) => (
@@ -349,7 +358,7 @@ function Row({
       <span className="hidden w-[26px] flex-shrink-0 justify-center sm:flex">
         <OriginBadge origin={o} title={originTitle(bead.created_by, o)} />
       </span>
-      <span className="hidden min-w-0 max-w-[130px] flex-shrink-0 items-center gap-[6px] md:flex">
+      <span className="flex min-w-0 max-w-[130px] flex-shrink-0 items-center gap-[6px]">
         <span
           className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
           style={{ background: avatarColor(bead.assignee ?? "") }}
