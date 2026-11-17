@@ -43,8 +43,8 @@ export function ReadOnlyBanner() {
     <button
       type="button" aria-label="Read Only Mode" title="Read Only Mode — click to customize or enable editing"
       onClick={() => setOpen(true)}
-      className="flex w-full shrink-0 items-center justify-center gap-2 border-b border-black/10 px-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-3px]"
-      style={{ backgroundColor: prefs.background, color: prefs.text, minHeight: prefs.size === "large" ? 48 : 28, fontSize: prefs.size === "large" ? 15 : 12 }}
+      className={`flex w-full shrink-0 items-center justify-center gap-2 border-b border-black/10 px-3 font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-3px] ${prefs.size === "large" ? "min-h-12 text-section" : "min-h-7 text-label max-md:min-h-11"}`}
+      style={{ backgroundColor: prefs.background, color: prefs.text }}
     >
       <LockKeyhole size={14} aria-hidden="true" />Read Only Mode
     </button>

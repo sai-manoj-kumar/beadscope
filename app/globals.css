@@ -479,3 +479,11 @@ html[data-theme="rose-pine"] {
 
 /* Recharts draws axis labels as SVG text with a size attribute; the type scale sets it instead. */
 .recharts-cartesian-axis-tick-value { font-size: var(--fs-meta); }
+
+/* Phone tap targets: at least 44px each way. Add to small icon buttons and rows. */
+@utility tap-target {
+  @media (max-width: 767px) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
