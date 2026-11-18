@@ -48,4 +48,4 @@ Phones are anything under 768px (Tailwind `md`). Use `md:` / `max-md:` in CSS; u
 - Tap targets are at least 44px on phones: add the `tap-target` utility to small icon buttons. Inside overlays (drawer, dialog, dropdown, select list) a rule in `app/globals.css` already gives every button and field 44px; opt a control out with `data-compact`.
 - A deliberate sideways scroller must carry `data-allow-x-scroll`; nothing else may stick out past the right edge.
 - Look at a view the way the tests do: `node scripts/mobile-audit.mjs http://localhost:3000/p/<project> [views...]` (390px; `MOBILE_WIDTH=360` to change). It lists overflow, text under 14px, fields under 16px and targets under 44px.
-- `scripts/test-mobile-layout.mjs` enforces this. When a view is finished, add it to `NO_OVERFLOW` / `TAP_TARGETS_OK` there so it cannot regress.
+- `scripts/test-mobile-layout.mjs` enforces this on every view in `VIEWS` (`scripts/mobile-audit.mjs`) at 360, 390 and 430px. A new view must be added to `VIEWS` and pass.
