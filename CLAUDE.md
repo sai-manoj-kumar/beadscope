@@ -20,9 +20,12 @@ Beadscope runs as a login service (launchd), not through `beadscope start`.
   prints the project URL; add `--port <n>` if it is elsewhere. Or use **Add project…** in the project
   switcher, which also works from the phone. Never run `beadscope start` inside a repo to add it: it would
   start a second server on port 3001 next to the service.
-- **After a code change:** `npm run build`, then `launchctl kickstart -k gui/$(id -u)/com.saimanoj.beadscope`.
-  Do not use `beadscope stop` or `beadscope start` for this one: they do not manage the service and will fight it
-  for port 3000. Check `localhost:3000` and the Tailscale address both return 200.
+- **After a code change:** run `scripts/reinstall.sh` (`--clean` also clears `.next/cache`, for a CSS token that
+  does not show up). It builds, runs `launchctl kickstart -k gui/$(id -u)/com.saimanoj.beadscope`, and checks that
+  `localhost:3000` and the Tailscale address both return 200. Do not use `beadscope stop` or `beadscope start` for
+  this one: they do not manage the service and will fight it for port 3000.
+- **After raising a PR:** run `scripts/reinstall.sh` from the PR branch, so the running Beadscope is the build
+  under review, and do it again before merging if the branch changed since.
 - **After editing the plist** (env or arguments), `kickstart` does not reload it. Run
   `launchctl bootout gui/$(id -u)/com.saimanoj.beadscope`, then
   `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.saimanoj.beadscope.plist`.
