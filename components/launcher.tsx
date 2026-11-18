@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -35,6 +36,13 @@ export function Launcher() {
             Choose a beads project to view and manage
           </div>
         </div>
+        <Link
+          href="/needs-you"
+          className="tap-target inline-flex items-center gap-1.5 rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-1.5 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+        >
+          <Icon name="user" size={15} />
+          Needs You
+        </Link>
         <ThemeToggle size="lg" />
       </header>
 

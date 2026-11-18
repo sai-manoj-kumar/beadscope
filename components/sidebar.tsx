@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Link from "next/link";
 import { Icon } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp, type View } from "@/components/app-context";
@@ -121,6 +122,13 @@ export function Sidebar({
             </button>
           );
         })}
+        <Link
+          href="/needs-you"
+          className="flex w-full items-center gap-[10px] rounded-[9px] px-[10px] py-2 text-left text-body font-medium text-[var(--text-2)] transition-colors tap-target hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+        >
+          <Icon name="user" size={17} className="flex-shrink-0" />
+          <span className="flex-1">Needs You · all repos</span>
+        </Link>
       </nav>
 
       <div className="mt-auto flex flex-col gap-[10px]">
