@@ -141,7 +141,7 @@ function GateCard({ gate }: { gate: Bead }) {
       </div>
       <button
         onClick={() => openDetail(gate.id)}
-        className="mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
+        className="tap-target mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
       >
         {gate.title}
       </button>
@@ -210,7 +210,7 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
       </div>
       <button
         onClick={() => openDetail(bead.id)}
-        className="mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
+        className="tap-target mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
       >
         {bead.title}
       </button>
