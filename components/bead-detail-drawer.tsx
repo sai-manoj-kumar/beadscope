@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { GateApproval } from "@/components/gate-approval";
 import { AssigneeField } from "@/components/assignee-field";
 import { DependencyEditor } from "@/components/dependency-editor";
@@ -146,6 +147,8 @@ export function BeadDetailDrawer({
     max: 1200,
     deltaFactor: -1,
   });
+  const mobile = useIsMobile();
+  const popupRef = React.useRef<HTMLDivElement>(null);
   // Set by the body while an edit or comment holds unsaved text, so a stray
   // click outside the drawer keeps it; Esc and the Close button still close.
   const dirtyRef = React.useRef(false);
@@ -168,14 +171,18 @@ export function BeadDetailDrawer({
       <SheetContent
         data-bead-drawer
         showCloseButton={false}
-        style={{ width, maxWidth: "96vw" }}
-        className="flex gap-0 overflow-hidden border-l border-border bg-[var(--drawer)] p-0"
+        ref={popupRef}
+        // On a phone focus the sheet itself: the first button (copy id) would otherwise open with a ring.
+        initialFocus={mobile ? popupRef : true}
+        tabIndex={-1}
+        style={{ width: mobile ? "100vw" : width, maxWidth: mobile ? "100vw" : "96vw" }}
+        className="flex gap-0 overflow-hidden border-l border-border bg-[var(--drawer)] p-0 outline-none"
       >
         {/* Left-edge resize handle (drawer is anchored right, so it grows leftward). */}
         <div
           onPointerDown={startResize}
           title="Drag to resize"
-          className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-[var(--brand)]/40"
+          className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-[var(--brand)]/40 max-md:hidden"
         />
         <div className="bd-scroll min-w-0 flex-1 overflow-y-auto">
           {bead ? (
@@ -413,7 +420,7 @@ function DrawerBody({
     <>
       <SheetDescription className="sr-only">Bead details for {bead.id}</SheetDescription>
 
-      <div className="sticky top-0 z-[2] flex items-center gap-[10px] border-b border-border bg-[var(--drawer)] p-[15px_20px]">
+      <div className="sticky top-0 z-[2] flex flex-wrap items-center gap-[10px] border-b border-border bg-[var(--drawer)] p-[15px_20px] max-md:gap-x-2 max-md:p-[10px_12px]">
         {/* Naming the destination rather than saying "Back" — you arrive here
             from a subtask and need to know what you're returning to (GH #15).
             No left-arrow icon exists; the drawer already rotates `chevron`. */}
@@ -423,9 +430,12 @@ function DrawerBody({
           </IconBtn>
         )}
         <span className="h-[9px] w-[9px] rounded-full" style={{ background: catColor(bead.status) }} />
-        <CopyableId id={bead.id} className="font-mono text-body text-[var(--text-2)]" />
+        <CopyableId id={bead.id} className="whitespace-nowrap font-mono text-body text-[var(--text-2)]" />
         <StatusChip status={bead.status} />
         <span className="flex-1" />
+        {/* Phones: Close stays beside the id; the other actions wrap onto their own row with Delete
+            at the far end, away from Close, so a tap meant for one cannot land on the other. */}
+        <div className="contents max-md:order-2 max-md:flex max-md:basis-full max-md:items-center max-md:gap-2">
         <IconBtn title="Copy link" onClick={copyLink}>
           <Icon name="link" size={15} />
         </IconBtn>
@@ -445,6 +455,7 @@ function DrawerBody({
         {!readOnly && (
           <IconBtn
             title="Delete"
+            className="max-md:ml-auto"
             danger
             onClick={() => {
               if (confirm(`Delete ${bead.id}? This calls bd delete.`)) {
@@ -456,7 +467,8 @@ function DrawerBody({
             <Icon name="trash" size={15} />
           </IconBtn>
         )}
-        <IconBtn title="Close" onClick={onClose}>
+        </div>
+        <IconBtn title="Close" className="max-md:order-1" onClick={onClose}>
           <Icon name="x" size={15} />
         </IconBtn>
       </div>
@@ -1246,20 +1258,23 @@ function IconBtn({
   title,
   onClick,
   danger,
+  className = "",
 }: {
   children: React.ReactNode;
   title: string;
   onClick: () => void;
   danger?: boolean;
+  className?: string;
 }) {
   return (
     <button
       title={title}
+      aria-label={title}
       onClick={onClick}
       className={
-        danger
+        (danger
           ? "flex h-8 w-8 items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:border-[#ef444433] hover:bg-[#ef444415] hover:text-[#ef4444]"
-          : "flex h-8 w-8 items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+          : "flex h-8 w-8 items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]") + " " + className
       }
     >
       {children}

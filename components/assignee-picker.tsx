@@ -122,7 +122,7 @@ export function AssigneeSelect({
         className="flex h-[38px] w-full cursor-pointer items-center gap-[8px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left text-body text-[var(--text)] outline-none focus:border-[var(--brand)]"
       >
         <OptionRow name={value} label={value || "Unassigned"} />
-        <Icon name="chevron" size={12} className="shrink-0 rotate-90 text-[var(--text-3)]" />
+        <Icon name="chevron" size={12} className="shrink-0 text-[var(--text-3)]" />
       </button>
       {open && (
         <ul id={listId} role="listbox" aria-label={label} className={listClass}>
