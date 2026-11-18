@@ -18,7 +18,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   }
 }
 
-const renameSchema = z.object({ name: z.string().min(1) });
+const renameSchema = z.object({ name: z.string().trim().min(1) });
 
 export async function PATCH(req: Request, { params }: Ctx) {
   try {

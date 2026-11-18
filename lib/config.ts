@@ -226,14 +226,24 @@ function sanitizeProjects(input: unknown): ProjectEntry[] {
 
 // ---- load / persist ------------------------------------------------------
 
-let cached: AppConfig | null = null;
+// Keyed off globalThis, not module scope: the page renderer (generateMetadata) and the API route
+// handlers are separate bundles with their own copy of this module, so a module-level cache would
+// leave the page showing the old project name after a rename.
+const CACHE_KEY = Symbol.for("beadscope.config.cache");
+type CacheHolder = Record<symbol, AppConfig | null | undefined>;
+function readCache(): AppConfig | null {
+  return (globalThis as unknown as CacheHolder)[CACHE_KEY] ?? null;
+}
+function writeCache(cfg: AppConfig | null): void {
+  (globalThis as unknown as CacheHolder)[CACHE_KEY] = cfg;
+}
 
 /**
  * Persist the config, preserving any unknown keys already on disk (e.g. the
  * legacy `repoPath`/`demo` fields) so older app versions can still read them.
  */
 function persist(cfg: AppConfig): void {
-  cached = cfg;
+  writeCache(cfg);
   try {
     fs.mkdirSync(configDir(), { recursive: true });
     let base: Record<string, unknown> = {};
@@ -250,7 +260,8 @@ function persist(cfg: AppConfig): void {
 }
 
 export function getConfig(): AppConfig {
-  if (cached) return cached;
+  const hit = readCache();
+  if (hit) return hit;
   const d = defaults();
 
   let onDisk:
@@ -303,10 +314,10 @@ export function getConfig(): AppConfig {
     }
   }
 
-  cached = merged;
+  writeCache(merged);
   // Persist the migrated entry so its id is stable across restarts.
   if (migrated) persist(merged);
-  return cached;
+  return merged;
 }
 
 /**
