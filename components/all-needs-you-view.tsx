@@ -8,6 +8,7 @@ import { AppProvider } from "@/components/app-context";
 import { SelectField } from "@/components/controls";
 import { GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
+import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { beadsKey } from "@/hooks/use-beads";
 import { useProjects } from "@/hooks/use-projects";
@@ -27,11 +28,13 @@ const ALL = "";
  */
 export function AllNeedsYouView() {
   const { data: projectData, isLoading: loadingProjects } = useProjects();
-  const projects = React.useMemo(() => projectData?.projects ?? [], [projectData]);
+  // A folder that lost its .beads cannot be read; the launcher already flags it, so it is left out here.
+  const projects = React.useMemo(() => (projectData?.projects ?? []).filter((p) => p.hasBeads), [projectData]);
   const results = useQueries({
     queries: projects.map((p) => ({
       queryKey: beadsKey(p.id),
       queryFn: () => api.list(p.id),
+      retry: 1,
       refetchInterval: (q: { state: { data?: BeadsResponse } }) => q.state.data?.meta.pollIntervalMs ?? 5000,
     })),
   });
@@ -49,7 +52,7 @@ export function AllNeedsYouView() {
 
   const sections = projects.map((project, i) => ({ project, query: results[i] }));
   const shown = sections.filter(({ project }) => repo === ALL || project.id === repo);
-  const settled = !loadingProjects && sections.every(({ query }) => !query.isLoading);
+  const settled = !loadingProjects && shown.every(({ query }) => !query.isLoading);
   const failed = shown.filter(({ query }) => query.isError);
 
   // Counts per repo are always the whole picture, so the filter labels stay honest.
@@ -67,6 +70,7 @@ export function AllNeedsYouView() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background text-foreground text-body">
+      <ReadOnlyBanner />
       <PageHeader
         title="Needs You"
         subtitle={
@@ -81,10 +85,11 @@ export function AllNeedsYouView() {
               <ArrowLeft size={14} aria-hidden="true" />
               Projects
             </Link>
-            <label className="flex items-center gap-2 text-label text-[var(--text-3)]">
+            <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
               Repo
               <SelectField
                 size="sm"
+                className="min-w-0 max-w-full"
                 aria-label="Filter by repo"
                 value={repo}
                 onChange={(e) => setRepo(e.target.value)}
@@ -118,8 +123,8 @@ export function AllNeedsYouView() {
             ))}
             {total === 0 ? (
               <div className="p-10 text-center text-body text-[var(--text-3)]">
-                🎉 Nothing needs you right now
-                {repo === ALL ? " in any repo" : " in this repo"}. Agents flag beads here with{" "}
+                {failed.length > 0 ? "Nothing waiting in the repos that could be read" : "🎉 Nothing needs you right now"}
+                {failed.length > 0 ? "" : repo === ALL ? " in any repo" : " in this repo"}. Agents flag beads here with{" "}
                 <span className="font-mono">bd human</span>, and human-approval gates (
                 <span className="font-mono">bd gate create --type human</span>) show up once their
                 blockers clear.

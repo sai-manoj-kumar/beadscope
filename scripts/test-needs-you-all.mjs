@@ -34,6 +34,10 @@ const projects = [
   { id: "alpha", name: "Alpha Repo", path: "/tmp/alpha", hasBeads: true },
   { id: "beta", name: "Beta Repo", path: "/tmp/beta", hasBeads: true },
   { id: "gamma", name: "Gamma Repo", path: "/tmp/gamma", hasBeads: true },
+  // Registered but unreadable: its request fails. It must not hide the other repos.
+  { id: "delta", name: "Delta Repo", path: "/tmp/delta", hasBeads: true },
+  // Folder that lost its .beads: left out of the page and the filter.
+  { id: "eps", name: "Eps Repo", path: "/tmp/eps", hasBeads: false },
 ];
 const posts = [];
 let readOnly = true;
@@ -48,13 +52,21 @@ try {
 
   await page.route("**/api/viewer-mode", (route) => route.fulfill({ json: { readOnly } }));
   await page.route("**/api/projects", (route) => route.fulfill({ json: { projects } }));
-  await page.route(/\/api\/p\/(alpha|beta|gamma)\//, async (route) => {
+  await page.route(/\/api\/p\/(alpha|beta|gamma|delta|eps)\//, async (route) => {
     const url = new URL(route.request().url());
     const [, , , id, ...rest] = url.pathname.split("/");
     if (url.pathname.endsWith("/beads/stream")) return route.abort();
+    assert.notEqual(id, "eps", "a repo without .beads is never requested");
+    if (id === "delta") return route.fulfill({ status: 500, json: { error: "bd unavailable" } });
     if (route.request().method() === "POST") {
-      posts.push({ project: id, path: url.pathname, body: route.request().postDataJSON() });
-      return route.fulfill({ json: data[id][0] });
+      const body = route.request().postDataJSON();
+      posts.push({ project: id, path: url.pathname, body });
+      // Apply the write so the refetch drops the card.
+      const target = decodeURIComponent(url.pathname.split("/")[5]);
+      data[id] = data[id].map((b) =>
+        b.id !== target ? b : body.action === "dismiss" ? { ...b, labels: [] } : { ...b, status: body.status },
+      );
+      return route.fulfill({ json: data[id].find((b) => b.id === target) });
     }
     if (rest.join("/") === "beads") {
       return route.fulfill({
@@ -71,6 +83,7 @@ try {
   await page.goto(`${base}/needs-you`);
   await heading("Needs You").first().waitFor();
   await page.locator("[data-repo-section]").first().waitFor();
+  await page.getByText(/Couldn’t read Delta Repo/).waitFor();
 
   // All repos: flagged beads and ready gates from every repo that has any; repos with none are left out.
   assert.deepEqual((await cardIds()).sort(), ["al-1", "al-gate", "be-1"]);
@@ -82,7 +95,8 @@ try {
 
   // Repo filter lists every repo with its count.
   const filter = page.getByLabel("Filter by repo");
-  assert.deepEqual(await filter.locator("option").allTextContents(), ["All repos", "Alpha Repo (2)", "Beta Repo (1)", "Gamma Repo"]);
+  assert.deepEqual(await filter.locator("option").allTextContents(), ["All repos", "Alpha Repo (2)", "Beta Repo (1)", "Gamma Repo", "Delta Repo"]);
+  assert.equal(await page.getByText(/Couldn’t read/).count(), 1, "only the repo that failed is reported");
 
   // Filtering narrows the page and the URL carries it.
   await filter.selectOption("beta");
@@ -91,6 +105,10 @@ try {
   await page.getByText("1 waiting on you · 1 repo").waitFor();
   await filter.selectOption("gamma");
   await page.getByText(/Nothing needs you right now in this repo/).waitFor();
+  assert.equal(await page.getByText(/Couldn’t read/).count(), 0, "a failing repo is not reported while it is filtered out");
+  await filter.selectOption("delta");
+  await page.getByText(/Couldn’t read Delta Repo/).waitFor();
+  await page.getByText(/Nothing waiting in the repos that could be read/).waitFor();
   await filter.selectOption("");
   assert.equal((await cardIds()).length, 3);
   assert.equal(new URL(page.url()).searchParams.has("repo"), false);
@@ -105,6 +123,8 @@ try {
 
   // Read-only viewers cannot act.
   assert.equal(await page.getByRole("button", { name: "Dismiss", exact: true }).first().isDisabled(), true);
+  assert.equal(await page.getByRole("button", { name: "Approve", exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole("textbox").first().isDisabled(), true);
 
   // Acting hits the card's own project, not the first or the filtered one.
   readOnly = false;
@@ -112,7 +132,8 @@ try {
   await page.locator("[data-keyboard-bead-id]").first().waitFor();
   await page.locator('[data-keyboard-bead-id="be-1"]').getByRole("button", { name: "Dismiss", exact: true }).click();
   await page.locator('[data-keyboard-bead-id="al-gate"]').getByRole("button", { name: "Approve", exact: true }).click();
-  await page.waitForTimeout(400);
+  await page.waitForFunction(() => !document.querySelector('[data-keyboard-bead-id="be-1"]') && !document.querySelector('[data-keyboard-bead-id="al-gate"]'));
+  assert.deepEqual(await cardIds(), ["al-1"], "answered cards leave the page after the refetch");
   assert.equal(posts.length, 2, "one write per action");
   assert.deepEqual(
     { project: posts[0].project, path: posts[0].path, action: posts[0].body.action },
