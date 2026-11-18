@@ -501,3 +501,12 @@ html[data-theme="rose-pine"] {
     min-width: 44px;
   }
 }
+
+/* Phones: a vertical scroller never pans sideways. Without this, one child that is a few pixels too
+   wide (a long id, a long word) lets the whole scroller, header included, slide left and right under
+   a finger. A deliberate sideways scroller opts out with data-allow-x-scroll. */
+@media (max-width: 767px) {
+  :is(.overflow-y-auto, .overflow-auto):not([data-allow-x-scroll]) {
+    overflow-x: hidden;
+  }
+}

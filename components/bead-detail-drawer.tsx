@@ -186,7 +186,7 @@ export function BeadDetailDrawer({
           title="Drag to resize"
           className="absolute left-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-[var(--brand)]/40 max-md:hidden"
         />
-        <div className="bd-scroll min-w-0 flex-1 overflow-y-auto">
+        <div className="bd-scroll min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
           {bead ? (
             <DrawerBody
               key={`${bead.id}-${actionNonce}`}
@@ -778,7 +778,7 @@ function DrawerBody({
                     disabled={!row.target}
                     title={row.target ? `Open ${row.target.id}` : undefined}
                     onClick={() => pushDetail(row.targetId)}
-                    className="flex min-w-0 flex-1 items-center gap-[9px] text-left disabled:cursor-default"
+                    className="flex min-w-0 flex-1 items-center gap-[9px] text-left disabled:cursor-default max-md:flex-wrap max-md:gap-y-1"
                   >
                     <span
                       className="flex-shrink-0 rounded-[5px] px-[7px] py-[2px] font-mono text-meta font-semibold"
@@ -790,14 +790,14 @@ function DrawerBody({
                     >
                       {row.label}
                     </span>
-                    <span className="flex-shrink-0 font-mono text-meta text-[var(--text-3)]">
+                    <span className="min-w-0 truncate font-mono text-meta text-[var(--text-3)] md:flex-shrink-0">
                       {row.targetId}
                     </span>
-                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-label">
+                    <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-label max-md:order-last max-md:basis-full">
                       {row.target?.title ?? "(unknown)"}
                     </span>
                     <span
-                      className="h-[7px] w-[7px] flex-shrink-0 rounded-full"
+                      className="h-[7px] w-[7px] flex-shrink-0 rounded-full max-md:ml-auto"
                       style={{ background: catColor(row.target?.status ?? "open") }}
                       title={statusLabel(row.target?.status ?? "open")}
                     />
