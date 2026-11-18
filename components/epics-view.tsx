@@ -210,7 +210,7 @@ export function EpicsView({
                     {/* overflow-hidden: every chip on this row is flex-shrink-0,
                         so without it a heavily-labelled epic would spill past
                         the progress block instead of clipping. */}
-                    <div className="flex min-w-0 items-center gap-[9px] overflow-hidden">
+                    <div className="flex min-w-0 items-center gap-[9px] overflow-hidden max-md:flex-wrap max-md:gap-y-1">
                       <span className="flex-shrink-0 font-mono text-meta text-[var(--text-3)]">
                         {e.id}
                       </span>
