@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, LayoutGrid, ChevronsUpDown } from "lucide-react";
+import { Check, Plus, LayoutGrid, ChevronsUpDown, Pencil } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useProjects } from "@/hooks/use-projects";
 import { FolderBrowserModal } from "@/components/folder-browser-modal";
+import { RenameProjectDialog } from "@/components/rename-project-dialog";
 
 export function ProjectSwitcher({
   projectId,
@@ -29,6 +30,7 @@ export function ProjectSwitcher({
   const router = useRouter();
   const { data } = useProjects();
   const [addOpen, setAddOpen] = React.useState(false);
+  const [renaming, setRenaming] = React.useState<{ id: string; name: string } | null>(null);
 
   const projects = data?.projects ?? [];
   const demo = projects.find((p) => p.id === "demo");
@@ -80,14 +82,24 @@ export function ProjectSwitcher({
 
           {recents.length > 0 && <DropdownMenuSeparator />}
           {recents.map((p) => (
-            <DropdownMenuItem key={p.id} onClick={() => { onNavigate?.(); router.push(`/p/${p.id}`); }}>
-              <span
-                className="h-[6px] w-[6px] flex-shrink-0 rounded-full"
-                style={{ background: p.hasBeads ? "#22c55e" : "#ef4444" }}
-              />
-              <span className="flex-1 truncate">{p.name}</span>
-              {p.id === projectId && <Check size={14} />}
-            </DropdownMenuItem>
+            <div key={p.id} className="flex items-center gap-0.5">
+              <DropdownMenuItem className="min-w-0 flex-1" onClick={() => { onNavigate?.(); router.push(`/p/${p.id}`); }}>
+                <span
+                  className="h-[6px] w-[6px] flex-shrink-0 rounded-full"
+                  style={{ background: p.hasBeads ? "#22c55e" : "#ef4444" }}
+                />
+                <span className="flex-1 truncate">{p.name}</span>
+                {p.id === projectId && <Check size={14} />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                aria-label={`Rename ${p.name}`}
+                title="Rename"
+                className="flex-shrink-0 justify-center text-[var(--text-3)] max-md:min-w-11"
+                onClick={() => setRenaming({ id: p.id, name: p.name })}
+              >
+                <Pencil size={13} />
+              </DropdownMenuItem>
+            </div>
           ))}
 
           <DropdownMenuSeparator />
@@ -103,6 +115,11 @@ export function ProjectSwitcher({
       </DropdownMenu>
 
       <FolderBrowserModal open={addOpen} onOpenChange={setAddOpen} />
+      <RenameProjectDialog
+        project={renaming}
+        currentProjectId={projectId}
+        onOpenChange={(open) => !open && setRenaming(null)}
+      />
     </>
   );
 }

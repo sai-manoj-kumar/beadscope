@@ -96,6 +96,20 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await page.getByRole("button", { name: /Select project/ }).click();
     await settle(300);
     await onState("project-menu", MENU);
+    // The Demo project cannot be renamed, so Rename only exists when a real project is registered.
+    const rename = page.getByRole("menuitem", { name: /^Rename / }).first();
+    if (await rename.count()) {
+      await rename.click();
+      await page.locator(DIALOG).waitFor({ timeout: 8000 });
+      await settle(600);
+      await onState("rename", DIALOG);
+      await page.keyboard.press("Escape");
+      await page.locator(DIALOG).waitFor({ state: "detached", timeout: 8000 });
+      await settle(300);
+      if (phone) await page.getByRole("button", { name: /Select project/ }).waitFor();
+      await page.getByRole("button", { name: /Select project/ }).click();
+      await settle(300);
+    }
     await page.getByRole("menuitem", { name: /Add project/ }).click();
     await page.locator(DIALOG).waitFor({ timeout: 8000 });
     await settle(900);
