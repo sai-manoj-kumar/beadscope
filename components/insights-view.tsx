@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { useApp } from "@/components/app-context";
 import { PageHeader } from "@/components/page-header";
+import { Chip } from "@/components/chip";
 import { useInsights } from "@/hooks/use-beads";
 import type { InsightsData } from "@/lib/api-client";
 
@@ -170,15 +171,9 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                 <div key={a.id} className="flex items-center gap-2 text-label">
                   <span className="font-mono text-meta text-[var(--text-3)]">{a.id}</span>
                   <span className="flex-1 truncate text-[var(--text-2)]">{a.title}</span>
-                  <span
-                    className="rounded-full px-[7px] py-px text-meta font-semibold"
-                    style={{
-                      color: a.days >= 7 ? "#ef4444" : "var(--text-2)",
-                      background: a.days >= 7 ? "#ef444418" : "var(--surface-2)",
-                    }}
-                  >
+                  <Chip color={a.days >= 7 ? "#ef4444" : undefined} tone="strong" className="font-semibold">
                     {a.days}d
-                  </span>
+                  </Chip>
                 </div>
               ))}
             </div>

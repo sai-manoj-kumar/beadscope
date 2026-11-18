@@ -1,5 +1,7 @@
 "use client";
 import * as React from "react";
+import { BrandButton } from "@/components/brand-button";
+import { StatusChip, Chip } from "@/components/chip";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { GateApproval } from "@/components/gate-approval";
 import { AssigneeField } from "@/components/assignee-field";
@@ -611,16 +613,9 @@ function DrawerBody({
               className="w-full resize-y rounded-[9px] border border-border bg-[var(--surface)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none focus:border-[var(--brand)]"
             />
             <div className="mt-[9px] flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                disabled={readOnly || setStatus.isPending}
-                onClick={confirmClose}
-                className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
-                style={{ background: "var(--brand)" }}
-              >
-                <Icon name="check" size={14} />
+              <BrandButton size="sm" icon="check" disabled={readOnly || setStatus.isPending} onClick={confirmClose}>
                 {closeDraft.trim() ? "Close with reason" : "Close without a reason"}
-              </button>
+              </BrandButton>
               <button
                 type="button"
                 disabled={readOnly || setStatus.isPending}
@@ -640,9 +635,9 @@ function DrawerBody({
           <div className={`${fieldLabel} mb-[6px] flex items-center gap-2`}>
             <span>Description</span>
             {progress.total > 0 && (
-              <span className="rounded-full border border-border bg-[var(--surface-2)] px-[7px] py-px font-normal normal-case tracking-normal text-[var(--text-2)]">
+              <Chip tone="strong" className="font-normal normal-case tracking-normal">
                 {progress.done}/{progress.total} done
-              </span>
+              </Chip>
             )}
             {editing && !readOnly && !isDemo && !previewEdit && (
               <span className="font-normal normal-case tracking-normal text-[var(--text-3)]">
@@ -735,14 +730,9 @@ function DrawerBody({
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={saveEdit}
-                  disabled={!titleDraft.trim() || update.isPending}
-                  className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
-                  style={{ background: "var(--brand)" }}
-                >
-                  <Icon name="check" size={14} /> Save
-                </button>
+                <BrandButton size="sm" icon="check" onClick={saveEdit} disabled={!titleDraft.trim() || update.isPending}>
+                  Save
+                </BrandButton>
               </div>
             </>
           ) : bead.description ? (
@@ -868,18 +858,17 @@ function DrawerBody({
                     placeholder="Reason (optional) — e.g. needs design sign-off"
                     className="h-8 flex-1 rounded-[9px] border border-border bg-[var(--surface-2)] px-[9px] text-label text-[var(--text)] outline-none focus:border-[var(--brand)]"
                   />
-                  <button
+                  <BrandButton
+                    size="sm"
                     disabled={createGate.isPending}
                     onClick={() => {
                       createGate.mutate({ id: bead.id, reason: gateReason.trim() || undefined });
                       setAddingGate(false);
                       setGateReason("");
                     }}
-                    className="flex h-8 flex-shrink-0 items-center rounded-md px-3 text-label font-medium text-white disabled:opacity-50"
-                    style={{ background: "var(--brand)" }}
                   >
                     Create gate
-                  </button>
+                  </BrandButton>
                 </div>
               ) : (
                 <button
@@ -1088,14 +1077,9 @@ function DrawerBody({
                 className="w-full resize-y rounded-[10px] border border-border bg-[var(--surface-2)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none"
               />
               <div className="flex justify-end">
-                <button
-                  disabled={!canComment}
-                  onClick={postComment}
-                  className="h-8 rounded-lg px-[14px] text-label font-medium text-white disabled:opacity-50"
-                  style={{ background: "var(--brand)" }}
-                >
+                <BrandButton size="sm" disabled={!canComment} onClick={postComment}>
                   Comment
-                </button>
+                </BrandButton>
               </div>
             </div>
           </div>
@@ -1238,18 +1222,6 @@ function Header({ icon, label, count }: { icon: string; label: string; count?: n
         <span className="font-mono text-meta text-[var(--text-3)]">{count}</span>
       )}
     </div>
-  );
-}
-
-function StatusChip({ status }: { status: string }) {
-  const c = catColor(status);
-  return (
-    <span
-      className="inline-flex items-center rounded-full px-2 py-px text-meta font-semibold tracking-[.01em]"
-      style={{ color: c, background: `${c}1c`, border: `1px solid ${c}33` }}
-    >
-      {statusLabel(status)}
-    </span>
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { PageHeader } from "@/components/page-header";
 import {
   ReactFlow,
   Background,
@@ -305,10 +306,9 @@ export function GraphView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <div className="flex-1">
-          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Dependency graph</h1>
-          <span className="text-meta text-[var(--text-3)]">
+      <PageHeader
+        title="Dependency graph"
+        subtitle={<>
             {effectiveEpicId
               ? spotlight
                 ? "Left → right: prerequisite → dependent · select to spotlight active blocking chains; double-click for details"
@@ -329,8 +329,9 @@ export function GraphView() {
                 </span>
               </>
             )}
-          </span>
-        </div>
+        </>}
+        controls={<>
+        <span className="flex-1" />
         <select
           aria-label="Graph scope"
           value={effectiveEpicId}
@@ -382,7 +383,8 @@ export function GraphView() {
             ) : <span className="text-label text-[var(--text-3)]">Choose a bead to highlight its blocking chains.</span>}
           </div>
         )}
-      </header>
+        </>}
+      />
       <div className="relative min-h-0 flex-1">
         <SpotlightContext.Provider value={spotlightContext}>
         <ReactFlow

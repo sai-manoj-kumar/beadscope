@@ -1,5 +1,8 @@
 "use client";
 import * as React from "react";
+import { BrandButton } from "@/components/brand-button";
+import { Chip } from "@/components/chip";
+import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
 import { useApp } from "@/components/app-context";
 import { useRespondHuman, useDismissHuman } from "@/hooks/use-beads";
@@ -41,13 +44,10 @@ export function NeedsYouView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-4 max-md:px-4">
-        <Icon name="user" size={18} className="text-[var(--text-2)]" />
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Needs You</h1>
-        <span className="text-label text-[var(--text-3)]">
-          · {waiting ? "loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you`}
-        </span>
-      </div>
+      <PageHeader
+        title="Needs You"
+        subtitle={waiting ? "Loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you`}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {waiting ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">Loading…</div>
@@ -134,9 +134,9 @@ function GateCard({ gate }: { gate: Bead }) {
         >
           {gate.id}
         </button>
-        <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-[1px] text-meta font-semibold uppercase tracking-wide text-[var(--text-2)]">
+        <Chip tone="strong" className="font-semibold uppercase tracking-wide">
           Approval gate
-        </span>
+        </Chip>
         <span className="flex-1" />
         <span title={fmtDateTime(gate.updated_at)} className="text-meta text-[var(--text-3)]">
           {relTime(gate.updated_at)}
@@ -240,14 +240,9 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         >
           Dismiss
         </button>
-        <button
-          disabled={!canRespond}
-          onClick={submit}
-          className="tap-target flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
-          style={{ background: "var(--brand)" }}
-        >
-          <Icon name="check" size={14} /> Respond
-        </button>
+        <BrandButton size="sm" icon="check" disabled={!canRespond} onClick={submit}>
+          Respond
+        </BrandButton>
       </div>
     </div>
   );

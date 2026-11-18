@@ -7,6 +7,7 @@ import { useUpdateCheck } from "@/hooks/use-update-check";
 import { api } from "@/lib/api-client";
 import type { UpdateStatus } from "@/lib/update-types";
 import { commitUrl } from "@/lib/build-info";
+import { BrandButton } from "@/components/brand-button";
 
 export function UpdateIndicator() {
   const { data } = useUpdateCheck();
@@ -52,10 +53,9 @@ export function UpdateIndicator() {
         </div>}
         <div className="mt-2 flex justify-end gap-2">
           <button disabled={run.isPending} onClick={() => setSelected(null)} className="rounded-lg border border-border px-3 py-2 text-label disabled:opacity-50">{run.data ? "Close" : "Not now"}</button>
-          {selected.canUpdate && selected.target && !run.data && <button disabled={run.isPending} onClick={() => run.mutate()}
-            className="rounded-lg px-3 py-2 text-label font-semibold text-white disabled:opacity-50" style={{ background: "var(--brand)" }}>
+          {selected.canUpdate && selected.target && !run.data && <BrandButton size="sm" disabled={run.isPending} onClick={() => run.mutate()}>
             {run.isPending ? "Updating…" : "Update now"}
-          </button>}
+          </BrandButton>}
         </div>
       </DialogContent>}
     </Dialog>

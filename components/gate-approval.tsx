@@ -2,11 +2,12 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/components/app-context";
-import { Icon } from "@/components/icons";
+
 import { toastError } from "@/components/error-toast";
 import { api } from "@/lib/api-client";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { beadsKey, activityKey } from "@/hooks/use-beads";
+import { BrandButton } from "@/components/brand-button";
 
 /** Shared by both human-gate surfaces; approval records an explicit decision. */
 export function GateApproval({ id }: { id: string }) {
@@ -49,15 +50,9 @@ export function GateApproval({ id }: { id: string }) {
         >
           {showNote ? "Hide approval note" : "Add approval note"}
         </button>
-        <button
-          type="button"
-          disabled={readOnly || approval.isPending}
-          onClick={approve}
-          className="tap-target flex h-8 flex-shrink-0 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
-          style={{ background: "var(--brand)" }}
-        >
-          <Icon name="check" size={14} /> Approve
-        </button>
+        <BrandButton size="sm" icon="check" disabled={readOnly || approval.isPending} onClick={approve}>
+          Approve
+        </BrandButton>
       </div>
       {showNote && (
         <textarea

@@ -5,10 +5,10 @@ import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { useApp } from "@/components/app-context";
 import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
+import { StatusChip } from "@/components/chip";
 import { beadOrigin, originTitle } from "@/lib/attribution";
 import {
   catColor,
-  statusLabel,
   typeColor,
   avatarColor,
   initials,
@@ -355,14 +355,3 @@ export function EpicsView({
   );
 }
 
-function StatusChip({ status }: { status: string }) {
-  const c = catColor(status);
-  return (
-    <span
-      className="inline-flex items-center rounded-full px-2 py-px text-meta font-semibold tracking-[.01em]"
-      style={{ color: c, background: `${c}1c`, border: `1px solid ${c}33` }}
-    >
-      {statusLabel(status)}
-    </span>
-  );
-}

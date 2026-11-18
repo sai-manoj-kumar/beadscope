@@ -17,6 +17,7 @@ import { KeyboardHelpDialog, ShortcutKeys } from "@/components/keyboard-help-dia
 import { UsageStatisticsSetting } from "@/components/usage-statistics";
 import { Card, SettingRow, ToggleButton } from "@/components/settings-card";
 import { PageHeader } from "@/components/page-header";
+import { BrandButton } from "@/components/brand-button";
 import { AgentsSettings } from "@/components/agents-settings";
 
 const inputClass =
@@ -272,15 +273,9 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
       <KeyboardShortcutsCard />
 
       <div className="flex justify-end">
-        <button
-          onClick={() => save.mutate()}
-          disabled={save.isPending}
-          className="tap-target flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:w-full max-md:justify-center"
-          style={{ background: "var(--brand)" }}
-        >
-          <Icon name="check" size={15} />
+        <BrandButton icon="check" onClick={() => save.mutate()} disabled={save.isPending} className="max-md:w-full">
           Save settings
-        </button>
+        </BrandButton>
       </div>
     </div>
   );

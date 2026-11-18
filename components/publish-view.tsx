@@ -8,6 +8,7 @@ import { api } from "@/lib/api-client";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { Card } from "@/components/settings-card";
 import { PageHeader } from "@/components/page-header";
+import { BrandButton } from "@/components/brand-button";
 
 const TEMPLATES = [
   { id: "manager", name: "Manager Dashboard", blurb: "Stats-forward hero + highlights. Warm & fuzzy for managers." },
@@ -159,15 +160,14 @@ export function PublishView() {
           </Card>
 
           <div className="flex justify-end">
-            <button
+            <BrandButton
+              icon="rocket"
               onClick={() => build.mutate()}
               disabled={readOnly || build.isPending}
-              className="tap-target flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:w-full max-md:justify-center"
-              style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
+              className="max-md:w-full"
             >
-              <Icon name="rocket" size={15} />
               {build.isPending ? "Building…" : "Publish site"}
-            </button>
+            </BrandButton>
           </div>
 
           {result && (

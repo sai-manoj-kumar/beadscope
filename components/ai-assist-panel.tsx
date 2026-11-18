@@ -8,6 +8,7 @@ import { api, type AssistResult } from "@/lib/api-client";
 import { useUpdateBead } from "@/hooks/use-beads";
 import { DescriptionContent } from "@/components/description-content";
 import type { Bead } from "@/lib/schema";
+import { BrandButton } from "@/components/brand-button";
 
 /**
  * In-UI version of the /refine-beads workflow: ask the local Claude CLI to
@@ -108,14 +109,9 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
             >
               Reject
             </button>
-            <button
-              onClick={applyDescription}
-              disabled={update.isPending}
-              className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
-              style={{ background: "var(--brand)" }}
-            >
-              <Icon name="check" size={14} /> Apply description
-            </button>
+            <BrandButton size="sm" icon="check" onClick={applyDescription} disabled={update.isPending}>
+              Apply description
+            </BrandButton>
           </div>
           <div className="mt-1 text-meta text-[var(--text-3)]">
             Labels and duplicates are advisory — only the description is written, on confirm.
