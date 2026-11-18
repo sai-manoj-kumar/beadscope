@@ -21,8 +21,9 @@ import type { Bead } from "@/lib/schema";
 
 /** `?repo=` / `?agent=` value meaning "everything" (the param is simply absent). */
 const ALL = "";
-/** Work still to do: closed beads are history, deferred ones are parked, archived ones are put away. */
-const isQueued = (b: Bead) => b.status !== "closed" && b.status !== "deferred" && !(b.labels ?? []).includes("archived");
+/** Work still to do, as Focus counts it: closed beads are history, deferred and pinned ones are parked, archived ones are put away. */
+const QUEUED_STATUSES = ["open", "in_progress", "hooked", "blocked"];
+const isQueued = (b: Bead) => QUEUED_STATUSES.includes(b.status) && !(b.labels ?? []).includes("archived");
 /** In flight first, then blocked, then ready. */
 const rank = (b: Bead, blocked: boolean) => (b.status === "in_progress" || b.status === "hooked" ? 0 : blocked ? 1 : 2);
 

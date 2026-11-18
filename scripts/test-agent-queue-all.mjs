@@ -34,7 +34,9 @@ const data = {
     bead("al-none", "Alpha unassigned"),
     bead("al-done", "Alpha finished", { assignee: "claude-code", status: "closed" }),
     bead("al-old", "Alpha archived", { assignee: "claude-code", labels: ["archived"] }),
-    bead("al-off", "Alpha for a switched-off agent", { assignee: "gemini" }),
+    bead("al-deferred", "Alpha deferred", { assignee: "claude-code", status: "deferred" }),
+    bead("al-pinned", "Alpha pinned", { assignee: "claude-code", status: "pinned" }),
+    bead("al-off","Alpha for a switched-off agent", { assignee: "gemini" }),
   ],
   beta: [
     bead("be-1", "Beta claude work", { assignee: "claude-code", priority: 0 }),
@@ -88,7 +90,7 @@ try {
   await page.getByText(/Couldn’t read Delta Repo/).waitFor();
 
   // All repos, all agents: open work of every agent identity (even a switched-off one), in flight
-  // first, then blocked, then ready by priority. Closed, archived, human and unassigned beads are left out.
+  // first, then blocked, then ready by priority. Closed, deferred, pinned, archived, human and unassigned beads are left out.
   assert.deepEqual(await cardIds(), ["al-2", "al-1", "al-3", "al-off", "be-blocked", "be-1"]);
   assert.equal(await page.locator('[data-repo-section="gamma"]').count(), 0, "a repo with nothing queued has no section");
   await page.getByText("6 queued for agents · all repos").waitFor();
@@ -133,9 +135,13 @@ try {
   await page.locator("[data-keyboard-bead-id]").first().waitFor();
   assert.equal((await cardIds()).length, 6);
 
-  // Opening a bead goes to its repo with the drawer on it.
+  // Opening a bead goes to its repo with the drawer on it: by click and by keyboard.
   await page.locator('[data-keyboard-bead-id="be-1"]').click();
   await page.waitForURL(/\/p\/beta\?bead=be-1/);
+  await page.goto(`${base}/agent-queue`);
+  await page.locator('[data-keyboard-bead-id="al-3"]').focus();
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/\/p\/alpha\?bead=al-3/);
 
   // Entry point: the launcher links here.
   await page.goto(`${base}/`);
