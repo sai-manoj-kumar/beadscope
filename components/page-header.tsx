@@ -29,7 +29,7 @@ export function PageHeader({
           {controls}
         </div>
       )}
-      {actions && <div className="flex flex-shrink-0 items-center gap-3 max-md:order-2">{actions}</div>}
+      {actions && <div className="flex flex-shrink-0 items-center gap-3 max-md:order-2 md:ml-auto">{actions}</div>}
     </header>
   );
 }

@@ -22,6 +22,7 @@ export function FilterBar({
   showArchived,
   onShowArchived,
   onClearAllAction,
+  stackFacets = false,
 }: {
   filters: Filters;
   onChange: (f: Filters) => void;
@@ -30,6 +31,12 @@ export function FilterBar({
   showArchived: boolean;
   onShowArchived: (v: boolean) => void;
   onClearAllAction?: () => void;
+  /**
+   * For a header that carries more controls than the facets (the Board's Sort): below 1440px the
+   * facets drop to their own row under the title, search and actions, instead of wrapping Sort and
+   * New away from the search. Wider screens keep one row, and phones have their own layout.
+   */
+  stackFacets?: boolean;
 }) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch });
   const [facetsOpen, setFacetsOpen] = React.useState(false);
@@ -89,7 +96,7 @@ export function FilterBar({
 
       <div
         id={facetsId}
-        className={`${facetsOpen ? "flex" : "max-md:hidden md:flex"} flex-wrap items-center gap-[7px] max-md:order-4 max-md:basis-full`}
+        className={`${facetsOpen ? "flex" : "max-md:hidden md:flex"} flex-wrap items-center gap-[7px] max-md:order-4 max-md:basis-full ${stackFacets ? "md:max-[1439px]:order-last md:max-[1439px]:basis-full" : ""}`}
       >
         <MultiSelectFilter
           label="Status"
