@@ -27,6 +27,7 @@ import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { AiAssistPanel } from "@/components/ai-assist-panel";
 import { ReviewLinkChips } from "@/components/review-link-chips";
 import { reviewLinks } from "@/lib/review-links";
+import { newestFirst } from "@/lib/comment-order";
 import {
   useUpdateBead,
   useSetStatus,
@@ -400,7 +401,7 @@ function DrawerBody({
   const design = bead.design?.trim() ?? "";
   const acceptance = bead.acceptance_criteria?.trim() ?? "";
   const closeReason = closeReasonOf(bead);
-  const comments = bead.comments ?? [];
+  const comments = newestFirst(bead.comments ?? []);
   const links = reviewLinks(bead);
   const activity = [
     { label: `Created by ${bead.created_by || "unknown"}`, time: fmtDate(bead.created_at) },
@@ -1009,7 +1010,36 @@ function DrawerBody({
         {/* Comments */}
         <Section>
           <Header icon="comment" label="Comments" count={comments.length} />
-          <div className="mb-3 flex flex-col gap-3">
+          {/* Newest first, so the composer sits above the list: a new comment lands right under it. */}
+          <div className="mb-3 flex items-start gap-[9px]">
+            <span
+              className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
+              style={{ background: "var(--brand-solid)" }}
+            >
+              {initials(actor)}
+            </span>
+            <div className="flex flex-1 flex-col gap-2">
+              <TextArea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (!isSubmitKey(e)) return;
+                  e.preventDefault();
+                  if (canComment) postComment();
+                }}
+                placeholder={`Comment as ${actor}…`}
+                disabled={readOnly}
+                rows={2}
+                className="rounded-[10px]"
+              />
+              <div className="flex justify-end">
+                <BrandButton size="sm" disabled={!canComment} onClick={postComment}>
+                  Comment
+                </BrandButton>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3" data-testid="comment-list">
             {comments.map((c, i) => {
               const co = originOf(c.author, humanAllowlist);
               return (
@@ -1040,34 +1070,6 @@ function DrawerBody({
             {comments.length === 0 && (
               <div className="text-label text-[var(--text-3)]">No comments yet.</div>
             )}
-          </div>
-          <div className="flex items-start gap-[9px]">
-            <span
-              className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-              style={{ background: "var(--brand-solid)" }}
-            >
-              {initials(actor)}
-            </span>
-            <div className="flex flex-1 flex-col gap-2">
-              <TextArea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (!isSubmitKey(e)) return;
-                  e.preventDefault();
-                  if (canComment) postComment();
-                }}
-                placeholder={`Comment as ${actor}…`}
-                disabled={readOnly}
-                rows={2}
-                className="rounded-[10px]"
-              />
-              <div className="flex justify-end">
-                <BrandButton size="sm" disabled={!canComment} onClick={postComment}>
-                  Comment
-                </BrandButton>
-              </div>
-            </div>
           </div>
         </Section>
 
