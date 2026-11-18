@@ -231,6 +231,22 @@ export function childrenOf(epicId: string, beads: Bead[]): Bead[] {
   );
 }
 
+/**
+ * Beads the Epics screen would otherwise never show: not epics themselves, not
+ * archived, and with no parent-child edge to an epic that exists in `beads`.
+ * A bead whose parent is a plain task still counts as epic-less, because the
+ * Epics screen lists only the direct children of an epic.
+ */
+export function beadsWithoutEpic(beads: Bead[]): Bead[] {
+  const epicIds = new Set(beads.filter((b) => b.issue_type === "epic").map((b) => b.id));
+  return beads.filter(
+    (b) =>
+      b.issue_type !== "epic" &&
+      !(b.labels ?? []).includes("archived") &&
+      !(b.dependencies ?? []).some((d) => d.type === "parent-child" && epicIds.has(d.depends_on_id)),
+  );
+}
+
 export function epicProgress(
   epicId: string,
   beads: Bead[],
