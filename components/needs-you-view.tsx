@@ -110,7 +110,7 @@ function ReviewLinks({ bead }: { bead: Bead }) {
  * A ready human-approval gate. "Approve" closes the gate (via `bd close`), which
  * resolves it and unblocks every bead depending on it.
  */
-function GateCard({ gate }: { gate: Bead }) {
+export function GateCard({ gate }: { gate: Bead }) {
   const { beads, openDetail, selectedBeadId, selectBead } = useApp();
   const blocks = React.useMemo(() => gateBlocks(gate.id, beads), [gate.id, beads]);
 
@@ -166,7 +166,7 @@ function GateCard({ gate }: { gate: Bead }) {
   );
 }
 
-function NeedsYouCard({ bead }: { bead: Bead }) {
+export function NeedsYouCard({ bead }: { bead: Bead }) {
   const { humanAllowlist, openDetail, readOnly, selectedBeadId, selectBead } = useApp();
   const respond = useRespondHuman();
   const dismiss = useDismissHuman();

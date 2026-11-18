@@ -132,4 +132,12 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await settle(1200);
     await onState("launcher", "");
   });
+
+  // Needs You across every repo: a page of its own, outside any project.
+  await attempt("needs-you-all", async () => {
+    await page.goto(`${origin}/needs-you`, { waitUntil: "domcontentloaded" });
+    await page.locator("h1").first().waitFor({ timeout: 15000 });
+    await settle(1200);
+    await onState("needs-you-all", "");
+  });
 }
