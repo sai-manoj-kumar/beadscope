@@ -40,20 +40,20 @@ export function Launcher() {
           onClick={toggle}
           title={themeButton.title}
           aria-label={themeButton.title}
-          className="flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+          className="tap-target flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
         >
           <Icon name={themeButton.icon} size={15} />
         </button>
       </header>
 
-      <div className="mx-auto w-full max-w-[860px] flex-1 p-[28px]">
+      <div className="mx-auto w-full max-w-[860px] flex-1 p-[28px] max-md:p-4">
         <div className="mb-[14px] flex items-center justify-between">
           <h2 className="text-body font-semibold uppercase tracking-[.03em] text-[var(--text-3)]">
             Projects
           </h2>
           <button
             onClick={() => setAddOpen(true)}
-            className="flex h-[36px] items-center gap-[7px] rounded-[9px] px-[14px] text-body font-semibold text-white"
+            className="tap-target flex h-[36px] items-center gap-[7px] rounded-[9px] px-[14px] text-body font-semibold text-white"
             style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
           >
             <Plus size={15} />
@@ -104,7 +104,7 @@ function CardShell({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClick();
       }}
-      className="group relative flex min-h-[112px] cursor-pointer flex-col gap-[10px] rounded-[13px] border border-border bg-[var(--surface)] p-[16px_18px] transition-colors hover:border-[var(--brand)] hover:bg-[var(--surface-2)]"
+      className="group relative flex cursor-pointer md:min-h-[112px] flex-col gap-[10px] rounded-[13px] border border-border bg-[var(--surface)] p-[16px_18px] transition-colors hover:border-[var(--brand)] hover:bg-[var(--surface-2)]"
     >
       {children}
     </div>
@@ -159,20 +159,23 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
             {project.hasBeads ? "bd repo" : "no .beads found"}
           </div>
         </div>
+        {/* Always visible where there is no hover (phones, tablets): a control that only appears on
+            hover cannot be found by touch. The confirm below guards a stray tap. */}
         <button
           title="Remove from list"
+          aria-label={`Remove ${project.name} from list`}
           onClick={(e) => {
             e.stopPropagation();
             if (confirm(`Remove "${project.name}" from the list? This does not delete any files.`)) {
               remove.mutate();
             }
           }}
-          className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg text-[var(--text-3)] opacity-0 transition-opacity hover:bg-[var(--surface-3)] hover:text-[#ef4444] group-hover:opacity-100"
+          className="tap-target flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg text-[var(--text-3)] opacity-0 transition-opacity hover:bg-[var(--surface-3)] hover:text-[#ef4444] focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Trash2 size={14} />
         </button>
       </div>
-      <div className="truncate font-mono text-meta text-[var(--text-3)]" dir="rtl" title={project.path ?? ""}>
+      <div className="truncate text-left font-mono text-meta text-[var(--text-3)]" dir="rtl" title={project.path ?? ""}>
         {project.path}
       </div>
     </CardShell>
