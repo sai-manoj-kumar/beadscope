@@ -51,6 +51,7 @@ try {
   assert.equal(await recent.getAttribute('aria-pressed'), 'false');
   const cards = column => page.locator(`[data-focus-column="${column}"] article`);
   const ids = column => cards(column).evaluateAll(els => els.map(e => e.dataset.keyboardBeadId));
+  await cards('flight').first().waitFor(); // the header renders before the beads load
   assert.equal((await ids('flight')).length, 16, 'all active work, including hooked, is visible');
   assert.equal((await ids('blocked')).length, 17, 'explicit and dependency-blocked work is uncapped');
   assert.ok((await ids('next')).includes('child'), 'hierarchy does not block');
