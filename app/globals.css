@@ -490,13 +490,13 @@ html[data-theme="rose-pine"] {
 
 /* Phones: every control inside an overlay (drawer, dialog, menu, select list) is a 44px tap target,
    so each of their buttons does not need its own tap-target class. Opt a deliberately small control
-   out with data-compact. min-height beats a fixed h-* utility, so nothing else has to change. */
+   out with data-compact. Settings cards opt in with data-phone-targets. min-height beats a fixed h-* utility, so nothing else has to change. */
 @media (max-width: 767px) {
-  :is([data-slot="sheet-content"], [data-slot="dialog-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"])
+  :is([data-slot="sheet-content"], [data-slot="dialog-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [data-phone-targets])
     :is(button, summary, [role="button"], [role="option"], [role="menuitem"], [role="combobox"], select, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="color"])):not([data-compact]) {
     min-height: 44px;
   }
-  :is([data-slot="sheet-content"], [data-slot="dialog-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"])
+  :is([data-slot="sheet-content"], [data-slot="dialog-content"], [data-slot="dropdown-menu-content"], [data-slot="select-content"], [data-phone-targets])
     :is(button, [role="button"]):not([data-compact]) {
     min-width: 44px;
   }

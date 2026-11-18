@@ -6,6 +6,8 @@ import { Icon } from "@/components/icons";
 import { useApp } from "@/components/app-context";
 import { api } from "@/lib/api-client";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
+import { Card } from "@/components/settings-card";
+import { PageHeader } from "@/components/page-header";
 
 const TEMPLATES = [
   { id: "manager", name: "Manager Dashboard", blurb: "Stats-forward hero + highlights. Warm & fuzzy for managers." },
@@ -66,14 +68,9 @@ export function PublishView() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex-shrink-0 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Publish</h1>
-        <span className="text-meta text-[var(--text-3)]">
-          Generate a shareable static site from your beads — built with Eleventy
-        </span>
-      </header>
+      <PageHeader title="Publish" subtitle="Generate a shareable static site from your beads — built with Eleventy" />
 
-      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[24px_22px]">
+      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[24px_22px] max-md:p-4">
         <div className="mx-auto flex max-w-[640px] flex-col gap-[18px]">
           {/* Template */}
           <Card title="Template">
@@ -125,7 +122,7 @@ export function PublishView() {
 
             <div className="flex flex-col gap-[6px]">
               <span className="text-label text-[var(--text-2)]">Scope</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {(["project", "all"] as const).map((s) => (
                   <button
                     key={s}
@@ -165,7 +162,7 @@ export function PublishView() {
             <button
               onClick={() => build.mutate()}
               disabled={readOnly || build.isPending}
-              className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
+              className="tap-target flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:w-full max-md:justify-center"
               style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
             >
               <Icon name="rocket" size={15} />
@@ -181,7 +178,7 @@ export function PublishView() {
               <div className="break-all rounded-[9px] border border-border bg-[var(--surface-2)] p-[9px_11px] font-mono text-meta text-[var(--text-3)]">
                 {result.outDir}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => open.mutate()}
                   disabled={readOnly || open.isPending}
@@ -203,7 +200,7 @@ export function PublishView() {
                     target="_blank"
                     rel="noopener noreferrer"
                     title={deployUrl}
-                    className="flex h-9 min-w-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--brand)] hover:bg-[var(--surface-3)]"
+                    className="tap-target flex h-9 min-w-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--brand)] hover:bg-[var(--surface-3)]"
                   >
                     <Icon name="link" size={14} />
                     <span className="truncate">{deployUrl.replace(/^https?:\/\//, "")}</span>
@@ -221,23 +218,14 @@ export function PublishView() {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-[14px] rounded-[13px] border border-border bg-[var(--surface)] p-[18px_20px]">
-      <div className="text-body font-semibold">{title}</div>
-      {children}
-    </section>
-  );
-}
-
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <label className="flex cursor-pointer select-none items-center gap-[9px]">
+    <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 cursor-pointer"
+        className="h-5 w-5 cursor-pointer md:h-4 md:w-4"
         style={{ accentColor: "var(--brand)" }}
       />
       <span className="text-body text-[var(--text-2)]">{label}</span>
