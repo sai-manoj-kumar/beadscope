@@ -43,6 +43,13 @@ export function Launcher() {
           <Icon name="user" size={15} />
           Needs You
         </Link>
+        <Link
+          href="/agent-queue"
+          className="tap-target inline-flex items-center gap-1.5 rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-1.5 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+        >
+          <Icon name="bot" size={15} />
+          Agent Queue
+        </Link>
         <ThemeToggle size="lg" />
       </header>
 
