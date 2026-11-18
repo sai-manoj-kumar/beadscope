@@ -43,7 +43,7 @@ export function MultiSelectFilter({
       >
         <span>{label}</span>
         {active && (
-          <span className="rounded-full bg-[var(--brand)] px-[6px] text-meta font-semibold leading-[16px] text-white">
+          <span className="rounded-full bg-[var(--brand-solid)] px-[6px] text-meta font-semibold leading-[16px] text-white">
             {selected.length}
           </span>
         )}

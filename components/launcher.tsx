@@ -25,7 +25,7 @@ export function Launcher() {
       <header className="flex items-center gap-[12px] border-b border-border p-[20px_28px]">
         <div
           className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] text-white"
-          style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
+          style={{ background: "var(--brand-solid)", boxShadow: "0 2px 8px -2px var(--brand)" }}
         >
           <Icon name="logo" size={19} />
         </div>

@@ -3,6 +3,7 @@ import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
+import { readableColor } from "@/components/chip";
 import { useTheme } from "@/components/theme-provider";
 import { SYSTEM_CHOICE, THEMES } from "@/lib/themes";
 import { useApp } from "@/components/app-context";
@@ -130,7 +131,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
           <Icon
             name={data.ok ? "check" : "x"}
             size={14}
-            style={{ color: data.ok ? "#22c55e" : "#ef4444" }}
+            style={{ color: readableColor(data.ok ? "#22c55e" : "#ef4444") }}
           />
           <span>
             {isDemo

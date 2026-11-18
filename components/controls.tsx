@@ -249,7 +249,7 @@ export function Segmented<T extends string | number>({
             className={cn(
               "tap-target rounded-[7px] px-[11px] py-[6px] text-label font-medium transition-colors",
               fill && "flex-1",
-              active ? "bg-[var(--brand)] text-white" : "text-[var(--text-2)] hover:bg-[var(--surface-3)]",
+              active ? "bg-[var(--brand-solid)] text-white" : "text-[var(--text-2)] hover:bg-[var(--surface-3)]",
             )}
           >
             {o.label}

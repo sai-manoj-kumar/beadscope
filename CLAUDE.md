@@ -57,3 +57,11 @@ Buttons, fields and selects come from `components/controls.tsx`; do not hand-wri
 - `Button` (`variant` secondary|outline|ghost|dashed, `size` sm|md|lg, `icon`, `pressed` for on/off toggles), `IconButton` (needs a `label`), `LinkButton` (text-only, `tone`, `mono`), `TextInput`, `TextArea`, `SelectField`, `CheckInput`, `Segmented`.
 - Main actions are `BrandButton`, small pills are `Chip`, the page header is `PageHeader`, the theme switch is `ThemeToggle`.
 - They already carry the 44px phone targets and 16px phone fields. A raw `<button>` is only right for a whole clickable row, card, menu item or tile, a hidden file/colour/radio input, or an inline editor that must look unlike a field; say why in a comment.
+
+## Quality gate
+
+`scripts/test-quality-phone.mjs` and `test-quality-desktop.mjs` (run by `npm run test:browser`) walk every screen state in `scripts/ui-states.mjs` (each view, the bead drawer, create dialog, palette, project menu, folder browser, nav sheet) in the light and dark theme and fail on: an icon above its label, text squeezed into a sliver, a page that scrolls sideways, a control without an accessible name, duplicate ids, text below WCAG AA contrast (4.5:1; 3:1 for large text), and any console error. A state that can no longer be reached fails too.
+
+- A new view goes in `VIEWS` in `scripts/ui-states.mjs`; a new overlay gets a step in `visitStates`.
+- Text colours: use `--text`, `--text-2`, `--text-3` (all AA on every surface). For a hue on a tint use `Chip`, `tintStyle` or `readableColor` from `components/chip.tsx`; for a fill behind white text use `--brand-solid`, not `--brand`.
+- To look at the states yourself: `node scripts/review-screenshots.mjs http://localhost:3000/p/<project> <dir> [bead-id]` writes screenshots and contact sheets. After a CSS token change, if the running app still shows the old value, `rm -rf .next/cache` and rebuild.

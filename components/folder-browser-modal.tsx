@@ -145,11 +145,11 @@ function Browser({ onClose }: { onClose: () => void }) {
 
       {/* Footer */}
       <div className="flex flex-wrap items-center gap-[10px] border-t border-border p-[14px_18px]">
-        <div className="min-w-0 flex-1 text-meta text-[var(--text-3)] max-md:basis-full">
+        <div className="min-w-[8rem] flex-1 text-meta text-[var(--text-3)] max-md:basis-full">
           {data?.hasBeads ? (
             <span className="flex items-center gap-1.5 text-[var(--text-2)]">
-              <Check size={13} className="text-[#22c55e]" />
-              This folder has a <span className="font-mono">.beads</span> repo
+              <Check size={13} className="flex-shrink-0 text-[#22c55e]" />
+              <span>This folder has a <span className="font-mono">.beads</span> repo</span>
             </span>
           ) : (
             "Navigate into a folder that contains a .beads directory"

@@ -40,6 +40,7 @@
   /* Beadscope brand + surface/text scale (from the design export) */
   --color-brand: var(--brand);
   --color-brand-2: var(--brand-2);
+  --color-brand-solid: var(--brand-solid);
   --color-brand-weak: var(--brand-weak);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -106,10 +107,12 @@
   --border: #e7e7ec;
   --border-strong: #d6d6dd;
   --text: #16161a;
-  --text-2: #62626d;
-  --text-3: #9a9aa5;
-  --brand: #6d5ef0;
-  --brand-2: #5546e0;
+  --text-2: #4d4d58;
+  --text-3: #686873;
+  --brand: #5f50e6;
+  --brand-2: #4a3bd0;
+  /* Fill behind white text (buttons, active pills, avatars): white on it is 4.5:1 or better. */
+  --brand-solid: #5f50e6;
   --brand-weak: #efedfd;
   --shadow: 0 1px 2px rgba(20, 20, 30, 0.05), 0 1px 1px rgba(20, 20, 30, 0.04);
   --shadow-lg: 0 12px 32px -8px rgba(20, 20, 40, 0.18), 0 4px 12px -4px rgba(20, 20, 40, 0.1);
@@ -122,7 +125,7 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --primary: var(--brand);
+  --primary: var(--brand-solid);
   --primary-foreground: #ffffff;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
@@ -153,10 +156,11 @@
   --border: #26262d;
   --border-strong: #34343d;
   --text: #f2f2f5;
-  --text-2: #a2a2ad;
-  --text-3: #6c6c77;
-  --brand: #8b7cf8;
+  --text-2: #b4b4bf;
+  --text-3: #92929e;
+  --brand: #978bf9;
   --brand-2: #9c8ffa;
+  --brand-solid: #6f61ec;
   --brand-weak: #211d3a;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
@@ -168,7 +172,7 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --primary: var(--brand);
+  --primary: var(--brand-solid);
   --primary-foreground: #0c0c0f;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
@@ -209,6 +213,7 @@ html[data-theme="dracula"] {
   --text-2: #b9bcd0;
   --text-3: #6272a4;
   --brand: #bd93f9;
+  --brand-solid: var(--brand);
   --brand-2: #caa9fa;
   --brand-weak: #343352;
   --drawer: #21222c;
@@ -227,6 +232,7 @@ html[data-theme="nord"] {
   --text-2: #d8dee9;
   --text-3: #7b8493;
   --brand: #88c0d0;
+  --brand-solid: var(--brand);
   --brand-2: #8fbcbb;
   --brand-weak: #2f3b41;
   --drawer: #2b303b;
@@ -245,6 +251,7 @@ html[data-theme="solarized-dark"] {
   --text-2: #839496;
   --text-3: #586e75;
   --brand: #268bd2;
+  --brand-solid: var(--brand);
   --brand-2: #2aa198;
   --brand-weak: #073642;
   --drawer: #002129;
@@ -263,6 +270,7 @@ html[data-theme="gruvbox-dark"] {
   --text-2: #d5c4a1;
   --text-3: #a89984;
   --brand: #fabd2f;
+  --brand-solid: var(--brand);
   --brand-2: #fe8019;
   --brand-weak: #3c3530;
   --drawer: #1d2021;
@@ -281,6 +289,7 @@ html[data-theme="tokyo-night"] {
   --text-2: #a9b1d6;
   --text-3: #565f89;
   --brand: #7aa2f7;
+  --brand-solid: var(--brand);
   --brand-2: #bb9af7;
   --brand-weak: #24283b;
   --drawer: #16161e;
@@ -299,6 +308,7 @@ html[data-theme="catppuccin-mocha"] {
   --text-2: #bac2de;
   --text-3: #6c7086;
   --brand: #cba6f7;
+  --brand-solid: var(--brand);
   --brand-2: #b4befe;
   --brand-weak: #2b2640;
   --drawer: #181825;
@@ -317,6 +327,7 @@ html[data-theme="rose-pine"] {
   --text-2: #908caa;
   --text-3: #6e6a86;
   --brand: #c4a7e7;
+  --brand-solid: var(--brand);
   --brand-2: #ebbcba;
   --brand-weak: #2a2440;
   --drawer: #16141f;
