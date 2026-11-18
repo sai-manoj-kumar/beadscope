@@ -2,9 +2,8 @@
 //
 // Checked on every view: the page does not scroll sideways, no visible text is under 14px, text
 // fields are at least 16px (iOS zooms on focus), and the page declares a device-width viewport.
-// Checked only on views that have been fixed: nothing sticks out past the right edge, and every
-// button, link and field is at least 44px. When a mobile bead finishes a view, add the view to
-// the lists below so it cannot regress. bui-4e1.20 (final review) needs both lists to hold all views.
+// Also checked on every view: nothing sticks out past the right edge, and every button, link and field
+// is at least 44px.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { VIEWS, auditView } from "./mobile-audit.mjs";
@@ -12,8 +11,9 @@ import { VIEWS, auditView } from "./mobile-audit.mjs";
 const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 
-const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish", "list", "board", "focus", "epics", "insights", "settings"]);
-const TAP_TARGETS_OK = new Set(["list", "activity", "achievements", "board", "focus", "epics", "insights", "needsyou", "publish", "settings"]);
+// Every view is held to the full rules (bui-4e1.20). A new view is checked from the day it is added.
+const NO_OVERFLOW = new Set(VIEWS);
+const TAP_TARGETS_OK = new Set(VIEWS);
 const WIDTHS = [360, 390, 430];
 
 const browser = await chromium.launch({ executablePath: process.env.BEADSCOPE_BROWSER_EXECUTABLE || undefined });
