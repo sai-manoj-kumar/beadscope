@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Folder, FolderOpen, Home, ArrowUp, Check, Loader2, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api } from "@/lib/api-client";
+import { BrandButton } from "@/components/brand-button";
+import { Button, IconButton, TextInput } from "@/components/controls";
 
 export function FolderBrowserModal({
   open,
@@ -71,22 +73,15 @@ function Browser({ onClose }: { onClose: () => void }) {
 
       {/* Path bar */}
       <div className="flex items-center gap-2 border-b border-border bg-[var(--surface-2)] p-[10px_16px]">
-        <button
-          onClick={() => setPath(undefined)}
-          title="Home"
-          className="tap-target flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
-        >
+        <IconButton label="Home" title="Home" onClick={() => setPath(undefined)}>
           <Home size={14} />
-        </button>
-        <button
-          onClick={() => data?.parent && setPath(data.parent)}
-          disabled={!data?.parent}
-          title="Up one level"
-          className="tap-target flex h-[28px] w-[28px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] disabled:opacity-40"
-        >
+        </IconButton>
+        <IconButton label="Up one level" title="Up one level" onClick={() => data?.parent && setPath(data.parent)} disabled={!data?.parent}>
           <ArrowUp size={14} />
-        </button>
-        <input
+        </IconButton>
+        <TextInput
+          size="sm"
+          mono
           // Re-mount on navigation so the field shows where we landed, while
           // still letting the user freely type/paste a path in between.
           key={data?.path ?? "home"}
@@ -101,9 +96,7 @@ function Browser({ onClose }: { onClose: () => void }) {
           autoComplete="off"
           placeholder="Type or paste a path, then press Enter"
           aria-label="Folder path"
-          className={`min-w-0 flex-1 rounded-lg border bg-[var(--surface)] px-[10px] py-[6px] max-md:min-h-11 font-mono text-label text-[var(--text)] outline-none focus:border-[var(--brand)] ${
-            errMsg ? "border-[#d97706]" : "border-border"
-          }`}
+          className={`w-0 flex-1 bg-[var(--surface)] ${errMsg ? "border-[#d97706]" : ""}`}
         />
       </div>
 
@@ -117,12 +110,9 @@ function Browser({ onClose }: { onClose: () => void }) {
           <div className="flex h-[180px] flex-col items-center justify-center gap-2 px-6 text-center">
             <AlertTriangle size={20} className="text-[#d97706]" />
             <p className="text-label text-[var(--text-2)]">{errMsg}</p>
-            <button
-              onClick={() => setPath(undefined)}
-              className="tap-target rounded-md border border-border px-2.5 py-1 text-label hover:bg-[var(--surface-2)]"
-            >
+            <Button variant="outline" size="sm" onClick={() => setPath(undefined)}>
               Go home
-            </button>
+            </Button>
           </div>
         ) : data && data.entries.length === 0 ? (
           <div className="flex h-[180px] items-center justify-center text-label text-[var(--text-3)]">
@@ -154,8 +144,8 @@ function Browser({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-[10px] border-t border-border p-[14px_18px]">
-        <div className="flex-1 text-meta text-[var(--text-3)]">
+      <div className="flex flex-wrap items-center gap-[10px] border-t border-border p-[14px_18px]">
+        <div className="min-w-0 flex-1 text-meta text-[var(--text-3)] max-md:basis-full">
           {data?.hasBeads ? (
             <span className="flex items-center gap-1.5 text-[var(--text-2)]">
               <Check size={13} className="text-[#22c55e]" />
@@ -165,21 +155,17 @@ function Browser({ onClose }: { onClose: () => void }) {
             "Navigate into a folder that contains a .beads directory"
           )}
         </div>
-        <button
-          onClick={onClose}
-          className="tap-target h-[36px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium hover:bg-[var(--surface-3)]"
-        >
+        <Button size="lg" className="max-md:flex-1" onClick={onClose}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <BrandButton
+          className="max-md:flex-[2]"
           onClick={() => data?.path && add.mutate(data.path)}
           disabled={!data?.hasBeads || add.isPending}
-          className="tap-target flex h-[36px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
-          style={{ background: "var(--brand)" }}
         >
           {add.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={15} />}
           Add this folder
-        </button>
+        </BrandButton>
       </div>
     </>
   );

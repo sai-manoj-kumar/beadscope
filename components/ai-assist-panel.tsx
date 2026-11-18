@@ -9,6 +9,7 @@ import { useUpdateBead } from "@/hooks/use-beads";
 import { DescriptionContent } from "@/components/description-content";
 import type { Bead } from "@/lib/schema";
 import { BrandButton } from "@/components/brand-button";
+import { Button, IconButton, LinkButton } from "@/components/controls";
 
 /**
  * In-UI version of the /refine-beads workflow: ask the local Claude CLI to
@@ -42,27 +43,19 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
 
   return (
     <div className="mt-2">
-      <button
-        onClick={() => assist.mutate()}
-        disabled={assist.isPending}
-        className="inline-flex h-8 items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
-      >
+      <Button size="sm" onClick={() => assist.mutate()} disabled={assist.isPending}>
         <Icon name="feature" size={14} style={{ color: "var(--brand)" }} />
         {assist.isPending ? "Refining with AI…" : "Refine with AI"}
-      </button>
+      </Button>
 
       {result && (
         <div className="mt-2 rounded-[10px] border bg-[var(--surface-2)] p-3" style={{ borderColor: "var(--brand)" }}>
           <div className="mb-2 flex items-center gap-2 text-label font-semibold text-[var(--brand)]">
             <Icon name="feature" size={14} /> AI suggestion
             <span className="flex-1" />
-            <button
-              onClick={() => setResult(null)}
-              className="text-[var(--text-3)] hover:text-[var(--text)]"
-              title="Dismiss"
-            >
+            <IconButton variant="ghost" size="sm" label="Dismiss" title="Dismiss" onClick={() => setResult(null)}>
               <Icon name="x" size={13} />
-            </button>
+            </IconButton>
           </div>
 
           <div className="mb-1 text-meta uppercase tracking-[.03em] text-[var(--text-3)]">
@@ -89,26 +82,24 @@ export function AiAssistPanel({ bead }: { bead: Bead }) {
             <div className="mt-2 text-meta">
               <div className="text-[var(--text-3)]">Possible duplicates:</div>
               {result.duplicates.map((d) => (
-                <button
+                <LinkButton
                   key={d.id}
+                  tone="text"
                   onClick={() => pushDetail(d.id)}
-                  className="mt-1 block text-left hover:underline"
+                  className="mt-1 block"
                 >
                   <span className="font-mono text-[var(--text-3)]">{d.id}</span>{" "}
                   <span className="text-[var(--text-2)]">{d.title}</span>
                   {d.reason ? <span className="text-[var(--text-3)]"> — {d.reason}</span> : null}
-                </button>
+                </LinkButton>
               ))}
             </div>
           )}
 
           <div className="mt-3 flex justify-end gap-2">
-            <button
-              onClick={() => setResult(null)}
-              className="h-8 rounded-lg border border-border bg-[var(--surface)] px-3 text-label font-medium hover:bg-[var(--surface-2)]"
-            >
+            <Button size="sm" onClick={() => setResult(null)}>
               Reject
-            </button>
+            </Button>
             <BrandButton size="sm" icon="check" onClick={applyDescription} disabled={update.isPending}>
               Apply description
             </BrandButton>

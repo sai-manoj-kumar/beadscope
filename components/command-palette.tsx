@@ -6,6 +6,7 @@ import { useTheme } from "@/components/theme-provider";
 import { SYSTEM_CHOICE, THEMES, themeButtonInfo } from "@/lib/themes";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Icon } from "@/components/icons";
+import { IconButton } from "@/components/controls";
 import { useApp, type View } from "@/components/app-context";
 import { useProjects } from "@/hooks/use-projects";
 import { useSetStatus, useUpdateBead } from "@/hooks/use-beads";
@@ -151,13 +152,9 @@ function PaletteBody({
     >
       <div className="flex items-center gap-2 border-b border-border px-3">
         {page !== "root" ? (
-          <button
-            onClick={goBack}
-            title="Back"
-            className="tap-target flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
-          >
+          <IconButton variant="ghost" label="Back" title="Back" onClick={goBack}>
             <Icon name="chevron" size={16} className="rotate-90" />
-          </button>
+          </IconButton>
         ) : (
           <Icon name="search" size={16} className="ml-1 text-[var(--text-3)]" />
         )}

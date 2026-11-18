@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { useApp } from "@/components/app-context";
+import { Button, LinkButton, SelectField } from "@/components/controls";
 import { Icon, typeIconName } from "@/components/icons";
 import { PriorityChip } from "@/components/board/bead-card";
 import { AgentIcon } from "@/components/agent-icon";
@@ -158,16 +159,14 @@ export function FocusView() {
         <span className="flex-1 max-md:hidden" />
         <label className="flex items-center gap-2 text-label text-[var(--text-2)] tap-target">
           Group by
-          <select value={groupBy} onChange={e => setGroupBy(e.target.value === "assignee" ? "assignee" : "none")}
-            className="h-8 rounded-[8px] border border-border bg-[var(--surface-2)] px-2 text-[var(--text)] max-md:h-11">
+          <SelectField size="sm" value={groupBy} onChange={e => setGroupBy(e.target.value === "assignee" ? "assignee" : "none")}>
             <option value="none">None</option>
             <option value="assignee">Assignee</option>
-          </select>
+          </SelectField>
         </label>
-        <button aria-pressed={showRecent} onClick={() => { setShowRecent(!showRecent); setShowAllRecent(false); }}
-          className="tap-target h-8 rounded-[8px] border border-border px-3 text-label aria-pressed:border-[var(--brand)] aria-pressed:bg-[var(--brand-weak)] aria-pressed:text-[var(--brand)]">
+        <Button size="sm" variant="outline" pressed={showRecent} onClick={() => { setShowRecent(!showRecent); setShowAllRecent(false); }}>
           Recently finished
-        </button>
+        </Button>
         {enabledAgents.length > 0 && (
           <div role="group" aria-label="Agent queue" className="flex flex-wrap items-center gap-[6px] max-md:basis-full">
             <span className="text-label text-[var(--text-2)]">Agent</span>
@@ -208,9 +207,9 @@ export function FocusView() {
         <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border px-[22px] py-2 text-label text-[var(--text-2)] max-md:px-4">
           <span aria-live="polite">Showing {recentItems.length} of {recentlyFinished.length} completed beads</span>
           {recentlyFinished.length > RECENT_LIMIT && (
-            <button onClick={() => setShowAllRecent(!showAllRecent)} className="tap-target rounded px-2 py-1 font-medium text-[var(--brand)] hover:bg-[var(--brand-weak)]">
+            <LinkButton tone="brand" className="rounded px-2 py-1 font-medium hover:bg-[var(--brand-weak)]" onClick={() => setShowAllRecent(!showAllRecent)}>
               {showAllRecent ? `Show latest ${RECENT_LIMIT}` : `Show all ${recentlyFinished.length} completed`}
-            </button>
+            </LinkButton>
           )}
           <span className="text-[var(--text-3)]">Current lane filter applies. Active and blocked work is always shown in full.</span>
         </div>

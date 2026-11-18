@@ -14,9 +14,8 @@ import {
   type AgentIdentity,
 } from "@/lib/agents";
 import { api, type DoctorResponse } from "@/lib/api-client";
+import { Button, CheckInput, IconButton, TextInput } from "@/components/controls";
 
-const nameInputClass =
-  "h-[32px] min-w-0 flex-1 rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-label text-[var(--text)] outline-none focus:border-[var(--brand)]";
 
 /**
  * Agent identities: which agents Beadscope offers in the assignee picker.
@@ -81,17 +80,16 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
             <li key={agent.id} data-agent-row={agent.id} className="flex flex-col gap-[8px]">
               <div className="flex items-center gap-[10px] max-md:flex-wrap">
                 <label className="flex shrink-0 cursor-pointer items-center justify-center max-md:h-11 max-md:w-11">
-                  <input
-                    type="checkbox"
+                  <CheckInput
                     checked={agent.enabled}
                     onChange={(e) => change(agent.id, { enabled: e.target.checked })}
                     aria-label={`Offer ${agent.name} as an assignee`}
-                    className="h-5 w-5 shrink-0 cursor-pointer md:h-4 md:w-4"
-                    style={{ accentColor: "var(--brand)" }}
                   />
                 </label>
                 <AgentIcon agent={agent} size={24} />
-                <input
+                <TextInput
+                  size="sm"
+                  mono
                   value={draft}
                   maxLength={MAX_AGENT_NAME}
                   onChange={(e) => setNames((n) => ({ ...n, [agent.id]: e.target.value }))}
@@ -105,7 +103,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                     }
                   }}
                   aria-label={`Name of ${preset?.label ?? agent.name}`}
-                  className={`${nameInputClass} font-mono`}
+                  className="flex-1"
                 />
                 {preset ? (
                   <span className="hidden w-[96px] shrink-0 truncate text-meta text-[var(--text-3)] sm:block">
@@ -113,24 +111,25 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                   </span>
                 ) : (
                   <>
-                    <button
-                      type="button"
+                    <Button
+                      variant="outline"
+                      size="sm"
                       aria-expanded={openPicker === agent.id}
                       aria-label={`Choose icon for ${agent.name}`}
                       onClick={() => setOpenPicker((p) => (p === agent.id ? null : agent.id))}
-                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
                     >
                       Icon
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       aria-label={`Remove ${agent.name}`}
                       disabled={save.isPending}
                       onClick={() => commit(agents.filter((a) => a.id !== agent.id))}
-                      className="h-[30px] shrink-0 rounded-[8px] border border-border px-[10px] text-label text-[var(--text-3)] hover:text-[#ef4444]"
+                      className="text-[var(--text-3)] hover:text-[#ef4444]"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -138,17 +137,17 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                 <div className="ml-[34px] max-md:ml-0 flex flex-col gap-[8px] rounded-[10px] border border-border bg-[var(--surface-2)] p-[10px]">
                   <div role="group" aria-label="Emoji" className="flex flex-wrap gap-[4px]">
                     {AGENT_EMOJIS.map((emoji) => (
-                      <button
+                      <IconButton
                         key={emoji}
-                        type="button"
-                        aria-label={`Emoji ${emoji}`}
+                        label={`Emoji ${emoji}`}
+                        variant="ghost"
                         aria-pressed={agent.emoji === emoji}
                         onClick={() => change(agent.id, { emoji })}
-                        className="tap-target flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border text-page-title hover:bg-[var(--surface-3)]"
+                        className="border text-page-title"
                         style={{ borderColor: agent.emoji === emoji ? "var(--brand)" : "transparent" }}
                       >
                         {emoji}
-                      </button>
+                      </IconButton>
                     ))}
                   </div>
                   <div role="group" aria-label="Colour" className="flex flex-wrap items-center gap-[6px]">
@@ -176,7 +175,10 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
         })}
       </ul>
       <div className="flex items-center gap-[8px] max-md:flex-wrap">
-        <input
+        <TextInput
+          size="sm"
+          mono
+          dashed
           value={newName}
           maxLength={MAX_AGENT_NAME}
           onChange={(e) => setNewName(e.target.value)}
@@ -188,16 +190,11 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
           }}
           aria-label="Name of a new agent"
           placeholder="+ add an agent, e.g. my-agent"
-          className={`${nameInputClass} border-dashed font-mono`}
+          className="flex-1"
         />
-        <button
-          type="button"
-          onClick={add}
-          disabled={!newName.trim() || save.isPending}
-          className="h-[32px] shrink-0 rounded-[8px] border border-border px-[12px] text-label text-[var(--text-2)] hover:bg-[var(--surface-2)] disabled:opacity-50"
-        >
+        <Button variant="outline" size="sm" onClick={add} disabled={!newName.trim() || save.isPending}>
           Add agent
-        </button>
+        </Button>
       </div>
     </div>
   );

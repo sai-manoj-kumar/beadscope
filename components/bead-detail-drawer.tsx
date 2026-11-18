@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
+import { Button, IconButton, LinkButton, SelectField, TextArea, TextInput } from "@/components/controls";
 import { StatusChip, Chip } from "@/components/chip";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { GateApproval } from "@/components/gate-approval";
@@ -62,8 +63,6 @@ import {
   type Dependency,
 } from "@/lib/schema";
 
-const selectClass =
-  "h-9 cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[9px] text-body text-[var(--text)] outline-none";
 const fieldLabel = "text-meta font-medium uppercase tracking-[.03em] text-[var(--text-3)]";
 const detailContentClass =
   "rounded-[10px] border border-border bg-[var(--surface-2)] p-[12px_13px] text-body leading-[1.55] text-[var(--text-2)] [text-wrap:pretty]";
@@ -497,7 +496,7 @@ function DrawerBody({
         {editing && !readOnly ? (
           <>
             <SheetTitle className="sr-only">Edit {bead.id}</SheetTitle>
-            <input
+            <TextInput
               autoFocus
               value={titleDraft}
               onChange={(e) => setTitleDraft(e.target.value)}
@@ -507,7 +506,7 @@ function DrawerBody({
                 saveEdit();
               }}
               placeholder="Title"
-              className="mb-[14px] w-full rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] py-[9px] text-page-title font-semibold leading-[1.25] tracking-[-.02em] text-[var(--text)] outline-none focus:border-[var(--brand)]"
+              className="mb-[14px] h-auto py-[9px] text-page-title font-semibold leading-[1.25] tracking-[-.02em]"
             />
           </>
         ) : (
@@ -519,9 +518,8 @@ function DrawerBody({
         <div className="mb-4 grid grid-cols-2 gap-[10px]">
           <label className="flex flex-col gap-[5px]">
             <span className={fieldLabel}>Status</span>
-            <select
+            <SelectField
               disabled={readOnly}
-              className={selectClass}
               value={closing && !readOnly ? "closed" : bead.status}
               onChange={(e) => {
                 const next = e.target.value;
@@ -537,13 +535,12 @@ function DrawerBody({
                   {statusLabel(s)}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
           <label className="flex flex-col gap-[5px]">
             <span className={fieldLabel}>Priority</span>
-            <select
+            <SelectField
               disabled={readOnly}
-              className={selectClass}
               value={String(bead.priority)}
               onChange={(e) =>
                 update.mutate({ id: bead.id, patch: { priority: Number(e.target.value) } })
@@ -554,7 +551,7 @@ function DrawerBody({
                   {p} · {["Critical", "High", "Medium", "Low", "Backlog"][p]}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
           <AssigneeField bead={bead} />
           <div className="flex flex-col gap-[5px]">
@@ -568,7 +565,7 @@ function DrawerBody({
                 type="button"
                 onClick={() => pushDetail(ep.id)}
                 title={`Open ${ep.id}`}
-                className="flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left text-[var(--brand)] hover:border-[var(--brand)] hover:bg-[var(--brand-weak)]"
+                className="flex h-[38px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left text-[var(--brand)] hover:border-[var(--brand)] hover:bg-[var(--brand-weak)]"
               >
                 <Icon
                   name={ep.issue_type === "epic" ? "target" : typeIconName(ep.issue_type)}
@@ -582,7 +579,7 @@ function DrawerBody({
                 <Icon name="chevron" size={13} className="-rotate-90 flex-shrink-0 text-[var(--text-3)]" />
               </button>
             ) : (
-              <div className="flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[var(--text-3)]">
+              <div className="flex h-[38px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[var(--text-3)]">
                 <Icon name="target" size={14} />
                 <span className="text-label">—</span>
               </div>
@@ -600,7 +597,7 @@ function DrawerBody({
         {closing && !readOnly && (
           <div className="mb-4 rounded-[10px] border border-border bg-[var(--surface-2)] p-[11px_13px]">
             <div className={`${fieldLabel} mb-[7px]`}>Close reason — optional</div>
-            <textarea
+            <TextArea
               ref={closeRef}
               value={closeDraft}
               onChange={(e) => setCloseDraft(e.target.value)}
@@ -610,20 +607,15 @@ function DrawerBody({
               }}
               rows={3}
               placeholder="Why is this done? A commit, a PR link, or a one-liner. Markdown and bead IDs render."
-              className="w-full resize-y rounded-[9px] border border-border bg-[var(--surface)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none focus:border-[var(--brand)]"
+              className="bg-[var(--surface)]"
             />
             <div className="mt-[9px] flex flex-wrap items-center gap-2">
               <BrandButton size="sm" icon="check" disabled={readOnly || setStatus.isPending} onClick={confirmClose}>
                 {closeDraft.trim() ? "Close with reason" : "Close without a reason"}
               </BrandButton>
-              <button
-                type="button"
-                disabled={readOnly || setStatus.isPending}
-                onClick={cancelClosing}
-                className="h-8 rounded-lg border border-border px-3 text-label text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
-              >
+              <Button variant="outline" size="sm" disabled={readOnly || setStatus.isPending} onClick={cancelClosing}>
                 Cancel
-              </button>
+              </Button>
               <span className="text-meta text-[var(--text-3)]">
                 bd can&rsquo;t attach a reason later — this is the only chance to record one.
               </span>
@@ -645,12 +637,14 @@ function DrawerBody({
               </span>
             )}
             {editing && !readOnly && (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPreviewEdit((p) => !p)}
-                className="ml-auto rounded-md border border-border bg-[var(--surface-2)] px-[8px] py-[2px] text-meta font-normal normal-case tracking-normal text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+                className="ml-auto h-6 px-2 text-meta font-normal normal-case tracking-normal"
               >
                 {previewEdit ? "Write" : "Preview"}
-              </button>
+              </Button>
             )}
           </div>
           {editing && !readOnly ? (
@@ -669,7 +663,7 @@ function DrawerBody({
                 onDragLeave={drop.onDragLeave}
               >
                 <MarkdownToolbar textareaRef={descRef} value={descDraft} onChange={setDescDraft} />
-                <textarea
+                <TextArea
                   ref={descRef}
                   value={descDraft}
                   onChange={(e) => setDescDraft(e.target.value)}
@@ -693,8 +687,8 @@ function DrawerBody({
                   }}
                   rows={6}
                   placeholder="Describe this bead…"
-                  className={`w-full resize-y rounded-[10px] border bg-[var(--surface-2)] p-[12px_13px] text-body leading-[1.55] text-[var(--text)] outline-none ${
-                    drop.dragOver ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : "border-border"
+                  className={`rounded-[10px] p-[12px_13px] leading-[1.55] ${
+                    drop.dragOver ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : ""
                   }`}
                 />
                 {drop.uploading && (
@@ -715,21 +709,15 @@ function DrawerBody({
                       className="hidden"
                       onChange={drop.pickFiles}
                     />
-                    <button
-                      onClick={() => fileRef.current?.click()}
-                      className="inline-flex h-8 items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
-                    >
+                    <Button size="sm" onClick={() => fileRef.current?.click()}>
                       <Icon name="image" size={14} /> Attach image
-                    </button>
+                    </Button>
                   </>
                 )}
                 <span className="flex-1" />
-                <button
-                  onClick={cancelEdit}
-                  className="h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium hover:bg-[var(--surface-3)]"
-                >
+                <Button size="sm" onClick={cancelEdit}>
                   Cancel
-                </button>
+                </Button>
                 <BrandButton size="sm" icon="check" onClick={saveEdit} disabled={!titleDraft.trim() || update.isPending}>
                   Save
                 </BrandButton>
@@ -802,7 +790,11 @@ function DrawerBody({
                       title={statusLabel(row.target?.status ?? "open")}
                     />
                   </button>
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    danger
+                    label="remove"
                     title="remove"
                     disabled={readOnly}
                     onClick={() =>
@@ -811,10 +803,9 @@ function DrawerBody({
                         dependsOnId: row.removeDependsOnId,
                       })
                     }
-                    className="flex h-[22px] w-[22px] items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[#ef444415] hover:text-[#ef4444]"
                   >
                     <Icon name="x" size={12} />
-                  </button>
+                  </IconButton>
                 </div>
               );
             })}
@@ -827,14 +818,9 @@ function DrawerBody({
             {addingDep ? (
               <DependencyEditor bead={bead} onDone={() => setAddingDep(false)} />
             ) : (
-              <button
-                disabled={readOnly}
-                onClick={() => setAddingDep(true)}
-                className="flex items-center gap-[7px] rounded-[9px] border border-dashed border-[var(--border-strong)] p-[8px_11px] text-label font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
-              >
-                <Icon name="plus" size={14} />
-                <span>Add dependency</span>
-              </button>
+              <Button variant="dashed" icon="plus" className="justify-start" disabled={readOnly} onClick={() => setAddingDep(true)}>
+                Add dependency
+              </Button>
             )}
 
             {/* Require a human approval gate before this bead can proceed
@@ -843,7 +829,8 @@ function DrawerBody({
             {!readOnly && !gateBead && bead.status !== "closed" &&
               (addingGate ? (
                 <div className="flex items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface)] p-[9px_11px]">
-                  <input
+                  <TextInput
+                    size="sm"
                     autoFocus
                     value={gateReason}
                     onChange={(e) => setGateReason(e.target.value)}
@@ -856,7 +843,7 @@ function DrawerBody({
                       if (e.key === "Escape") setAddingGate(false);
                     }}
                     placeholder="Reason (optional) — e.g. needs design sign-off"
-                    className="h-8 flex-1 rounded-[9px] border border-border bg-[var(--surface-2)] px-[9px] text-label text-[var(--text)] outline-none focus:border-[var(--brand)]"
+                    className="flex-1"
                   />
                   <BrandButton
                     size="sm"
@@ -871,14 +858,15 @@ function DrawerBody({
                   </BrandButton>
                 </div>
               ) : (
-                <button
+                <Button
+                  variant="dashed"
+                  icon="gate"
+                  className="justify-start"
                   onClick={() => setAddingGate(true)}
                   title="Block this bead on a human approval gate"
-                  className="flex items-center gap-[7px] rounded-[9px] border border-dashed border-[var(--border-strong)] p-[8px_11px] text-label font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
                 >
-                  <Icon name="gate" size={14} />
-                  <span>Require approval</span>
-                </button>
+                  Require approval
+                </Button>
               ))}
           </div>
         </Section>
@@ -947,31 +935,29 @@ function DrawerBody({
                 >
                   {initials(k.assignee ?? "")}
                 </span>
-                <button
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  danger
+                  label={`Detach ${k.id}`}
                   title={`Detach ${k.id} from this bead`}
-                  aria-label={`Detach ${k.id}`}
                   disabled={readOnly}
                   onClick={(ev) => {
                     ev.stopPropagation();
                     update.mutate({ id: k.id, patch: { parent: "" } });
                   }}
-                  className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[#ef444415] hover:text-[#ef4444]"
                 >
                   <Icon name="x" size={12} />
-                </button>
+                </IconButton>
               </div>
             ))}
             {kids.length === 0 && (
               <div className="px-[2px] py-1 text-label text-[var(--text-3)]">No subtasks yet.</div>
             )}
             {!readOnly && (
-              <button
-                onClick={() => openCreate({ parent: bead.id })}
-                className="flex items-center gap-[7px] rounded-[9px] border border-dashed border-[var(--border-strong)] p-[8px_11px] text-label font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)]"
-              >
-                <Icon name="plus" size={14} />
-                <span>Add subtask</span>
-              </button>
+              <Button variant="dashed" icon="plus" className="justify-start" onClick={() => openCreate({ parent: bead.id })}>
+                Add subtask
+              </Button>
             )}
           </div>
         </Section>
@@ -1063,7 +1049,7 @@ function DrawerBody({
               {initials(actor)}
             </span>
             <div className="flex flex-1 flex-col gap-2">
-              <textarea
+              <TextArea
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -1074,7 +1060,7 @@ function DrawerBody({
                 placeholder={`Comment as ${actor}…`}
                 disabled={readOnly}
                 rows={2}
-                className="w-full resize-y rounded-[10px] border border-border bg-[var(--surface-2)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none"
+                className="rounded-[10px]"
               />
               <div className="flex justify-end">
                 <BrandButton size="sm" disabled={!canComment} onClick={postComment}>
@@ -1148,15 +1134,14 @@ function LabelsField({
         {visible.map((l) => (
           <span key={l} className={labelChipClass}>
             {l}
-            <button
-              type="button"
+            <LinkButton
               onClick={() => commitVisible(visible.filter((x) => x !== l))}
               title={`Remove label “${l}”`}
               aria-label={`Remove label ${l}`}
-              className="text-[var(--text-3)] hover:text-[var(--danger,#ef4444)]"
+              className="hover:text-[#ef4444]"
             >
               <Icon name="x" size={11} />
-            </button>
+            </LinkButton>
           </span>
         ))}
         {isArchived && (
@@ -1239,17 +1224,8 @@ function IconBtn({
   className?: string;
 }) {
   return (
-    <button
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={
-        (danger
-          ? "flex h-8 w-8 items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:border-[#ef444433] hover:bg-[#ef444415] hover:text-[#ef4444]"
-          : "flex h-8 w-8 items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]") + " " + className
-      }
-    >
+    <IconButton label={title} title={title} danger={danger} onClick={onClick} className={className}>
       {children}
-    </button>
+    </IconButton>
   );
 }

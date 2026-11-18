@@ -2,6 +2,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
+import { IconButton, LinkButton } from "@/components/controls";
 import { ApiError } from "@/lib/api-client";
 
 /**
@@ -22,8 +23,9 @@ function CommandLine({ cmd, note }: { cmd: string; note: string }) {
         {cmd}
       </code>
       <span className="flex-shrink-0 text-meta text-[var(--text-3)]">{note}</span>
-      <button
-        type="button"
+      <IconButton
+        size="sm"
+        label={`Copy command: ${cmd}`}
         onClick={() => {
           void navigator.clipboard?.writeText(cmd).then(
             () => {
@@ -34,11 +36,9 @@ function CommandLine({ cmd, note }: { cmd: string; note: string }) {
           );
         }}
         title="Copy command"
-        aria-label={`Copy command: ${cmd}`}
-        className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-md border border-border text-[var(--text-3)] hover:text-[var(--text)]"
       >
         <Icon name={copied ? "check" : "link"} size={11} />
-      </button>
+      </IconButton>
     </div>
   );
 }
@@ -68,13 +68,13 @@ function SchemaMigrationMessage({ detail }: { detail?: string }) {
       </p>
       {detail && (
         <>
-          <button
-            type="button"
+          <LinkButton
+            underline
             onClick={() => setOpen((v) => !v)}
-            className="self-start text-meta font-medium text-[var(--text-3)] underline underline-offset-2 hover:text-[var(--text-2)]"
+            className="self-start text-meta font-medium"
           >
             {open ? "Hide technical details" : "Show technical details"}
-          </button>
+          </LinkButton>
           {open && (
             <pre className="m-0 max-h-[180px] overflow-auto whitespace-pre-wrap rounded-md border border-border bg-[var(--surface-2)] p-2 font-mono text-meta leading-[1.45] text-[var(--text-3)]">
               {detail}

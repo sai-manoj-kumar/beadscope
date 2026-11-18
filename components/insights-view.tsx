@@ -15,6 +15,7 @@ import {
 import { useApp } from "@/components/app-context";
 import { PageHeader } from "@/components/page-header";
 import { Chip } from "@/components/chip";
+import { CheckInput, Segmented, TextInput } from "@/components/controls";
 import { useInsights } from "@/hooks/use-beads";
 import type { InsightsData } from "@/lib/api-client";
 
@@ -51,27 +52,15 @@ export function InsightsView() {
         controls={<>
         <span className="flex-1 max-md:hidden" />
         <label className="flex items-center gap-[6px] text-label text-[var(--text-2)] max-md:min-h-11">
-          <input
-            type="checkbox"
-            checked={split}
-            onChange={(e) => setSplit(e.target.checked)}
-            style={{ accentColor: "var(--brand)" }}
-          />
+          <CheckInput checked={split} onChange={(e) => setSplit(e.target.checked)} />
           Split by human/agent
         </label>
-        <div className="flex overflow-hidden rounded-[8px] border border-border">
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setDays(r)}
-              className={`tap-target px-[10px] py-[5px] text-label ${
-                days === r ? "bg-[var(--brand)] text-white" : "bg-[var(--surface-2)] text-[var(--text-2)]"
-              }`}
-            >
-              {r}d
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Range"
+          options={RANGES.map((r) => ({ value: r, label: `${r}d` }))}
+          value={days}
+          onChange={setDays}
+        />
         </>}
       />
 
@@ -209,13 +198,14 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                   </div>
                   <label className="flex flex-col items-end gap-[3px] text-meta text-[var(--text-3)] max-md:min-h-11">
                     limit
-                    <input
+                    <TextInput
+                      size="sm"
                       type="number"
                       min={0}
                       value={limit || ""}
                       placeholder="0"
                       onChange={(e) => setLimit(c.id, Math.max(0, Number(e.target.value) || 0))}
-                      className="h-7 w-14 rounded-md border border-border bg-[var(--surface)] px-2 text-right text-label text-[var(--text)] outline-none"
+                      className="w-14 text-right"
                     />
                   </label>
                 </div>

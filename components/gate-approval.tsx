@@ -8,6 +8,7 @@ import { api } from "@/lib/api-client";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { beadsKey, activityKey } from "@/hooks/use-beads";
 import { BrandButton } from "@/components/brand-button";
+import { LinkButton, TextArea } from "@/components/controls";
 
 /** Shared by both human-gate surfaces; approval records an explicit decision. */
 export function GateApproval({ id }: { id: string }) {
@@ -40,22 +41,22 @@ export function GateApproval({ id }: { id: string }) {
   return (
     <div className="flex min-w-0 flex-col items-end gap-2">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <LinkButton
+          className="text-meta"
           disabled={readOnly || approval.isPending}
           aria-expanded={showNote}
           aria-controls={noteId}
           onClick={() => setShowNote(!showNote)}
-          className="tap-target text-meta text-[var(--text-3)] hover:text-[var(--text)] disabled:opacity-50"
         >
           {showNote ? "Hide approval note" : "Add approval note"}
-        </button>
+        </LinkButton>
         <BrandButton size="sm" icon="check" disabled={readOnly || approval.isPending} onClick={approve}>
           Approve
         </BrandButton>
       </div>
       {showNote && (
-        <textarea
+        <TextArea
+  size="sm"
           id={noteId}
           aria-label="Approval note"
           placeholder="Optional approval note"
@@ -69,7 +70,7 @@ export function GateApproval({ id }: { id: string }) {
           disabled={readOnly || approval.isPending}
           maxLength={8000}
           rows={2}
-          className="w-full min-w-[180px] rounded-lg border border-border bg-[var(--surface)] p-2 text-label text-[var(--text)] disabled:opacity-50"
+          className="min-w-[180px]"
         />
       )}
     </div>

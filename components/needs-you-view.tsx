@@ -2,6 +2,7 @@
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
 import { Chip } from "@/components/chip";
+import { Button, LinkButton, TextArea } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
 import { useApp } from "@/components/app-context";
@@ -128,12 +129,9 @@ function GateCard({ gate }: { gate: Bead }) {
     >
       <div className="mb-1 flex items-center gap-2">
         <Icon name="gate" size={15} style={{ color: "var(--brand)" }} />
-        <button
-          onClick={() => openDetail(gate.id)}
-          className="tap-target font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
-        >
+        <LinkButton mono className="text-meta" onClick={() => openDetail(gate.id)}>
           {gate.id}
-        </button>
+        </LinkButton>
         <Chip tone="strong" className="font-semibold uppercase tracking-wide">
           Approval gate
         </Chip>
@@ -142,12 +140,9 @@ function GateCard({ gate }: { gate: Bead }) {
           {relTime(gate.updated_at)}
         </span>
       </div>
-      <button
-        onClick={() => openDetail(gate.id)}
-        className="tap-target mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
-      >
+      <LinkButton tone="text" className="mb-2 block text-section font-semibold leading-snug" onClick={() => openDetail(gate.id)}>
         {gate.title}
-      </button>
+      </LinkButton>
       <CardDescription bead={gate} />
       <ReviewLinks bead={gate} />
       {blocks.length > 0 && (
@@ -156,12 +151,9 @@ function GateCard({ gate }: { gate: Bead }) {
           {blocks.map((b, i) => (
             <React.Fragment key={b.id}>
               {i > 0 && ", "}
-              <button
-                onClick={() => openDetail(b.id)}
-                className="font-mono text-[var(--text)] hover:underline"
-              >
+              <LinkButton mono tone="text" onClick={() => openDetail(b.id)}>
                 {b.id}
-              </button>
+              </LinkButton>
             </React.Fragment>
           ))}
           .
@@ -199,27 +191,21 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
     >
       <div className="mb-1 flex items-center gap-2">
         <Icon name={typeIconName(bead.issue_type)} size={14} style={{ color: typeColor(bead.issue_type) }} />
-        <button
-          onClick={() => openDetail(bead.id)}
-          className="tap-target font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
-        >
+        <LinkButton mono className="text-meta" onClick={() => openDetail(bead.id)}>
           {bead.id}
-        </button>
+        </LinkButton>
         <OriginBadge origin={o} title={o === "human" ? "Human" : "Agent"} />
         <span className="flex-1" />
         <span title={fmtDateTime(bead.updated_at)} className="text-meta text-[var(--text-3)]">
           {relTime(bead.updated_at)}
         </span>
       </div>
-      <button
-        onClick={() => openDetail(bead.id)}
-        className="tap-target mb-2 block text-left text-section font-semibold leading-snug text-[var(--text)] hover:underline"
-      >
+      <LinkButton tone="text" className="mb-2 block text-section font-semibold leading-snug" onClick={() => openDetail(bead.id)}>
         {bead.title}
-      </button>
+      </LinkButton>
       <CardDescription bead={bead} />
       <ReviewLinks bead={bead} />
-      <textarea
+      <TextArea
         disabled={readOnly}
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -230,16 +216,12 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         }}
         rows={2}
         placeholder="Answer the agent's question… (posts a comment; the bead stays open)"
-        className="mb-2 w-full resize-y rounded-[9px] border border-border bg-[var(--surface-2)] p-[9px_11px] text-body leading-[1.5] text-[var(--text)] outline-none focus:border-[var(--brand)]"
+        className="mb-2"
       />
       <div className="flex items-center justify-end gap-2">
-        <button
-          disabled={readOnly || busy}
-          onClick={() => dismiss.mutate({ id: bead.id })}
-          className="tap-target h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
-        >
+        <Button size="sm" disabled={readOnly || busy} onClick={() => dismiss.mutate({ id: bead.id })}>
           Dismiss
-        </button>
+        </Button>
         <BrandButton size="sm" icon="check" disabled={!canRespond} onClick={submit}>
           Respond
         </BrandButton>

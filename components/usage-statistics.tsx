@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { SettingRow, ToggleButton } from "@/components/settings-card";
+import { LinkButton } from "@/components/controls";
 
 type Settings = { enabled: boolean; configured: boolean };
 
@@ -74,7 +75,7 @@ export function UsageStatisticsSetting() {
       }
     >
         {query.data && !query.data.configured && <p className="mt-2 text-meta text-[var(--text-3)]">Usage reporting is not configured for this installation. No events are sent.</p>}
-        {query.isError && <p role="alert" className="text-label">Could not load usage preference. <button className="tap-target" onClick={() => void query.refetch()}>Retry</button></p>}
+        {query.isError && <p role="alert" className="text-label">Could not load usage preference. <LinkButton tone="brand" onClick={() => void query.refetch()}>Retry</LinkButton></p>}
     </SettingRow>
   );
 }

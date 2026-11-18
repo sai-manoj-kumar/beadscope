@@ -32,6 +32,7 @@ import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { useNotificationActivation } from "@/hooks/use-notifications";
 import { Menu, Search } from "lucide-react";
 import { OPEN_PALETTE_EVENT } from "@/lib/breakpoints";
+import { IconButton } from "@/components/controls";
 
 /**
  * Puts ?bead= back when it is missing while a bead is open. Next's router rewrites the URL to its
@@ -273,14 +274,14 @@ export function AppShell({ projectId }: { projectId: string }) {
             Beadscope
           </div>
           {/* The command palette (search, jump to a bead, change status) has no keyboard on a phone. */}
-          <button
-            type="button"
-            aria-label="Search and commands"
+          <IconButton
+            size="lg"
+            label="Search and commands"
             onClick={() => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[9px] border border-border bg-[var(--surface-2)] text-[var(--text-2)] hover:bg-[var(--surface-3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+            className="h-11 w-11 shrink-0"
           >
             <Search size={18} aria-hidden="true" />
-          </button>
+          </IconButton>
         </div>
         <div className="flex min-h-0 flex-1 overflow-hidden">
         <Sidebar

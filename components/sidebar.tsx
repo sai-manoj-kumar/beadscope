@@ -1,8 +1,7 @@
 "use client";
 import * as React from "react";
 import { Icon } from "@/components/icons";
-import { useTheme } from "@/components/theme-provider";
-import { themeButtonInfo } from "@/lib/themes";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp, type View } from "@/components/app-context";
 import { ProjectSwitcher } from "@/components/project-switcher";
 import {
@@ -58,8 +57,6 @@ export function Sidebar({
   /** Close an owning mobile Sheet after project routing. */
   onProjectNavigate?: () => void;
 }) {
-  const { mode, choice, toggle } = useTheme();
-  const themeButton = themeButtonInfo(choice, mode);
   const { meta, beads, index } = useApp();
   const actor = meta?.humanActor ?? "you";
   const epicCount = beads.filter((b) => b.issue_type === "epic").length;
@@ -179,14 +176,7 @@ export function Sidebar({
             <div className="text-label font-medium">{meta ? actor : "…"}</div>
             <div className="text-meta text-[var(--text-3)]">human actor</div>
           </div>
-          <button
-            onClick={toggle}
-            title={themeButton.title}
-            aria-label={themeButton.title}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] tap-target"
-          >
-            <Icon name={themeButton.icon} size={15} />
-          </button>
+          <ThemeToggle />
         </div>
 
         <UpdateIndicator />

@@ -3,6 +3,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { api } from "@/lib/api-client";
+import { CheckInput } from "@/components/controls";
 
 /**
  * Renders a bead description as GitHub-flavored markdown (headings, lists,
@@ -59,13 +60,11 @@ export function DescriptionContent({
       if (type !== "checkbox") return null;
       const idx = counter.i++;
       return (
-        <input
-          type="checkbox"
+        <CheckInput
           checked={!!checked}
           disabled={!onToggleTask}
           onChange={() => onToggleTask?.(idx)}
-          className="mr-[6px] translate-y-[2px] cursor-pointer disabled:cursor-default"
-          style={{ accentColor: "var(--brand)" }}
+          className="mr-[6px] translate-y-[2px] disabled:cursor-default"
         />
       );
     },

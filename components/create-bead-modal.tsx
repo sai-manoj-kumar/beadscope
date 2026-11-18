@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
+import { Button, CheckInput, IconButton, SelectField, TextArea, TextInput } from "@/components/controls";
 import { useApp } from "@/components/app-context";
 import { useCreateBead, beadsKey } from "@/hooks/use-beads";
 import { useImageDrop } from "@/hooks/use-image-drop";
@@ -22,10 +23,6 @@ import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { BEAD_TYPES, type BeadType } from "@/lib/schema";
 import { AssigneeSelect, useAssigneeNames } from "@/components/assignee-picker";
 
-const inputClass =
-  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-body text-[var(--text)] outline-none focus:border-[var(--brand)]";
-const selectClass =
-  "h-[38px] cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-body text-[var(--text)] outline-none";
 const labelClass = "text-label font-medium text-[var(--text-2)]";
 
 interface FormState {
@@ -260,30 +257,26 @@ function CreateForm({
             bd create … --json
           </DialogDescription>
         </div>
-        <button
-          onClick={onClose}
-          className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-border text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
-        >
+        <IconButton label="Close" onClick={onClose}>
           <Icon name="x" size={14} />
-        </button>
+        </IconButton>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto p-5">
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-[6px]">
             <span className={labelClass}>Type</span>
-            <select className={selectClass} value={form.type} onChange={(e) => set("type", e.target.value as BeadType)}>
+            <SelectField value={form.type} onChange={(e) => set("type", e.target.value as BeadType)}>
               {BEAD_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {typeLabel(t)}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
           <label className="flex flex-col gap-[6px]">
             <span className={labelClass}>Priority</span>
-            <select
-              className={selectClass}
+            <SelectField
               value={String(form.priority)}
               onChange={(e) => set("priority", Number(e.target.value))}
             >
@@ -292,17 +285,17 @@ function CreateForm({
                   {p} · {["Critical", "High", "Medium", "Low", "Backlog"][p]}
                 </option>
               ))}
-            </select>
+            </SelectField>
           </label>
         </div>
 
         <label className="flex flex-col gap-[6px]">
           <span className={labelClass}>Title</span>
-          <textarea
+          <TextArea
             autoFocus
             ref={autosize}
             rows={1}
-            className={`${inputClass} h-auto min-h-[38px] resize-none overflow-hidden py-[9px] leading-[1.4]`}
+            className="min-h-[38px] resize-none overflow-hidden leading-[1.4]"
             value={form.title}
             onChange={(e) => {
               set("title", e.target.value);
@@ -334,11 +327,9 @@ function CreateForm({
             onDragOver={drop.onDragOver}
             onDragLeave={drop.onDragLeave}
           >
-            <textarea
+            <TextArea
               ref={taRef}
-              className={`${inputClass} h-auto w-full resize-y py-[10px] leading-[1.5] ${
-                drop.dragOver ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : ""
-              }`}
+              className={drop.dragOver ? "border-[var(--brand)] ring-1 ring-[var(--brand)]" : ""}
               rows={3}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
@@ -365,13 +356,12 @@ function CreateForm({
                 className="hidden"
                 onChange={drop.pickFiles}
               />
-              <button
-                type="button"
+              <Button
+                size="sm"
                 onClick={() => fileRef.current?.click()}
-                className="inline-flex items-center gap-[6px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[10px] py-[6px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
               >
                 <Icon name="image" size={14} /> Attach image
-              </button>
+              </Button>
             </div>
           )}
           {hasImageRef(form.description) && (
@@ -395,7 +385,7 @@ function CreateForm({
                 list is now every open bead, which is far too long to scan. The
                 visible text is "<id> · <title> (<type>)" and the id is parsed
                 back out on change, so similar titles stay distinguishable. */}
-            <input
+            <TextInput
               list={parentListId}
               value={parentDraft}
               onChange={(e) => {
@@ -405,7 +395,7 @@ function CreateForm({
                 set("parent", parentOptions.some((b) => b.id === id) ? id : "");
               }}
               placeholder="No parent — type to search…"
-              className={`${selectClass} cursor-text`}
+              className="cursor-text"
             />
             <datalist id={parentListId}>
               {parentOptions.map((b) => (
@@ -421,8 +411,8 @@ function CreateForm({
           <span className={labelClass}>
             Labels <span className="font-normal text-[var(--text-3)]">· comma separated</span>
           </span>
-          <input
-            className={`${inputClass} font-mono`}
+          <TextInput
+            mono
             value={form.labels}
             onChange={(e) => set("labels", e.target.value)}
             placeholder="ui, dnd, m3"
@@ -430,13 +420,7 @@ function CreateForm({
         </label>
 
         <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
-          <input
-            type="checkbox"
-            checked={form.backlog}
-            onChange={(e) => set("backlog", e.target.checked)}
-            className="h-4 w-4 cursor-pointer"
-            style={{ accentColor: "var(--brand)" }}
-          />
+          <CheckInput checked={form.backlog} onChange={(e) => set("backlog", e.target.checked)} />
           <span className="text-body text-[var(--text-2)]">
             Start in Backlog (<span className="font-mono">deferred</span>) instead of Ready
           </span>
@@ -450,12 +434,9 @@ function CreateForm({
             Stamped <span className="font-mono text-[var(--text-2)]">created_by={actor}</span>
           </span>
         </div>
-        <button
-          onClick={onClose}
-          className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium text-[var(--text)] hover:bg-[var(--surface-3)] max-md:flex-1"
-        >
+        <Button size="lg" className="max-md:flex-1" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
         <BrandButton
           icon="check"
           onClick={submit}

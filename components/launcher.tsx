@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
-import { useTheme } from "@/components/theme-provider";
-import { themeButtonInfo } from "@/lib/themes";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { IconButton } from "@/components/controls";
 import { useProjects } from "@/hooks/use-projects";
 import { FolderBrowserModal } from "@/components/folder-browser-modal";
 import { api, type ProjectInfo } from "@/lib/api-client";
@@ -15,8 +15,6 @@ import { api, type ProjectInfo } from "@/lib/api-client";
 export function Launcher() {
   const { data, isLoading } = useProjects();
   const [addOpen, setAddOpen] = React.useState(false);
-  const { mode, choice, toggle } = useTheme();
-  const themeButton = themeButtonInfo(choice, mode);
 
   const projects = data?.projects ?? [];
   const demo = projects.find((p) => p.id === "demo");
@@ -37,14 +35,7 @@ export function Launcher() {
             Choose a beads project to view and manage
           </div>
         </div>
-        <button
-          onClick={toggle}
-          title={themeButton.title}
-          aria-label={themeButton.title}
-          className="tap-target flex h-[34px] w-[34px] items-center justify-center rounded-lg border border-border bg-[var(--surface)] text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-        >
-          <Icon name={themeButton.icon} size={15} />
-        </button>
+        <ThemeToggle size="lg" />
       </header>
 
       <div className="mx-auto w-full max-w-[860px] flex-1 p-[28px] max-md:p-4">
@@ -155,19 +146,21 @@ function ProjectCard({ project }: { project: ProjectInfo }) {
         </div>
         {/* Always visible where there is no hover (phones, tablets): a control that only appears on
             hover cannot be found by touch. The confirm below guards a stray tap. */}
-        <button
+        <IconButton
+          variant="ghost"
+          danger
+          label={`Remove ${project.name} from list`}
           title="Remove from list"
-          aria-label={`Remove ${project.name} from list`}
           onClick={(e) => {
             e.stopPropagation();
             if (confirm(`Remove "${project.name}" from the list? This does not delete any files.`)) {
               remove.mutate();
             }
           }}
-          className="tap-target flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-lg text-[var(--text-3)] opacity-0 transition-opacity hover:bg-[var(--surface-3)] hover:text-[#ef4444] focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100"
+          className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Trash2 size={14} />
-        </button>
+        </IconButton>
       </div>
       <div className="truncate text-left font-mono text-meta text-[var(--text-3)]" dir="rtl" title={project.path ?? ""}>
         {project.path}
