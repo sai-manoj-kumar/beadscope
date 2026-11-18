@@ -13,6 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { useApp } from "@/components/app-context";
+import { PageHeader } from "@/components/page-header";
 import { useInsights } from "@/hooks/use-beads";
 import type { InsightsData } from "@/lib/api-client";
 
@@ -43,11 +44,12 @@ export function InsightsView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4">
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Insights</h1>
-        <span className="text-label text-[var(--text-3)]">· flow metrics, human vs agent</span>
-        <span className="flex-1" />
-        <label className="flex items-center gap-[6px] text-label text-[var(--text-2)]">
+      <PageHeader
+        title="Insights"
+        subtitle="flow metrics, human vs agent"
+        controls={<>
+        <span className="flex-1 max-md:hidden" />
+        <label className="flex items-center gap-[6px] text-label text-[var(--text-2)] max-md:min-h-11">
           <input
             type="checkbox"
             checked={split}
@@ -61,7 +63,7 @@ export function InsightsView() {
             <button
               key={r}
               onClick={() => setDays(r)}
-              className={`px-[10px] py-[5px] text-label ${
+              className={`tap-target px-[10px] py-[5px] text-label ${
                 days === r ? "bg-[var(--brand)] text-white" : "bg-[var(--surface-2)] text-[var(--text-2)]"
               }`}
             >
@@ -69,9 +71,10 @@ export function InsightsView() {
             </button>
           ))}
         </div>
-      </div>
+        </>}
+      />
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-5">
+      <div className="min-h-0 flex-1 overflow-y-auto p-5 max-md:p-4">
         {isLoading && !data ? (
           <div className="p-8 text-center text-body text-[var(--text-3)]">Loading insights…</div>
         ) : !data ? (
@@ -213,7 +216,7 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                       {over && <span className="ml-1 text-meta font-medium">over limit</span>}
                     </div>
                   </div>
-                  <label className="flex flex-col items-end gap-[3px] text-meta text-[var(--text-3)]">
+                  <label className="flex flex-col items-end gap-[3px] text-meta text-[var(--text-3)] max-md:min-h-11">
                     limit
                     <input
                       type="number"
@@ -247,7 +250,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3 rounded-[13px] border border-border bg-[var(--surface)] p-[16px_18px]">
+    <section className="flex min-w-0 flex-col gap-3 rounded-[13px] border border-border bg-[var(--surface)] p-[16px_18px]">
       <div className="text-body font-semibold">{title}</div>
       {children}
     </section>
@@ -256,12 +259,12 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 
 function CycleRow({ label, stat }: { label: string; stat: { p50: number; p90: number; count: number } }) {
   return (
-    <div className="flex items-center justify-between rounded-[9px] bg-[var(--surface-2)] px-3 py-2 text-label">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-[9px] bg-[var(--surface-2)] px-3 py-2 text-label">
       <span className="font-medium text-[var(--text-2)]">{label}</span>
       {stat.count === 0 ? (
         <span className="text-[var(--text-3)]">no closed beads</span>
       ) : (
-        <span className="flex items-center gap-3 font-mono text-label">
+        <span className="flex flex-wrap items-center gap-x-3 font-mono text-label">
           <span title="median">p50 {hrs(stat.p50)}</span>
           <span title="90th percentile" className="text-[var(--text-3)]">p90 {hrs(stat.p90)}</span>
           <span className="text-[var(--text-3)]">· {stat.count}</span>
