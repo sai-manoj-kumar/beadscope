@@ -92,7 +92,7 @@ export function demoBeads(): Bead[] {
     // M2 children
     D("bd-7e40.1", "Create modal + bd create wiring", "feature", "open", 1, "stevey", "stevey", "bd-7e40", { description: "Type, title, description, priority, assignee, labels, parent epic. Zod-validated." }),
     D("bd-7e40.2", "Inline edit (send only changed fields)", "feature", "deferred", 2, "amp-bot", "", "bd-7e40", { description: "bd update <id> with only the changed flags." }),
-    D("bd-7e40.3", "Comments thread + composer", "feature", "open", 2, "stevey", "dana", "bd-7e40", { description: "Author-stamped comments; newest-last with relative time." }),
+    D("bd-7e40.3", "Comments thread + composer", "feature", "open", 2, "stevey", "dana", "bd-7e40", { description: "Author-stamped comments; newest-first with relative time." }),
     D("bd-7e40.4", "Attribution stamping (BEADS_ACTOR)", "task", "open", 1, "stevey", "stevey", "bd-7e40", { description: "Every UI write runs with BEADS_ACTOR=<humanActor>." }),
     D("bd-7e40.5", "Optimistic updates + toasts", "task", "deferred", 2, "claude-agent", "", "bd-7e40", { description: "TanStack Query optimistic mutations with rollback on adapter error." }),
     // M3 children
