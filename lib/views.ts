@@ -24,7 +24,15 @@ const VIEW_NAV: ViewNavItem[] = [
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
+/** Views that have no phone layout (maintainer decision: the dependency graph is desktop only). */
+export const DESKTOP_ONLY_VIEWS: readonly View[] = ["graph"];
+export function isDesktopOnly(view: View): boolean {
+  return DESKTOP_ONLY_VIEWS.includes(view);
+}
+
 // Shared by the sidebar and the command palette so both offer the same views.
-export function navViews(gamification: boolean): ViewNavItem[] {
-  return VIEW_NAV.filter((view) => view.key !== "achievements" || gamification);
+export function navViews(gamification: boolean, mobile = false): ViewNavItem[] {
+  return VIEW_NAV.filter(
+    (view) => (view.key !== "achievements" || gamification) && !(mobile && isDesktopOnly(view.key)),
+  );
 }

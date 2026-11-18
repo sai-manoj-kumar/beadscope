@@ -15,6 +15,7 @@ import { findShortcut, type KeyboardShortcut } from "@/lib/keyboard-shortcuts";
 import { ShortcutKeys } from "@/components/keyboard-help-dialog";
 import { copyBeadId } from "@/components/copyable-id";
 import { navViews } from "@/lib/views";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 
 // Issue shortcuts act on the board selection; the ones listed here do the same
 // thing as the matching bead-page entry. "Close" is left without one because C
@@ -96,6 +97,7 @@ function PaletteBody({
 }) {
   const { beads, index, meta, openDetail, openCreate, projectId, readOnly } = useApp();
   const router = useRouter();
+  const mobile = useIsMobile();
   const { mode, choice, setTheme, toggle } = useTheme();
   const themeButton = themeButtonInfo(choice, mode);
   const setStatus = useSetStatus();
@@ -212,7 +214,7 @@ function PaletteBody({
             </Command.Group>
 
             <Command.Group heading="Go to">
-              {navViews(!!meta?.gamification).map((v) => (
+              {navViews(!!meta?.gamification, mobile).map((v) => (
                 <Item
                   key={v.key}
                   icon={v.icon}
