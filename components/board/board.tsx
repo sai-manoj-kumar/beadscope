@@ -213,6 +213,7 @@ export function Board() {
           showArchived={showArchived}
           onShowArchived={setShowArchived}
           onClearAllAction={clearFilters}
+          stackFacets
         />
 
         <label
