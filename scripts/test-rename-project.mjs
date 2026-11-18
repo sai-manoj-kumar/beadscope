@@ -60,7 +60,8 @@ try {
   {
     const { context, page } = await newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
     await openMenu(page, true);
-    assert.equal(await page.getByRole("button", { name: "Rename Demo" }).count(), 0, "Demo has no Rename");
+    assert.equal(await page.getByRole("menuitem", { name: "Demo", exact: true }).count(), 1, "Demo is listed");
+    assert.equal(await page.getByRole("menuitem", { name: /^Rename / }).count(), 1, "only the real project has Rename, not Demo");
     await page.waitForTimeout(500); // the menu zooms in; measure once it settles
     const trigger = page.getByRole("menuitem", { name: `Rename ${originalName}`, exact: true });
     const box = await trigger.boundingBox();
