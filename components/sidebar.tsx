@@ -171,12 +171,12 @@ export function Sidebar({
         <div className="flex items-center gap-2 px-1">
           <div
             className="flex h-6 w-6 items-center justify-center rounded-full text-meta font-semibold text-white"
-            style={{ background: avatarColor(actor) }}
+            style={{ background: meta ? avatarColor(actor) : "var(--surface-3)" }}
           >
-            {initials(actor)}
+            {meta ? initials(actor) : ""}
           </div>
           <div className="flex-1 leading-[1.15]">
-            <div className="text-label font-medium">{actor}</div>
+            <div className="text-label font-medium">{meta ? actor : "…"}</div>
             <div className="text-meta text-[var(--text-3)]">human actor</div>
           </div>
           <button

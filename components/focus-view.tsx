@@ -74,7 +74,7 @@ function laneOf(b: Bead, prefix: string): string | null {
 }
 
 export function FocusView() {
-  const { beads, index, meta } = useApp();
+  const { beads, index, meta, loading } = useApp();
   const prefix = meta?.lanePrefix ?? null;
   const [groupBy, setGroupBy] = React.useState<"none" | "assignee">("none");
   const [showRecent, setShowRecent] = React.useState(false);
@@ -150,7 +150,7 @@ export function FocusView() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Focus"
-        subtitle={<>
+        subtitle={loading && beads.length === 0 ? "what\u2019s happening now · loading…" : <>
             what&rsquo;s happening now · {inFlight.length} in flight · {blocked.length} blocked ·{" "}
             {nextUp.length} next up
         </>}

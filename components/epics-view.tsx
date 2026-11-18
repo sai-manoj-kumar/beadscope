@@ -60,6 +60,7 @@ export function EpicsView({
     selectedBeadId,
     selectBead,
     readOnly,
+    loading,
   } = useApp();
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
   const [hideClosed, setHideClosed] = React.useState(true);
@@ -127,7 +128,7 @@ export function EpicsView({
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="Epics"
-        subtitle={<>
+        subtitle={loading && allEpics.length === 0 ? "Loading…" : <>
             {epics.length}
             {hideClosed && allEpics.length !== epics.length ? ` of ${allEpics.length}` : ""} epics ·
             progress = closed ÷ children

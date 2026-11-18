@@ -126,15 +126,11 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
               contentStyle={{ fontSize: "var(--fs-label)", background: "var(--surface)", border: "1px solid var(--border)" }}
               labelFormatter={shortDate}
             />
-            {split ? (
-              <>
-                <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />
-                <Bar dataKey="human" stackId="a" fill={HUMAN} name="Human" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="agent" stackId="a" fill={AGENT} name="Agent" radius={[3, 3, 0, 0]} />
-              </>
-            ) : (
-              <Bar dataKey="total" fill="var(--brand)" name="Closed" radius={[3, 3, 0, 0]} />
-            )}
+            {/* Recharts 2 only finds its series, axes and legend among direct children; a Fragment hides them. */}
+            {split && <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />}
+            {split && <Bar dataKey="human" stackId="a" fill={HUMAN} name="Human" radius={[0, 0, 0, 0]} />}
+            {split && <Bar dataKey="agent" stackId="a" fill={AGENT} name="Agent" radius={[3, 3, 0, 0]} />}
+            {!split && <Bar dataKey="total" fill="var(--brand)" name="Closed" radius={[3, 3, 0, 0]} />}
           </BarChart>
         </ResponsiveContainer>
       </Panel>
