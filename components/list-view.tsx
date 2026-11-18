@@ -155,7 +155,7 @@ export function ListView() {
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="List"
-        subtitle={<>{rows.length} beads<span className="max-md:hidden"> · drag to set run-order</span></>}
+        subtitle={loading && beads.length === 0 ? "Loading…" : <>{rows.length} beads<span className="max-md:hidden"> · drag to set run-order</span></>}
         actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
         controls={
           <FilterBar

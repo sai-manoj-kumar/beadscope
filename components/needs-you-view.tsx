@@ -30,7 +30,8 @@ import { isSubmitKey } from "@/lib/keyboard-shortcuts";
  *      don't sit invisibly waiting on the board (bead 8qc / gh-6).
  */
 export function NeedsYouView() {
-  const { beads, index } = useApp();
+  const { beads, index, loading } = useApp();
+  const waiting = loading && beads.length === 0;
   const inbox = React.useMemo(() => beads.filter(needsHuman), [beads]);
   const gates = React.useMemo(
     () => beads.filter((b) => readyHumanGate(b, index)),
@@ -44,11 +45,13 @@ export function NeedsYouView() {
         <Icon name="user" size={18} className="text-[var(--text-2)]" />
         <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Needs You</h1>
         <span className="text-label text-[var(--text-3)]">
-          · {total === 0 ? "nothing waiting" : `${total} waiting on you`}
+          · {waiting ? "loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you`}
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-        {total === 0 ? (
+        {waiting ? (
+          <div className="p-10 text-center text-body text-[var(--text-3)]">Loading…</div>
+        ) : total === 0 ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">
             🎉 Nothing needs you right now. Agents flag beads here with{" "}
             <span className="font-mono">bd human</span>, and human-approval gates
