@@ -3,6 +3,8 @@ import * as React from "react";
 import { Icon, typeIconName } from "@/components/icons";
 import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { useApp } from "@/components/app-context";
+import { PageHeader } from "@/components/page-header";
+import { BrandButton } from "@/components/brand-button";
 import { beadOrigin, originTitle } from "@/lib/attribution";
 import {
   catColor,
@@ -123,35 +125,34 @@ export function EpicsView({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex flex-shrink-0 items-center gap-3 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <div className="flex-1">
-          <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Epics</h1>
-          <span className="text-meta text-[var(--text-3)]">
+      <PageHeader
+        title="Epics"
+        subtitle={<>
             {epics.length}
             {hideClosed && allEpics.length !== epics.length ? ` of ${allEpics.length}` : ""} epics ·
             progress = closed ÷ children
-          </span>
-        </div>
+        </>}
+        actions={<BrandButton
+          icon="plus"
+          disabled={readOnly}
+          onClick={() => openCreate({ type: "epic" })}
+        >
+          New epic
+        </BrandButton>}
+        controls={<>
+        <span className="flex-1 max-md:hidden" />
         <button
           onClick={() => setHideClosed((v) => !v)}
           title={hideClosed ? "Show closed epics and children" : "Hide closed epics and children"}
-          className="flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
+          className="tap-target flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
         >
           <Icon name={hideClosed ? "check" : "x"} size={14} />
           <span>{hideClosed ? "Show Closed" : "Hide Closed"}</span>
         </button>
-        <button
-          disabled={readOnly}
-          onClick={() => openCreate({ type: "epic" })}
-          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[14px] text-body font-medium text-white"
-          style={{ background: "var(--brand)" }}
-        >
-          <Icon name="plus" size={15} />
-          <span>New epic</span>
-        </button>
-      </header>
+        </>}
+      />
 
-      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[20px_22px]">
+      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[20px_22px] max-md:p-[12px_16px_24px]">
         <div className="mx-auto flex max-w-[880px] flex-col gap-[14px]">
           {epics.map((e) => {
             const { closed, total, pct } = epicProgress(e.id, beads);
@@ -197,7 +198,7 @@ export function EpicsView({
                     }
                   }}
                   title={isOpen ? "Hide children" : "Show children"}
-                  className={`flex cursor-pointer items-center gap-[14px] p-[16px_18px] focus-visible:outline-none ${
+                  className={`flex cursor-pointer items-center gap-[14px] p-[16px_18px] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-3 max-md:p-[14px] ${
                     selectedBeadId === e.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""
                   }`}
                 >
@@ -220,8 +221,8 @@ export function EpicsView({
                       {e.title}
                     </div>
                   </div>
-                  <div className="flex w-[200px] flex-shrink-0 flex-col items-end gap-[7px]">
-                    <div className="flex items-baseline gap-[6px]">
+                  <div className="flex w-[200px] flex-shrink-0 flex-col items-end gap-[7px] max-md:order-4 max-md:w-full max-md:basis-full max-md:items-stretch">
+                    <div className="flex items-baseline gap-[6px] max-md:justify-between">
                       <span className="font-mono text-page-title font-semibold tracking-[-.02em]">
                         {pct}%
                       </span>
@@ -251,7 +252,7 @@ export function EpicsView({
                     }}
                     aria-label={`Open details for ${e.id}`}
                     title={`Open details for ${e.id}`}
-                    className="flex h-7 flex-shrink-0 items-center gap-[5px] rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-meta font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                    className="tap-target flex h-7 flex-shrink-0 items-center gap-[5px] max-md:order-5 max-md:basis-full max-md:justify-center rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-meta font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                   >
                     <Icon name="list" size={12} className="flex-shrink-0" />
                     <span>Details</span>
@@ -270,7 +271,7 @@ export function EpicsView({
                       ev.stopPropagation();
                       setExpanded((st) => ({ ...st, [e.id]: !isOpen }));
                     }}
-                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-2)]"
+                    className="tap-target flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[8px] text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-2)] max-md:order-3"
                   >
                     <Icon
                       name="chevron"
@@ -297,24 +298,24 @@ export function EpicsView({
                             selectBead(k.id);
                             openDetail(k.id);
                           }}
-                          className={`flex cursor-pointer items-center gap-[11px] rounded-[9px] p-[9px_12px] hover:bg-[var(--surface)] focus-visible:outline-none ${
+                          className={`flex cursor-pointer items-center gap-[11px] rounded-[9px] p-[9px_12px] hover:bg-[var(--surface)] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:py-3 ${
                             selectedBeadId === k.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""
                           }`}
                         >
                           <span
-                            className="h-2 w-2 flex-shrink-0 rounded-full"
+                            className="h-2 w-2 flex-shrink-0 rounded-full max-md:-order-2"
                             style={{ background: catColor(k.status) }}
                           />
-                          <span className="w-[74px] flex-shrink-0 font-mono text-meta text-[var(--text-3)]">
+                          <span className="w-[74px] flex-shrink-0 font-mono text-meta text-[var(--text-3)] max-md:ml-[26px] max-md:w-auto">
                             {k.id}
                           </span>
                           <Icon
                             name={typeIconName(k.issue_type)}
                             size={14}
-                            className="flex-shrink-0"
+                            className="flex-shrink-0 max-md:-order-2"
                             style={{ color: typeColor(k.issue_type) }}
                           />
-                          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-body font-medium">
+                          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-body font-medium max-md:-order-1 max-md:flex-[1_1_calc(100%-50px)] max-md:whitespace-normal max-md:line-clamp-2">
                             {k.title}
                           </span>
                           <LabelChips labels={k.labels ?? []} max={2} />
@@ -332,7 +333,7 @@ export function EpicsView({
                     <button
                       disabled={readOnly}
           onClick={() => openCreate({ parent: e.id })}
-                      className="m-[2px] flex w-[calc(100%-4px)] items-center gap-[7px] rounded-[9px] p-[9px_12px] text-label font-medium text-[var(--brand)] hover:bg-[var(--surface)]"
+                      className="tap-target m-[2px] flex w-[calc(100%-4px)] items-center gap-[7px] rounded-[9px] p-[9px_12px] text-label font-medium text-[var(--brand)] hover:bg-[var(--surface)]"
                     >
                       <Icon name="plus" size={14} />
                       <span>Add child to this epic</span>
