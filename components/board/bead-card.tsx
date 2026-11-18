@@ -8,6 +8,7 @@ import { useApp } from "@/components/app-context";
 import { CopyableId } from "@/components/copyable-id";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { beadOrigin, originTitle } from "@/lib/attribution";
+import { readableColor, tintStyle } from "@/components/chip";
 import {
   catColor,
   statusLabel,
@@ -154,7 +155,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
           <span
             title="dependencies"
             className="inline-flex items-center gap-[3px] font-mono text-meta"
-            style={{ color: blocked ? "#ef4444" : "var(--text-3)" }}
+            style={{ color: blocked ? readableColor("#ef4444") : "var(--text-3)" }}
           >
             <Icon name="link" size={13} />
             {depCount}
@@ -173,7 +174,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
           <span
             title="checklist progress"
             className="inline-flex items-center gap-[3px] font-mono text-meta"
-            style={{ color: checklist.done === checklist.total ? "#16a34a" : "var(--text-3)" }}
+            style={{ color: checklist.done === checklist.total ? readableColor("#16a34a") : "var(--text-3)" }}
           >
             <Icon name="check" size={13} />
             {checklist.done}/{checklist.total}
@@ -224,7 +225,7 @@ export function PriorityChip({ p }: { p: number }) {
   return (
     <span
       className="inline-flex flex-shrink-0 items-center rounded-md px-[7px] py-[3px] text-meta font-semibold leading-none tracking-[.01em]"
-      style={{ color: c, background: `${c}1f`, border: `1px solid ${c}33` }}
+      style={tintStyle(c, "1f")}
     >
       {prioLabel(p)}
     </span>

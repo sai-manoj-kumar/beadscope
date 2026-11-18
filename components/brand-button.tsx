@@ -23,13 +23,13 @@ export function BrandButton({
           : "h-9 gap-[6px] rounded-[9px] px-[14px] text-body font-semibold"
       } ${className}`}
       style={{
-        background: "var(--brand)",
+        background: "var(--brand-solid)",
         ...(sm ? {} : { boxShadow: "0 2px 8px -2px var(--brand)" }),
         ...props.style,
       }}
     >
       {icon && <Icon name={icon} size={sm ? 14 : 15} />}
-      <span>{children}</span>
+      <span className="inline-flex items-center gap-[inherit]">{children}</span>
     </button>
   );
 }

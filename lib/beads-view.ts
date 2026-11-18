@@ -132,17 +132,18 @@ export function typeLabel(t: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+// Each is at least 4.5:1 against the white initials drawn on it (checked by the quality gate).
 const AVATARS = [
-  "#6d5ef0",
-  "#0ea5e9",
-  "#16a34a",
-  "#d97706",
-  "#db2777",
-  "#0891b2",
-  "#7c3aed",
+  "#5f50e6",
+  "#0369a1",
+  "#15803d",
+  "#b45309",
+  "#be185d",
+  "#0e7490",
+  "#6d28d9",
 ];
 export function avatarColor(name: string): string {
-  if (!name) return "#9aa0aa";
+  if (!name) return "#6b7280";
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return AVATARS[h % AVATARS.length];

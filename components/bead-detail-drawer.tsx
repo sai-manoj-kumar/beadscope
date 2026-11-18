@@ -1044,7 +1044,7 @@ function DrawerBody({
           <div className="flex items-start gap-[9px]">
             <span
               className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-              style={{ background: "var(--brand)" }}
+              style={{ background: "var(--brand-solid)" }}
             >
               {initials(actor)}
             </span>

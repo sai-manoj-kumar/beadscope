@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { useApp } from "@/components/app-context";
 import { PageHeader } from "@/components/page-header";
-import { Chip } from "@/components/chip";
+import { Chip, readableColor } from "@/components/chip";
 import { CheckInput, Segmented, TextInput } from "@/components/controls";
 import { useInsights } from "@/hooks/use-beads";
 import type { InsightsData } from "@/lib/api-client";
@@ -110,14 +110,14 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={data.throughput} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" />
+            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" minTickGap={28} />
             <YAxis allowDecimals={false} stroke="var(--text-3)" />
             <Tooltip
               contentStyle={{ fontSize: "var(--fs-label)", background: "var(--surface)", border: "1px solid var(--border)" }}
               labelFormatter={shortDate}
             />
             {/* Recharts 2 only finds its series, axes and legend among direct children; a Fragment hides them. */}
-            {split && <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />}
+            {split && <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} formatter={legendText} />}
             {split && <Bar dataKey="human" stackId="a" fill={HUMAN} name="Human" radius={[0, 0, 0, 0]} />}
             {split && <Bar dataKey="agent" stackId="a" fill={AGENT} name="Agent" radius={[3, 3, 0, 0]} />}
             {!split && <Bar dataKey="total" fill="var(--brand)" name="Closed" radius={[3, 3, 0, 0]} />}
@@ -129,13 +129,13 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={data.createdClosed} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" />
+            <XAxis dataKey="date" tickFormatter={shortDate} stroke="var(--text-3)" minTickGap={28} />
             <YAxis allowDecimals={false} stroke="var(--text-3)" />
             <Tooltip
               contentStyle={{ fontSize: "var(--fs-label)", background: "var(--surface)", border: "1px solid var(--border)" }}
               labelFormatter={shortDate}
             />
-            <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} />
+            <Legend wrapperStyle={{ fontSize: "var(--fs-label)" }} formatter={legendText} />
             <Line type="monotone" dataKey="created" stroke="#64748b" strokeWidth={2} dot={false} name="Created" />
             <Line type="monotone" dataKey="closed" stroke="#16a34a" strokeWidth={2} dot={false} name="Closed" />
           </LineChart>
@@ -190,7 +190,7 @@ function Dashboard({ data, split }: { data: InsightsData; split: boolean }) {
                     </div>
                     <div
                       className="text-page-title font-semibold"
-                      style={{ color: over ? "#ef4444" : "var(--text)" }}
+                      style={{ color: over ? readableColor("#ef4444") : "var(--text)" }}
                     >
                       {c.count}
                       {over && <span className="ml-1 text-meta font-medium">over limit</span>}
@@ -253,4 +253,9 @@ function CycleRow({ label, stat }: { label: string; stat: { p50: number; p90: nu
       )}
     </div>
   );
+}
+
+/** Legend labels in the normal secondary text colour: Recharts would paint them in the series colour, which is too faint to read. */
+function legendText(value: string) {
+  return <span style={{ color: "var(--text-2)" }}>{value}</span>;
 }

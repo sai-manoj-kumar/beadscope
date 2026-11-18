@@ -22,7 +22,13 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const scriptsDir = path.join(root, "scripts");
-const NEEDS_WRITABLE = new Set(["test-close-actor.mjs", "test-mobile-header.mjs", "test-mobile-drawer.mjs"]);
+const NEEDS_WRITABLE = new Set([
+  "test-close-actor.mjs",
+  "test-mobile-header.mjs",
+  "test-mobile-drawer.mjs",
+  "test-quality-phone.mjs", // opens the create dialog and the drawer editor
+  "test-quality-desktop.mjs",
+]);
 const SUITE_TIMEOUT_MS = 3 * 60_000;
 const SERVER_START_TIMEOUT_MS = 60_000;
 

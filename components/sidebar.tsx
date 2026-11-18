@@ -79,7 +79,7 @@ export function Sidebar({
       <div className="flex items-center gap-[10px] px-2 pb-[18px] pt-1">
         <div
           className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-[9px] text-white"
-          style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
+          style={{ background: "var(--brand-solid)", boxShadow: "0 2px 8px -2px var(--brand)" }}
         >
           <Icon name="logo" size={17} />
         </div>
@@ -113,7 +113,7 @@ export function Sidebar({
               {n.key === "needsyou" && needsYouCount > 0 && (
                 <span
                   className="min-w-[18px] rounded-full px-[6px] py-px text-center text-meta font-semibold text-white"
-                  style={{ background: "var(--brand)" }}
+                  style={{ background: "var(--brand-solid)" }}
                 >
                   {needsYouCount}
                 </span>
@@ -135,7 +135,7 @@ export function Sidebar({
                 className="h-full rounded-full transition-[width]"
                 style={{
                   width: `${Math.round(game.data.you.progress * 100)}%`,
-                  background: "var(--brand)",
+                  background: "var(--brand-solid)",
                 }}
               />
             </div>
