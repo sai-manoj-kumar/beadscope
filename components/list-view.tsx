@@ -23,6 +23,7 @@ import { FilterBar } from "@/components/filter-bar";
 import { PageHeader } from "@/components/page-header";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { BrandButton } from "@/components/brand-button";
+import { Chip } from "@/components/chip";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
 import { useSetStatus } from "@/hooks/use-beads";
 import { useUrlFilters } from "@/hooks/use-url-filters";
@@ -197,9 +198,7 @@ export function ListView() {
                           <span className="text-meta font-semibold uppercase tracking-[.04em] text-[var(--text-3)]">
                             {meta.name}
                           </span>
-                          <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
-                            {countByCol.get(col) ?? 0}
-                          </span>
+                          <Chip mono>{countByCol.get(col) ?? 0}</Chip>
                         </div>
                       )}
                       <Row

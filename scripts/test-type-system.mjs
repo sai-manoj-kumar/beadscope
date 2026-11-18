@@ -69,3 +69,10 @@ for (const file of files) {
 assert.equal(titleClasses.size, 1, `page titles (<h1>) should share one class list, found ${titleClasses.size}: ${[...titleClasses].join(' | ')}`);
 
 console.log('type system: ok');
+
+// 5. Every page title comes from the shared PageHeader (bead bui-4e1.11), so headers cannot drift apart.
+const ownHeaders = files
+  .filter((file) => !file.endsWith(`${path.sep}page-header.tsx`))
+  .filter((file) => /<h1[\s>]/.test(fs.readFileSync(file, 'utf8')))
+  .map((file) => path.relative(root, file));
+assert.deepEqual(ownHeaders, [], `page titles must use <PageHeader>, but these files write their own <h1>: ${ownHeaders.join(', ')}`);

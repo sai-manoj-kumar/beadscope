@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { Chip } from "@/components/chip";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { Bead } from "@/lib/schema";
@@ -56,9 +57,7 @@ export function Column({
         >
           <span className="h-[9px] w-[9px] flex-shrink-0 rounded-[3px]" style={{ background: col.color }} />
           <span className="text-body font-semibold tracking-[-.005em]">{col.name}</span>
-          <span className="rounded-full border border-border bg-[var(--surface-2)] px-2 py-px font-mono text-meta text-[var(--text-3)]">
-            {cards.length}
-          </span>
+          <Chip mono>{cards.length}</Chip>
           <Icon
             name="chevron"
             size={14}

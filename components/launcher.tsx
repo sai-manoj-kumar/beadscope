@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, Trash2, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
 import { Icon } from "@/components/icons";
+import { BrandButton } from "@/components/brand-button";
 import { useTheme } from "@/components/theme-provider";
 import { themeButtonInfo } from "@/lib/themes";
 import { useProjects } from "@/hooks/use-projects";
@@ -51,14 +52,7 @@ export function Launcher() {
           <h2 className="text-body font-semibold uppercase tracking-[.03em] text-[var(--text-3)]">
             Projects
           </h2>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="tap-target flex h-[36px] items-center gap-[7px] rounded-[9px] px-[14px] text-body font-semibold text-white"
-            style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
-          >
-            <Plus size={15} />
-            Add project
-          </button>
+          <BrandButton icon="plus" onClick={() => setAddOpen(true)}>Add project</BrandButton>
         </div>
 
         {isLoading ? (

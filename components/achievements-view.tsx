@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { PageHeader } from "@/components/page-header";
 import { useApp } from "@/components/app-context";
 import { useGamification } from "@/hooks/use-beads";
 import { Icon } from "@/components/icons";
@@ -98,11 +99,7 @@ export function AchievementsView() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
-        <Icon name="feature" size={18} className="text-[var(--brand)]" />
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Achievements</h1>
-        <span className="text-label text-[var(--text-3)]">· XP, streaks, badges & leaderboard</span>
-      </div>
+      <PageHeader title="Achievements" subtitle="XP, streaks, badges & leaderboard" />
       <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
     </div>
   );

@@ -1,9 +1,9 @@
 "use client";
 import * as React from "react";
+import { PageHeader } from "@/components/page-header";
 import { useApp } from "@/components/app-context";
 import { useActivity } from "@/hooks/use-beads";
 import { OriginBadge } from "@/components/board/bead-card";
-import { Icon } from "@/components/icons";
 import { avatarColor, initials, relTime, fmtDateTime } from "@/lib/beads-view";
 
 /**
@@ -19,13 +19,7 @@ export function ActivityView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
-        <Icon name="comment" size={18} className="text-[var(--text-2)]" />
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Activity</h1>
-        <span className="text-label text-[var(--text-3)]">
-          · what humans and agents did, newest first
-        </span>
-      </div>
+      <PageHeader title="Activity" subtitle="what humans and agents did, newest first" />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {isLoading && items.length === 0 ? (
           <div className="p-8 text-center text-body text-[var(--text-3)]">Loading activity…</div>

@@ -10,6 +10,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Icon } from "@/components/icons";
+import { BrandButton } from "@/components/brand-button";
 import { useApp } from "@/components/app-context";
 import { useCreateBead, beadsKey } from "@/hooks/use-beads";
 import { useImageDrop } from "@/hooks/use-image-drop";
@@ -455,15 +456,14 @@ function CreateForm({
         >
           Cancel
         </button>
-        <button
+        <BrandButton
+          icon="check"
           onClick={submit}
           disabled={!form.title.trim() || create.isPending}
-          className="flex h-[38px] items-center justify-center gap-[7px] whitespace-nowrap rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:flex-[2]"
-          style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
+          className="max-md:flex-[2]"
         >
-          <Icon name="check" size={15} />
-          <span>Create bead</span>
-        </button>
+          Create bead
+        </BrandButton>
       </div>
     </>
   );
