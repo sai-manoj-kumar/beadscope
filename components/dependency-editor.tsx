@@ -3,6 +3,8 @@ import * as React from "react";
 import { Command } from "cmdk";
 import { useApp } from "@/components/app-context";
 import { Icon } from "@/components/icons";
+import { BrandButton } from "@/components/brand-button";
+import { Button, IconButton, SelectField } from "@/components/controls";
 import { useAddDep } from "@/hooks/use-beads";
 import { filterDepCandidates } from "@/lib/dep-picker";
 import { catColor, statusLabel, typeLabel } from "@/lib/beads-view";
@@ -48,15 +50,15 @@ export function DependencyEditor({ bead, onDone }: { bead: Bead; onDone: () => v
             <span className="font-mono text-meta text-[var(--text-3)]">{selected.id}</span>
             <div className="break-words text-label text-[var(--text)]">{selected.title}</div>
           </div>
-          <button
+          <IconButton
             autoFocus
-            type="button"
-            aria-label="Clear selected bead"
+            variant="ghost"
+            size="sm"
+            label="Clear selected bead"
             title="Clear selected bead"
             disabled={disabled}
             onClick={() => { setTargetId(""); setQuery(""); }}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--text-3)] hover:bg-[var(--surface)]"
-          ><Icon name="x" size={13} /></button>
+          ><Icon name="x" size={13} /></IconButton>
         </div>
       ) : (
         <Command shouldFilter={false} label="Search dependency beads" className="min-w-0">
@@ -94,19 +96,20 @@ export function DependencyEditor({ bead, onDone }: { bead: Bead; onDone: () => v
         </Command>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <SelectField
+          size="sm"
           aria-label="Dependency type"
           value={type}
           onChange={event => setType(event.target.value as DepType)}
           disabled={disabled}
-          className="h-8 min-w-0 flex-1 rounded-[9px] border border-border bg-[var(--surface-2)] px-2 text-label"
+          className="min-w-0 flex-1"
         >
           {/* Hierarchy stays in the Parent/Subtasks controls. Preserve the existing dependency choices. */}
           <option value="blocks">blocked by</option>
           <option value="related">related</option>
-        </select>
-        <button type="button" aria-label="Cancel dependency" disabled={disabled} onClick={onDone} className="h-8 rounded-md border border-border px-3 text-label">Cancel</button>
-        <button type="button" disabled={disabled || !selected} onClick={add} className="h-8 rounded-md bg-[var(--brand)] px-3 text-label font-medium text-white">Add</button>
+        </SelectField>
+        <Button variant="outline" size="sm" aria-label="Cancel dependency" disabled={disabled} onClick={onDone}>Cancel</Button>
+        <BrandButton size="sm" disabled={disabled || !selected} onClick={add}>Add</BrandButton>
       </div>
     </div>
   );

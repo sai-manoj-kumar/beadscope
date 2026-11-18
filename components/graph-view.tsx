@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { PageHeader } from "@/components/page-header";
+import { Button, CheckInput, SelectField } from "@/components/controls";
 import {
   ReactFlow,
   Background,
@@ -332,7 +333,7 @@ export function GraphView() {
         </>}
         controls={<>
         <span className="flex-1" />
-        <select
+        <SelectField
           aria-label="Graph scope"
           value={effectiveEpicId}
           onChange={(event) => {
@@ -340,7 +341,7 @@ export function GraphView() {
             setFocusId(null);
           }}
           title="Scope the graph to an epic and its descendants"
-          className="h-9 max-w-[280px] flex-shrink-0 cursor-pointer rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-label font-medium text-[var(--text-2)] outline-none hover:bg-[var(--surface-3)]"
+          className="max-w-[280px] flex-shrink-0 text-label font-medium text-[var(--text-2)]"
         >
           <option value="">All beads</option>
           {epics.map((epic) => (
@@ -348,29 +349,22 @@ export function GraphView() {
               {epic.id} · {epic.title}
             </option>
           ))}
-        </select>
+        </SelectField>
         <label className="flex cursor-pointer items-center gap-2 text-label text-[var(--text-2)]">
-          <input type="checkbox" checked={spotlight} className="accent-[var(--brand)]"
+          <CheckInput checked={spotlight}
             onChange={e => { setSpotlight(e.target.checked); setFocusId(null); }} />
           Spotlight dependencies
         </label>
         <label className="flex cursor-pointer items-center gap-2 text-label text-[var(--text-2)]">
-          <input
-            type="checkbox"
+          <CheckInput
             checked={liveOnly}
             onChange={(e) => { setLiveOnly(e.target.checked); setFocusId(null); }}
-            className="accent-[var(--brand)]"
           />
           Live dependencies only
         </label>
-        <button
-          onClick={center}
-          title="Center the graph on all issues"
-          className="flex h-9 flex-shrink-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
-        >
-          <Icon name="target" size={15} />
-          <span>Center</span>
-        </button>
+        <Button icon="target" onClick={center} title="Center the graph on all issues">
+          Center
+        </Button>
         {spotlight && (
           <div className="flex h-9 basis-full items-center">
             {focus && focusId ? (
@@ -421,12 +415,9 @@ export function GraphView() {
                   : "The current filter hides all beads. Show all beads to inspect completed work or create new dependencies."}
               </p>
               {liveOnly && considered > 0 && (
-                <button
-                  onClick={() => setLiveOnly(false)}
-                  className="mt-3 rounded-lg border border-border px-3 py-1.5 text-label hover:bg-[var(--surface-2)]"
-                >
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => setLiveOnly(false)}>
                   Show all beads
-                </button>
+                </Button>
               )}
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { Icon } from "@/components/icons";
+import { Button } from "@/components/controls";
 import {
   bold,
   italic,
@@ -67,22 +68,22 @@ export function MarkdownToolbar({
         item.kind === "sep" ? (
           <span key={i} className="mx-[3px] h-[16px] w-px bg-border" />
         ) : (
-          <button
+          <Button
             key={i}
-            type="button"
+            size="sm"
             title={item.title}
             // Keep textarea focus/selection through the click so the transform
             // applies to what the user had selected, not a collapsed cursor.
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => applyTransform(textareaRef.current, value, onChange, item.fn)}
-            className="flex h-7 min-w-7 items-center justify-center rounded-md border border-border bg-[var(--surface-2)] px-[6px] text-label text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
+            className="h-7 min-w-7 rounded-md px-[6px] text-[var(--text-2)] hover:text-[var(--text)]"
           >
             {item.icon ? (
               <Icon name={item.icon} size={14} />
             ) : (
               <span className={item.glyphClass}>{item.glyph}</span>
             )}
-          </button>
+          </Button>
         ),
       )}
     </div>

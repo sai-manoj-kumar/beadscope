@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { Icon, typeIconName } from "@/components/icons";
+import { Button } from "@/components/controls";
 import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { useApp } from "@/components/app-context";
 import { PageHeader } from "@/components/page-header";
@@ -142,14 +143,13 @@ export function EpicsView({
         </BrandButton>}
         controls={<>
         <span className="flex-1 max-md:hidden" />
-        <button
+        <Button
+          icon={hideClosed ? "check" : "x"}
           onClick={() => setHideClosed((v) => !v)}
           title={hideClosed ? "Show closed epics and children" : "Hide closed epics and children"}
-          className="tap-target flex h-9 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)]"
         >
-          <Icon name={hideClosed ? "check" : "x"} size={14} />
-          <span>{hideClosed ? "Show Closed" : "Hide Closed"}</span>
-        </button>
+          {hideClosed ? "Show Closed" : "Hide Closed"}
+        </Button>
         </>}
       />
 
@@ -245,19 +245,19 @@ export function EpicsView({
                       VISIBLE word — an icon alone wasn't discoverable, which is
                       half of what GH #17 was about. stopPropagation is
                       load-bearing: without it this also toggles the row. */}
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
+                    icon="list"
                     onClick={(ev) => {
                       ev.stopPropagation();
                       openDetail(e.id);
                     }}
                     aria-label={`Open details for ${e.id}`}
                     title={`Open details for ${e.id}`}
-                    className="tap-target flex h-7 flex-shrink-0 items-center gap-[5px] max-md:order-5 max-md:basis-full max-md:justify-center rounded-[8px] border border-border bg-[var(--surface-2)] px-[9px] text-meta font-medium text-[var(--text-2)] hover:border-[var(--brand)] hover:text-[var(--brand)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                    className="max-md:order-5 max-md:basis-full"
                   >
-                    <Icon name="list" size={12} className="flex-shrink-0" />
-                    <span>Details</span>
-                  </button>
+                    Details
+                  </Button>
                   {/* Redundant mouse convenience for the row's own toggle. The
                       row carries aria-expanded, so this is aria-hidden and out
                       of the tab order — two elements announcing the same
@@ -331,14 +331,15 @@ export function EpicsView({
                         </div>
                       );
                     })}
-                    <button
+                    <Button
+                      variant="ghost"
+                      icon="plus"
                       disabled={readOnly}
-          onClick={() => openCreate({ parent: e.id })}
-                      className="tap-target m-[2px] flex w-[calc(100%-4px)] items-center gap-[7px] rounded-[9px] p-[9px_12px] text-label font-medium text-[var(--brand)] hover:bg-[var(--surface)]"
+                      onClick={() => openCreate({ parent: e.id })}
+                      className="m-[2px] w-[calc(100%-4px)] justify-start text-[var(--brand)] hover:bg-[var(--surface)] hover:text-[var(--brand)]"
                     >
-                      <Icon name="plus" size={14} />
-                      <span>Add child to this epic</span>
-                    </button>
+                      Add child to this epic
+                    </Button>
                   </div>
                 )}
               </section>

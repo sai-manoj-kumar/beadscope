@@ -49,3 +49,11 @@ Phones are anything under 768px (Tailwind `md`). Use `md:` / `max-md:` in CSS; u
 - A deliberate sideways scroller must carry `data-allow-x-scroll`; nothing else may stick out past the right edge.
 - Look at a view the way the tests do: `node scripts/mobile-audit.mjs http://localhost:3000/p/<project> [views...]` (390px; `MOBILE_WIDTH=360` to change). It lists overflow, text under 14px, fields under 16px and targets under 44px.
 - `scripts/test-mobile-layout.mjs` enforces this on every view in `VIEWS` (`scripts/mobile-audit.mjs`) at 360, 390 and 430px. A new view must be added to `VIEWS` and pass.
+
+## Shared controls
+
+Buttons, fields and selects come from `components/controls.tsx`; do not hand-write their classes.
+
+- `Button` (`variant` secondary|outline|ghost|dashed, `size` sm|md|lg, `icon`, `pressed` for on/off toggles), `IconButton` (needs a `label`), `LinkButton` (text-only, `tone`, `mono`), `TextInput`, `TextArea`, `SelectField`, `CheckInput`, `Segmented`.
+- Main actions are `BrandButton`, small pills are `Chip`, the page header is `PageHeader`, the theme switch is `ThemeToggle`.
+- They already carry the 44px phone targets and 16px phone fields. A raw `<button>` is only right for a whole clickable row, card, menu item or tile, a hidden file/colour/radio input, or an inline editor that must look unlike a field; say why in a comment.

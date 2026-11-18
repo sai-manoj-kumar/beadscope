@@ -2,12 +2,12 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Icon } from "@/components/icons";
 import { useUpdateCheck } from "@/hooks/use-update-check";
 import { api } from "@/lib/api-client";
 import type { UpdateStatus } from "@/lib/update-types";
 import { commitUrl } from "@/lib/build-info";
 import { BrandButton } from "@/components/brand-button";
+import { Button } from "@/components/controls";
 
 export function UpdateIndicator() {
   const { data } = useUpdateCheck();
@@ -25,11 +25,10 @@ export function UpdateIndicator() {
   if (!data?.updateAvailable && !selected) return null;
   const label = data?.channel === "stable" ? `Version ${data.latestVersion} available` : "Development update available";
   return <>
-    {data?.updateAvailable && <button onClick={() => { run.reset(); setSelected(data); }}
-      className="flex items-center gap-[6px] rounded-lg border px-[9px] py-[5px] text-meta font-semibold"
-      style={{ borderColor: "var(--brand)", color: "var(--brand)", background: "var(--brand-weak)" }}>
-      <Icon name="rocket" size={12} /><span>{label}</span>
-    </button>}
+    {data?.updateAvailable && <Button size="sm" icon="rocket" onClick={() => { run.reset(); setSelected(data); }}
+      className="border-[var(--brand)] bg-[var(--brand-weak)] font-semibold text-[var(--brand)] hover:bg-[var(--brand-weak)]">
+      {label}
+    </Button>}
     <Dialog open={!!selected} onOpenChange={open => { if (!open && !run.isPending) setSelected(null); }}>
       {selected && <DialogContent className="max-w-[480px]">
         <DialogTitle>{selected.channel === "stable" ? `Version ${selected.latestVersion} available` : "Development update available"}</DialogTitle>
@@ -52,7 +51,7 @@ export function UpdateIndicator() {
           <p>{run.data.restarting ? "The server is restarting. This page will reconnect shortly." : "Update built successfully. Restart the server to load the new version."}</p>
         </div>}
         <div className="mt-2 flex justify-end gap-2">
-          <button disabled={run.isPending} onClick={() => setSelected(null)} className="rounded-lg border border-border px-3 py-2 text-label disabled:opacity-50">{run.data ? "Close" : "Not now"}</button>
+          <Button size="sm" disabled={run.isPending} onClick={() => setSelected(null)}>{run.data ? "Close" : "Not now"}</Button>
           {selected.canUpdate && selected.target && !run.data && <BrandButton size="sm" disabled={run.isPending} onClick={() => run.mutate()}>
             {run.isPending ? "Updating…" : "Update now"}
           </BrandButton>}

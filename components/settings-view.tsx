@@ -18,10 +18,9 @@ import { UsageStatisticsSetting } from "@/components/usage-statistics";
 import { Card, SettingRow, ToggleButton } from "@/components/settings-card";
 import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
+import { Button, CheckInput, LinkButton, SelectField, Segmented, TextInput } from "@/components/controls";
 import { AgentsSettings } from "@/components/agents-settings";
 
-const inputClass =
-  "h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-label text-[var(--text)] outline-none focus:border-[var(--brand)]";
 
 export function SettingsView() {
   const { projectId } = useApp();
@@ -149,8 +148,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
           <span className="text-label text-[var(--text-2)]">
             Human actor (stamps <span className="font-mono">BEADS_ACTOR</span>)
           </span>
-          <input
-            className={inputClass}
+          <TextInput
             value={actor}
             onChange={(e) => setActor(e.target.value)}
             onKeyDown={saveOnSubmitKey}
@@ -167,16 +165,18 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
                 className="inline-flex items-center gap-[6px] rounded-lg border border-border bg-[var(--surface-2)] px-[9px] py-1 text-label"
               >
                 {n}
-                <button
+                <LinkButton
                   onClick={() => setAllowlist((a) => a.filter((x) => x !== n))}
                   aria-label={`Remove ${n}`}
-                  className="cursor-pointer text-[var(--text-3)] hover:text-[#ef4444]"
+                  className="hover:text-[#ef4444]"
                 >
                   ×
-                </button>
+                </LinkButton>
               </span>
             ))}
-            <input
+            <TextInput
+              size="sm"
+              dashed
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
@@ -186,7 +186,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
                 }
               }}
               placeholder="+ add name, Enter"
-              className="w-[120px] rounded-lg border border-dashed border-[var(--border-strong)] bg-transparent px-[9px] py-1 text-label text-[var(--text)] outline-none"
+              className="w-[120px]"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
           description="Live changes stream in instantly; this only backstops a dropped stream"
           control={
           <div className="flex flex-shrink-0 items-center gap-[6px]">
-            <input
+            <TextInput
               type="number"
               min={1}
               max={300}
@@ -214,7 +214,8 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
               onBlur={() => setPollSec(String(clampSec(pollSec)))}
               onKeyDown={saveOnSubmitKey}
               aria-label="Fallback refresh interval in seconds"
-              className={`${inputClass} w-[72px] text-right font-mono`}
+              mono
+              className="w-[72px] text-right"
             />
             <span className="font-mono text-body text-[var(--text-3)]">s</span>
           </div>
@@ -313,12 +314,9 @@ function KeyboardShortcutsCard() {
           </kbd>{" "}
           anywhere outside a field for the same reference.</>}
         control={
-          <button
-            onClick={() => setHelpOpen(true)}
-            className="h-[30px] flex-shrink-0 rounded-[8px] border border-border px-3 text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-          >
+          <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
             Open reference
-          </button>
+          </Button>
         }
       />
       <KeyboardHelpDialog open={helpOpen} onOpenChangeAction={setHelpOpen} />
@@ -338,24 +336,12 @@ function BoardCard() {
         title="Blocked column"
         description="Hide the Blocked column when nothing is blocked, or keep it pinned."
         control={
-        <div className="flex flex-shrink-0 gap-1 rounded-[9px] border border-border bg-[var(--surface-2)] p-1 max-md:w-full">
-          {opts.map((o) => {
-            const active = prefs.blockedColumn === o.value;
-            return (
-              <button
-                key={o.value}
-                onClick={() => setPrefs({ ...prefs, blockedColumn: o.value })}
-                className="rounded-[7px] px-[11px] py-[6px] text-label font-medium transition-colors max-md:flex-1"
-                style={{
-                  background: active ? "var(--brand)" : "transparent",
-                  color: active ? "#fff" : "var(--text-2)",
-                }}
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
+        <Segmented
+          label="Blocked column"
+          options={opts}
+          value={prefs.blockedColumn}
+          onChange={(v) => setPrefs({ ...prefs, blockedColumn: v })}
+        />
         }
       />
     </Card>
@@ -382,12 +368,12 @@ function UpdatesCard() {
       />
       <label className="flex items-center justify-between gap-4 text-body max-md:flex-col max-md:items-start max-md:gap-2">
         Update channel
-        <select aria-label="Update channel" value={prefs.updateChannel}
+        <SelectField aria-label="Update channel" value={prefs.updateChannel}
           onChange={e => setPrefs({ ...prefs, updateChannel: e.target.value === "development" ? "development" : "stable" })}
-          className="rounded-lg border border-border bg-[var(--surface-2)] p-2 max-md:w-full">
+          className="max-md:w-full">
           <option value="stable">Stable releases (recommended)</option>
           <option value="development">Development (main)</option>
-        </select>
+        </SelectField>
       </label>
       <p className="m-0 text-meta text-[var(--text-3)]">
         Stable follows published versions and includes release notes. Development follows the latest
@@ -435,13 +421,10 @@ function NotificationsCard() {
 
   const cat = (key: keyof NotifPrefs, label: string) => (
     <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
-      <input
-        type="checkbox"
+      <CheckInput
         checked={prefs[key]}
         disabled={!prefs.enabled}
         onChange={(e) => setPrefs({ ...prefs, [key]: e.target.checked })}
-        className="h-5 w-5 cursor-pointer disabled:opacity-40 md:h-4 md:w-4"
-        style={{ accentColor: "var(--brand)" }}
       />
       <span className={`text-body ${prefs.enabled ? "text-[var(--text-2)]" : "text-[var(--text-3)]"}`}>
         {label}

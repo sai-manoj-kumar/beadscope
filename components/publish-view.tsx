@@ -7,6 +7,7 @@ import { useApp } from "@/components/app-context";
 import { api } from "@/lib/api-client";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { Card } from "@/components/settings-card";
+import { Button, CheckInput, Segmented, TextInput } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
 
@@ -108,7 +109,7 @@ export function PublishView() {
           <Card title="Options">
             <label className="flex flex-col gap-[6px]">
               <span className="text-label text-[var(--text-2)]">Site title</span>
-              <input
+              <TextInput
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => {
@@ -116,29 +117,22 @@ export function PublishView() {
                   e.preventDefault();
                   if (!readOnly && !build.isPending) build.mutate();
                 }}
-                className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-body text-[var(--text)] outline-none focus:border-[var(--brand)]"
                 placeholder="Look at my productivity 😄"
               />
             </label>
 
             <div className="flex flex-col gap-[6px]">
               <span className="text-label text-[var(--text-2)]">Scope</span>
-              <div className="flex flex-wrap gap-2">
-                {(["project", "all"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setScope(s)}
-                    className="h-9 flex-1 rounded-[9px] border text-label font-medium"
-                    style={{
-                      borderColor: scope === s ? "var(--brand)" : "var(--border)",
-                      background: scope === s ? "var(--brand-weak)" : "var(--surface-2)",
-                      color: scope === s ? "var(--brand)" : "var(--text-2)",
-                    }}
-                  >
-                    {s === "project" ? "This project" : "All projects"}
-                  </button>
-                ))}
-              </div>
+              <Segmented
+                label="Scope"
+                fill
+                options={[
+                  { value: "project" as const, label: "This project" },
+                  { value: "all" as const, label: "All projects" },
+                ]}
+                value={scope}
+                onChange={setScope}
+              />
               <span className="text-meta text-[var(--text-3)]">
                 {scope === "project"
                   ? `${localCount} beads in this project (archived excluded)`
@@ -179,21 +173,12 @@ export function PublishView() {
                 {result.outDir}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => open.mutate()}
-                  disabled={readOnly || open.isPending}
-                  className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-3 text-label font-medium hover:bg-[var(--surface-3)] disabled:opacity-50"
-                >
-                  <Icon name="board" size={14} /> Open preview
-                </button>
-                <button
-                  onClick={() => deploy.mutate()}
-                  disabled={readOnly || deploy.isPending}
-                  className="flex h-9 items-center gap-[6px] rounded-[9px] px-3 text-label font-medium text-white disabled:opacity-50"
-                  style={{ background: "var(--brand)" }}
-                >
-                  <Icon name="rocket" size={14} /> {deploy.isPending ? "Deploying…" : "Deploy"}
-                </button>
+                <Button icon="board" onClick={() => open.mutate()} disabled={readOnly || open.isPending}>
+                  Open preview
+                </Button>
+                <BrandButton size="sm" icon="rocket" onClick={() => deploy.mutate()} disabled={readOnly || deploy.isPending}>
+                  {deploy.isPending ? "Deploying…" : "Deploy"}
+                </BrandButton>
                 {deployUrl && (
                   <a
                     href={deployUrl}
@@ -221,13 +206,7 @@ export function PublishView() {
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5 cursor-pointer md:h-4 md:w-4"
-        style={{ accentColor: "var(--brand)" }}
-      />
+      <CheckInput checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span className="text-body text-[var(--text-2)]">{label}</span>
     </label>
   );

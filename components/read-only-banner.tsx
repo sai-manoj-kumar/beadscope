@@ -4,6 +4,8 @@ import { LockKeyhole } from "lucide-react";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, SettingRow, ToggleButton } from "@/components/settings-card";
+import { BrandButton } from "@/components/brand-button";
+import { Button, LinkButton } from "@/components/controls";
 
 const KEY = "beadscope.read-only-banner";
 const EVENT = "beadscope:banner";
@@ -65,11 +67,11 @@ export function ReadOnlyBanner() {
         </div>
         <div className="rounded-md px-3 py-2 text-center font-semibold" style={{ backgroundColor: prefs.background, color: prefs.text }}>Read Only Mode</div>
         <p className="text-label text-muted-foreground">Size and colors are saved automatically in this browser.</p>
-        <button className="justify-self-start text-label underline" onClick={() => update(DEFAULTS)}>Reset appearance</button>
+        <LinkButton underline className="justify-self-start text-label" onClick={() => update(DEFAULTS)}>Reset appearance</LinkButton>
         {change.error && <p role="alert" className="text-body text-destructive">{change.error.message}</p>}
         <div className="flex flex-wrap justify-end gap-2">
-          <button className="rounded-md border px-3 py-2" onClick={() => setOpen(false)}>Keep read-only mode</button>
-          <button disabled={change.isPending} className="rounded-md bg-primary px-3 py-2 text-primary-foreground disabled:opacity-50" onClick={() => change.mutate(false, { onSuccess: () => setOpen(false) })}>Disable read-only mode</button>
+          <Button onClick={() => setOpen(false)}>Keep read-only mode</Button>
+          <BrandButton disabled={change.isPending} onClick={() => change.mutate(false, { onSuccess: () => setOpen(false) })}>Disable read-only mode</BrandButton>
         </div>
       </DialogContent>
     </Dialog>

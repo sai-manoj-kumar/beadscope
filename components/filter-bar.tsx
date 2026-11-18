@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { Icon } from "@/components/icons";
+import { Button } from "@/components/controls";
 import { MultiSelectFilter, type FilterOption } from "@/components/multi-select-filter";
 import { typeLabel, statusLabel, prioLabel } from "@/lib/beads-view";
 import { BEAD_TYPES, BEAD_STATUSES } from "@/lib/schema";
@@ -74,18 +75,17 @@ export function FilterBar({
       </div>
 
       {/* Phones: the facets sit behind one Filters button instead of a row wider than the screen. */}
-      <button
-        type="button"
+      <Button
         aria-expanded={facetsOpen}
         aria-controls={facetsId}
         onClick={() => setFacetsOpen((o) => !o)}
-        className="flex h-11 flex-shrink-0 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[12px] text-label font-medium text-[var(--text-2)] max-md:order-2 md:hidden"
+        className="max-md:order-2 md:hidden"
         style={active > 0 ? { borderColor: "var(--brand)", color: "var(--brand)" } : undefined}
       >
         <Icon name="settings" size={14} />
         <span>{active > 0 ? `Filters · ${active}` : "Filters"}</span>
         <Icon name="chevron" size={13} className={`opacity-60 transition-transform ${facetsOpen ? "rotate-180" : ""}`} />
-      </button>
+      </Button>
 
       <div
         id={facetsId}
@@ -140,28 +140,13 @@ export function FilterBar({
           onToggle={(v) => set({ origin: toggleStr(filters.origin, v) })}
           onClear={() => set({ origin: [] })}
         />
-        <button
-          onClick={() => onShowArchived(!showArchived)}
-          title="Toggle archived"
-          className="flex h-9 items-center gap-[6px] rounded-[9px] px-[11px] text-label font-medium tap-target"
-          style={{
-            border: `1px solid ${showArchived ? "var(--brand)" : "var(--border)"}`,
-            background: showArchived ? "var(--brand-weak)" : "var(--surface-2)",
-            color: showArchived ? "var(--brand)" : "var(--text-2)",
-          }}
-        >
-          <Icon name="archive" size={14} />
-          <span>Archived</span>
-        </button>
+        <Button icon="archive" pressed={showArchived} title="Toggle archived" onClick={() => onShowArchived(!showArchived)}>
+          Archived
+        </Button>
         {active > 0 && (
-          <button
-            onClick={clearAll}
-            title="Clear all filters"
-            className="flex h-9 items-center gap-[6px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[11px] text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] tap-target"
-          >
-            <Icon name="x" size={14} />
-            <span>Clear · {active}</span>
-          </button>
+          <Button icon="x" title="Clear all filters" onClick={clearAll}>
+            Clear · {active}
+          </Button>
         )}
       </div>
     </>
