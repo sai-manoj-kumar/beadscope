@@ -15,7 +15,9 @@ import {
   initials,
   childrenOf,
   epicProgress,
+  beadsWithoutEpic,
 } from "@/lib/beads-view";
+import type { Bead } from "@/lib/schema";
 
 /** Chip styling shared with the list rows and drawer so labels read alike. */
 const labelChipClass =
@@ -46,6 +48,54 @@ function LabelChips({ labels, max }: { labels: string[]; max: number }) {
   );
 }
 
+/** One bead row, under an epic or under the "No epic" section. */
+function ChildRow({ k }: { k: Bead }) {
+  const { humanAllowlist, selectedBeadId, selectBead, openDetail } = useApp();
+  const o = beadOrigin(k, humanAllowlist);
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      data-keyboard-bead-id={k.id}
+      aria-current={selectedBeadId === k.id ? "true" : undefined}
+      onFocus={() => selectBead(k.id)}
+      onClick={() => {
+        selectBead(k.id);
+        openDetail(k.id);
+      }}
+      className={`flex cursor-pointer items-center gap-[11px] rounded-[9px] p-[9px_12px] hover:bg-[var(--surface)] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:py-3 ${
+        selectedBeadId === k.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""
+      }`}
+    >
+      <span
+        className="h-2 w-2 flex-shrink-0 rounded-full max-md:-order-1"
+        style={{ background: catColor(k.status) }}
+      />
+      <span className="w-[74px] flex-shrink-0 font-mono text-meta text-[var(--text-3)] max-md:w-auto">
+        {k.id}
+      </span>
+      <Icon
+        name={typeIconName(k.issue_type)}
+        size={14}
+        className="flex-shrink-0 max-md:-order-1"
+        style={{ color: typeColor(k.issue_type) }}
+      />
+      <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-body font-medium max-md:order-1 max-md:basis-full max-md:whitespace-normal max-md:line-clamp-2">
+        {k.title}
+      </span>
+      <LabelChips labels={k.labels ?? []} max={2} />
+      <PriorityChip p={k.priority} />
+      <OriginBadge origin={o} title={originTitle(k.created_by, o)} />
+      <span
+        className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
+        style={{ background: avatarColor(k.assignee ?? "") }}
+      >
+        {initials(k.assignee ?? "")}
+      </span>
+    </div>
+  );
+}
+
 export function EpicsView({
   focusEpic,
   onFocusHandledAction,
@@ -55,7 +105,6 @@ export function EpicsView({
 }) {
   const {
     beads,
-    humanAllowlist,
     openCreate,
     openDetail,
     selectedBeadId,
@@ -64,6 +113,7 @@ export function EpicsView({
     loading,
   } = useApp();
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
+  const [noEpicExpanded, setNoEpicExpanded] = React.useState<boolean | undefined>(undefined);
   const [hideClosed, setHideClosed] = React.useState(true);
   const flashedElement = React.useRef<HTMLElement | null>(null);
   const focusFrame = React.useRef<number | null>(null);
@@ -86,6 +136,20 @@ export function EpicsView({
   const epics = allEpics.filter(
     (e) => !hideClosed || e.status !== "closed" || e.id === focusEpic?.id,
   );
+
+  // Beads that belong to no epic, shown last under a "No epic" section so the
+  // screen accounts for every bead. Same Hide Closed and ordering rules as the
+  // children above; the header count says how many are hidden.
+  const noEpicAll = beadsWithoutEpic(beads);
+  const noEpic = noEpicAll
+    .filter((b) => !hideClosed || b.status !== "closed")
+    .sort(
+      (a, b) =>
+        Number(a.status === "closed") - Number(b.status === "closed") ||
+        a.priority - b.priority ||
+        a.id.localeCompare(b.id),
+    );
+  const noEpicOpen = noEpicExpanded ?? true;
 
   // Consume each focus request after scrolling. Keeping a handled request in
   // AppShell made its closed-epic exception permanent, so "Hide closed" could
@@ -285,52 +349,9 @@ export function EpicsView({
 
                 {isOpen && (
                   <div className="border-t border-border bg-[var(--surface-2)] p-[6px]">
-                    {kids.map((k) => {
-                      const o = beadOrigin(k, humanAllowlist);
-                      return (
-                        <div
-                          key={k.id}
-                          role="button"
-                          tabIndex={0}
-                          data-keyboard-bead-id={k.id}
-                          aria-current={selectedBeadId === k.id ? "true" : undefined}
-                          onFocus={() => selectBead(k.id)}
-                          onClick={() => {
-                            selectBead(k.id);
-                            openDetail(k.id);
-                          }}
-                          className={`flex cursor-pointer items-center gap-[11px] rounded-[9px] p-[9px_12px] hover:bg-[var(--surface)] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-2 max-md:gap-y-1 max-md:py-3 ${
-                            selectedBeadId === k.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""
-                          }`}
-                        >
-                          <span
-                            className="h-2 w-2 flex-shrink-0 rounded-full max-md:-order-2"
-                            style={{ background: catColor(k.status) }}
-                          />
-                          <span className="w-[74px] flex-shrink-0 font-mono text-meta text-[var(--text-3)] max-md:ml-[26px] max-md:w-auto">
-                            {k.id}
-                          </span>
-                          <Icon
-                            name={typeIconName(k.issue_type)}
-                            size={14}
-                            className="flex-shrink-0 max-md:-order-2"
-                            style={{ color: typeColor(k.issue_type) }}
-                          />
-                          <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-body font-medium max-md:-order-1 max-md:flex-[1_1_calc(100%-50px)] max-md:whitespace-normal max-md:line-clamp-2">
-                            {k.title}
-                          </span>
-                          <LabelChips labels={k.labels ?? []} max={2} />
-                          <PriorityChip p={k.priority} />
-                          <OriginBadge origin={o} title={originTitle(k.created_by, o)} />
-                          <span
-                            className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-                            style={{ background: avatarColor(k.assignee ?? "") }}
-                          >
-                            {initials(k.assignee ?? "")}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {kids.map((k) => (
+                      <ChildRow key={k.id} k={k} />
+                    ))}
                     <Button
                       variant="ghost"
                       icon="plus"
@@ -349,6 +370,68 @@ export function EpicsView({
             <div className="rounded-[14px] border border-dashed border-border p-10 text-center text-body text-[var(--text-3)]">
               No epics yet. Create one with type “epic”.
             </div>
+          )}
+          {noEpicAll.length > 0 && (
+            <section
+              data-no-epic-section
+              className="overflow-hidden rounded-[14px] border border-border bg-[var(--surface)] shadow-[var(--shadow)]"
+            >
+              {/* A group header, not a bead: it only expands and collapses. */}
+              <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={noEpicOpen}
+                onClick={() => setNoEpicExpanded(!noEpicOpen)}
+                onKeyDown={(ev) => {
+                  if (ev.target !== ev.currentTarget) return;
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    setNoEpicExpanded(!noEpicOpen);
+                  }
+                }}
+                title={noEpicOpen ? "Hide beads" : "Show beads"}
+                className="flex cursor-pointer items-center gap-[14px] p-[16px_18px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] max-md:gap-3 max-md:p-[14px]"
+              >
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] bg-[var(--surface-2)] text-[var(--text-3)]">
+                  <Icon name="list" size={19} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-section font-semibold tracking-[-.01em]">No epic</div>
+                  <div className="mt-[3px] text-meta text-[var(--text-3)]">
+                    Beads that are not part of any epic · {noEpic.length}
+                    {hideClosed && noEpic.length !== noEpicAll.length ? ` of ${noEpicAll.length}` : ""}{" "}
+                    {noEpicAll.length === 1 ? "bead" : "beads"}
+                  </div>
+                </div>
+                <Icon
+                  name="chevron"
+                  size={18}
+                  className="flex-shrink-0 text-[var(--text-3)] transition-transform"
+                  style={{ transform: noEpicOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </div>
+              {noEpicOpen && (
+                <div className="border-t border-border bg-[var(--surface-2)] p-[6px]">
+                  {noEpic.map((k) => (
+                    <ChildRow key={k.id} k={k} />
+                  ))}
+                  {noEpic.length === 0 && (
+                    <div className="p-[9px_12px] text-body text-[var(--text-3)]">
+                      Every bead outside an epic is closed. Use Show Closed to see them.
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    icon="plus"
+                    disabled={readOnly}
+                    onClick={() => openCreate()}
+                    className="m-[2px] w-[calc(100%-4px)] justify-start text-[var(--brand)] hover:bg-[var(--surface)] hover:text-[var(--brand)]"
+                  >
+                    New bead
+                  </Button>
+                </div>
+              )}
+            </section>
           )}
         </div>
       </div>
