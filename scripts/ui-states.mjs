@@ -140,4 +140,12 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await settle(1200);
     await onState("needs-you-all", "");
   });
+
+  // Agent Queue across every repo: a page of its own, outside any project.
+  await attempt("agent-queue-all", async () => {
+    await page.goto(`${origin}/agent-queue`, { waitUntil: "domcontentloaded" });
+    await page.locator("h1").first().waitFor({ timeout: 15000 });
+    await settle(1200);
+    await onState("agent-queue-all", "");
+  });
 }
