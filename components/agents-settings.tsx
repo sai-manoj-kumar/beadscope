@@ -79,15 +79,17 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
           const draft = names[agent.id] ?? agent.name;
           return (
             <li key={agent.id} data-agent-row={agent.id} className="flex flex-col gap-[8px]">
-              <div className="flex items-center gap-[10px]">
-                <input
-                  type="checkbox"
-                  checked={agent.enabled}
-                  onChange={(e) => change(agent.id, { enabled: e.target.checked })}
-                  aria-label={`Offer ${agent.name} as an assignee`}
-                  className="h-4 w-4 shrink-0 cursor-pointer"
-                  style={{ accentColor: "var(--brand)" }}
-                />
+              <div className="flex items-center gap-[10px] max-md:flex-wrap">
+                <label className="flex shrink-0 cursor-pointer items-center justify-center max-md:h-11 max-md:w-11">
+                  <input
+                    type="checkbox"
+                    checked={agent.enabled}
+                    onChange={(e) => change(agent.id, { enabled: e.target.checked })}
+                    aria-label={`Offer ${agent.name} as an assignee`}
+                    className="h-5 w-5 shrink-0 cursor-pointer md:h-4 md:w-4"
+                    style={{ accentColor: "var(--brand)" }}
+                  />
+                </label>
                 <AgentIcon agent={agent} size={24} />
                 <input
                   value={draft}
@@ -133,7 +135,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                 )}
               </div>
               {!preset && openPicker === agent.id && (
-                <div className="ml-[34px] flex flex-col gap-[8px] rounded-[10px] border border-border bg-[var(--surface-2)] p-[10px]">
+                <div className="ml-[34px] max-md:ml-0 flex flex-col gap-[8px] rounded-[10px] border border-border bg-[var(--surface-2)] p-[10px]">
                   <div role="group" aria-label="Emoji" className="flex flex-wrap gap-[4px]">
                     {AGENT_EMOJIS.map((emoji) => (
                       <button
@@ -142,7 +144,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                         aria-label={`Emoji ${emoji}`}
                         aria-pressed={agent.emoji === emoji}
                         onClick={() => change(agent.id, { emoji })}
-                        className="flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border text-page-title hover:bg-[var(--surface-3)]"
+                        className="tap-target flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border text-page-title hover:bg-[var(--surface-3)]"
                         style={{ borderColor: agent.emoji === emoji ? "var(--brand)" : "transparent" }}
                       >
                         {emoji}
@@ -160,7 +162,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                           aria-pressed={active}
                           // A colour means initials on that colour, so it replaces the emoji.
                           onClick={() => change(agent.id, { color, emoji: undefined })}
-                          className="h-[22px] w-[22px] rounded-full border-2"
+                          className="tap-target h-[22px] w-[22px] rounded-full border-2 max-md:h-11 max-md:w-11"
                           style={{ background: color, borderColor: active ? "var(--text)" : "transparent" }}
                         />
                       );
@@ -173,7 +175,7 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
           );
         })}
       </ul>
-      <div className="flex items-center gap-[8px]">
+      <div className="flex items-center gap-[8px] max-md:flex-wrap">
         <input
           value={newName}
           maxLength={MAX_AGENT_NAME}

@@ -15,6 +15,8 @@ import { KEYBOARD_SHORTCUT_GROUPS, isSubmitKey } from "@/lib/keyboard-shortcuts"
 import { KeyboardHelpDialog, ShortcutKeys } from "@/components/keyboard-help-dialog";
 
 import { UsageStatisticsSetting } from "@/components/usage-statistics";
+import { Card, SettingRow, ToggleButton } from "@/components/settings-card";
+import { PageHeader } from "@/components/page-header";
 import { AgentsSettings } from "@/components/agents-settings";
 
 const inputClass =
@@ -31,13 +33,8 @@ export function SettingsView() {
     : "loading";
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex-shrink-0 border-b border-border bg-[var(--surface)] p-[14px_22px]">
-        <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Settings</h1>
-        <span className="text-meta text-[var(--text-3)]">
-          Local config · stored under the OS config dir, not in beads
-        </span>
-      </header>
-      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[24px_22px]">
+      <PageHeader title="Settings" subtitle="Local config · stored under the OS config dir, not in beads" />
+      <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[24px_22px] max-md:p-4">
         <div className="mx-auto mb-[18px] flex max-w-[620px] flex-col gap-[18px]"><ViewerModeSetting /><DefaultViewSetting /><Card title="Usage statistics"><UsageStatisticsSetting /></Card></div>
         {data ? (
           <SettingsForm key={key} data={data} />
@@ -53,31 +50,27 @@ function DefaultViewSetting() {
   const { enabled, save } = useDefaultFocus();
   return (
     <Card title="Default view">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div id="default-focus-label" className="text-body">Use Focus as the default view</div>
-          <p id="default-focus-description" className="m-0 mt-1 text-meta text-[var(--text-3)]">
-            Off opens projects in Board. Turn on to open in Focus instead, showing
-            current work, blockers, and high-priority next steps. Links to a specific
-            view open that view, including on reload. Switching views does not change this setting.
-            Saved automatically for all projects in this browser.
-          </p>
-        </div>
-        <button
-          role="switch"
-          aria-checked={enabled}
-          aria-labelledby="default-focus-label"
-          aria-describedby="default-focus-description"
-          onClick={() => {
-            try { save(!enabled); }
-            catch { toast.error("Could not save the default view. Browser storage may be unavailable."); }
-          }}
-          className="flex h-[34px] shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)]"
-        >
-          <Icon name={enabled ? "check" : "x"} size={14} />
-          <span>{enabled ? "On" : "Off"}</span>
-        </button>
-      </div>
+      <SettingRow
+        titleId="default-focus-label"
+        descriptionId="default-focus-description"
+        title="Use Focus as the default view"
+        description="Off opens projects in Board. Turn on to open in Focus instead, showing current work, blockers, and high-priority next steps. Links to a specific view open that view, including on reload. Switching views does not change this setting. Saved automatically for all projects in this browser."
+        control={
+          <ToggleButton
+            on={enabled}
+            onText="On"
+            offText="Off"
+            role="switch"
+            aria-checked={enabled}
+            aria-labelledby="default-focus-label"
+            aria-describedby="default-focus-description"
+            onClick={() => {
+              try { save(!enabled); }
+              catch { toast.error("Could not save the default view. Browser storage may be unavailable."); }
+            }}
+          />
+        }
+      />
     </Card>
   );
 }
@@ -175,6 +168,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
                 {n}
                 <button
                   onClick={() => setAllowlist((a) => a.filter((x) => x !== n))}
+                  aria-label={`Remove ${n}`}
                   className="cursor-pointer text-[var(--text-3)] hover:text-[#ef4444]"
                 >
                   ×
@@ -205,13 +199,10 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
       </Card>
 
       <Card title="Freshness & theme">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-body">Fallback refresh interval</div>
-            <div className="text-meta text-[var(--text-3)]">
-              Live changes stream in instantly; this only backstops a dropped stream
-            </div>
-          </div>
+        <SettingRow
+          title="Fallback refresh interval"
+          description="Live changes stream in instantly; this only backstops a dropped stream"
+          control={
           <div className="flex flex-shrink-0 items-center gap-[6px]">
             <input
               type="number"
@@ -226,7 +217,8 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
             />
             <span className="font-mono text-body text-[var(--text-3)]">s</span>
           </div>
-        </div>
+          }
+        />
         <div className="flex flex-col gap-[10px]">
           <div>
             <div className="text-body">Theme</div>
@@ -283,7 +275,7 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
         <button
           onClick={() => save.mutate()}
           disabled={save.isPending}
-          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
+          className="tap-target flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:w-full max-md:justify-center"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="check" size={15} />
@@ -318,21 +310,22 @@ function KeyboardShortcutsCard() {
           </section>
         ))}
       </div>
-      <div className="flex items-center justify-between gap-4">
-        <span className="text-meta text-[var(--text-3)]">
-          Shortcuts are disabled while typing in a field. Press{" "}
+      <SettingRow
+        title="Shortcuts are disabled while typing in a field"
+        description={<>Press{" "}
           <kbd className="rounded border border-border bg-[var(--surface-2)] px-1.5 py-0.5 font-mono">
             ?
           </kbd>{" "}
-          anywhere outside a field for the same reference.
-        </span>
-        <button
-          onClick={() => setHelpOpen(true)}
-          className="h-[30px] flex-shrink-0 rounded-[8px] border border-border px-3 text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
-        >
-          Open reference
-        </button>
-      </div>
+          anywhere outside a field for the same reference.</>}
+        control={
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="h-[30px] flex-shrink-0 rounded-[8px] border border-border px-3 text-label text-[var(--text-2)] hover:bg-[var(--surface-2)]"
+          >
+            Open reference
+          </button>
+        }
+      />
       <KeyboardHelpDialog open={helpOpen} onOpenChangeAction={setHelpOpen} />
     </Card>
   );
@@ -346,21 +339,18 @@ function BoardCard() {
   ];
   return (
     <Card title="Board">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-body">Blocked column</div>
-          <div className="text-meta text-[var(--text-3)]">
-            Hide the Blocked column when nothing is blocked, or keep it pinned.
-          </div>
-        </div>
-        <div className="flex flex-shrink-0 gap-1 rounded-[9px] border border-border bg-[var(--surface-2)] p-1">
+      <SettingRow
+        title="Blocked column"
+        description="Hide the Blocked column when nothing is blocked, or keep it pinned."
+        control={
+        <div className="flex flex-shrink-0 gap-1 rounded-[9px] border border-border bg-[var(--surface-2)] p-1 max-md:w-full">
           {opts.map((o) => {
             const active = prefs.blockedColumn === o.value;
             return (
               <button
                 key={o.value}
                 onClick={() => setPrefs({ ...prefs, blockedColumn: o.value })}
-                className="rounded-[7px] px-[11px] py-[6px] text-label font-medium transition-colors"
+                className="rounded-[7px] px-[11px] py-[6px] text-label font-medium transition-colors max-md:flex-1"
                 style={{
                   background: active ? "var(--brand)" : "transparent",
                   color: active ? "#fff" : "var(--text-2)",
@@ -371,7 +361,8 @@ function BoardCard() {
             );
           })}
         </div>
-      </div>
+        }
+      />
     </Card>
   );
 }
@@ -381,35 +372,29 @@ function UpdatesCard() {
   const on = prefs.checkUpdates;
   return (
     <Card title="Software updates">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-body">Check for new versions</div>
-          <div className="text-meta text-[var(--text-3)]">
-            Check GitHub every five minutes and show new versions in the sidebar.
-            This choice applies to this browser.
-          </div>
-        </div>
-        <button
-          role="switch"
-          aria-label="Check for new versions"
-          aria-checked={on}
-          onClick={() => setPrefs({ ...prefs, checkUpdates: !on })}
-          className="flex h-[34px] flex-shrink-0 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)]"
-        >
-          <Icon name={on ? "check" : "x"} size={14} />
-          <span>{on ? "Enabled" : "Disabled"}</span>
-        </button>
-      </div>
-      <label className="mt-4 flex items-center justify-between gap-4 text-body">
+      <SettingRow
+        title="Check for new versions"
+        description="Check GitHub every five minutes and show new versions in the sidebar. This choice applies to this browser."
+        control={
+          <ToggleButton
+            on={on}
+            role="switch"
+            aria-label="Check for new versions"
+            aria-checked={on}
+            onClick={() => setPrefs({ ...prefs, checkUpdates: !on })}
+          />
+        }
+      />
+      <label className="flex items-center justify-between gap-4 text-body max-md:flex-col max-md:items-start max-md:gap-2">
         Update channel
         <select aria-label="Update channel" value={prefs.updateChannel}
           onChange={e => setPrefs({ ...prefs, updateChannel: e.target.value === "development" ? "development" : "stable" })}
-          className="rounded-lg border border-border bg-[var(--surface-2)] p-2">
+          className="rounded-lg border border-border bg-[var(--surface-2)] p-2 max-md:w-full">
           <option value="stable">Stable releases (recommended)</option>
           <option value="development">Development (main)</option>
         </select>
       </label>
-      <p className="mt-2 text-meta text-[var(--text-3)]">
+      <p className="m-0 text-meta text-[var(--text-3)]">
         Stable follows published versions and includes release notes. Development follows the latest
         commits on main and requires a Git checkout. Updates only install when you choose Update now.
       </p>
@@ -432,23 +417,11 @@ function GamificationCard() {
   });
   return (
     <Card title="Gamification">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-body">Productivity XP &amp; levels</div>
-          <div className="text-meta text-[var(--text-3)]">
-            Earn XP for closing beads (weighted by priority and how many they unblock);
-            a level/progress bar appears in the sidebar. Derived from bd history — opt-in.
-          </div>
-        </div>
-        <button
-          onClick={() => save.mutate(!enabled)}
-          disabled={save.isPending}
-          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)] disabled:opacity-50"
-        >
-          <Icon name={enabled ? "check" : "x"} size={14} />
-          <span>{enabled ? "Enabled" : "Disabled"}</span>
-        </button>
-      </div>
+      <SettingRow
+        title="Productivity XP & levels"
+        description="Earn XP for closing beads (weighted by priority and how many they unblock); a level/progress bar appears in the sidebar. Derived from bd history — opt-in."
+        control={<ToggleButton on={enabled} onClick={() => save.mutate(!enabled)} disabled={save.isPending} />}
+      />
     </Card>
   );
 }
@@ -466,13 +439,13 @@ function NotificationsCard() {
   };
 
   const cat = (key: keyof NotifPrefs, label: string) => (
-    <label className="flex cursor-pointer select-none items-center gap-[9px]">
+    <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
       <input
         type="checkbox"
         checked={prefs[key]}
         disabled={!prefs.enabled}
         onChange={(e) => setPrefs({ ...prefs, [key]: e.target.checked })}
-        className="h-4 w-4 cursor-pointer disabled:opacity-40"
+        className="h-5 w-5 cursor-pointer disabled:opacity-40 md:h-4 md:w-4"
         style={{ accentColor: "var(--brand)" }}
       />
       <span className={`text-body ${prefs.enabled ? "text-[var(--text-2)]" : "text-[var(--text-3)]"}`}>
@@ -483,24 +456,13 @@ function NotificationsCard() {
 
   return (
     <Card title="Notifications">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-body">Desktop &amp; toast notifications</div>
-          <div className="text-meta text-[var(--text-3)]">
-            {unsupported
-              ? "This browser does not support desktop notifications."
-              : "Get notified when an agent finishes or blocks a bead, or escalates one to you."}
-          </div>
-        </div>
-        <button
-          onClick={toggleEnabled}
-          disabled={unsupported}
-          className="flex h-[34px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[13px] text-label hover:bg-[var(--surface-3)] disabled:opacity-50"
-        >
-          <Icon name={prefs.enabled ? "check" : "x"} size={14} />
-          <span>{prefs.enabled ? "Enabled" : "Disabled"}</span>
-        </button>
-      </div>
+      <SettingRow
+        title="Desktop & toast notifications"
+        description={unsupported
+          ? "This browser does not support desktop notifications."
+          : "Get notified when an agent finishes or blocks a bead, or escalates one to you."}
+        control={<ToggleButton on={prefs.enabled} onClick={toggleEnabled} disabled={unsupported} />}
+      />
       {prefs.enabled && permission === "denied" && (
         <div className="text-meta text-[#ef4444]">
           Desktop permission is blocked in your browser — you will still see in-app toasts.
@@ -516,14 +478,5 @@ function NotificationsCard() {
         Per-device — stored in this browser, not in beads. Your own (human) actions never notify.
       </div>
     </Card>
-  );
-}
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-[14px] rounded-[13px] border border-border bg-[var(--surface)] p-[18px_20px]">
-      <div className="text-body font-semibold">{title}</div>
-      {children}
-    </section>
   );
 }

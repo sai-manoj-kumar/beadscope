@@ -3,6 +3,7 @@ import * as React from "react";
 import { LockKeyhole } from "lucide-react";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Card, SettingRow, ToggleButton } from "@/components/settings-card";
 
 const KEY = "beadscope.read-only-banner";
 const EVENT = "beadscope:banner";
@@ -77,12 +78,20 @@ export function ReadOnlyBanner() {
 
 export function ViewerModeSetting() {
   const { data, change, error } = useViewerMode();
-  return <section className="mb-5 rounded-xl border border-border p-4">
-    <h2 className="mb-2 font-semibold">Read-only mode</h2>
-    <p className="mb-3 text-body text-muted-foreground">Prevent edits while you watch progress. This setting applies to your current browser session.</p>
-    <button disabled={!data || change.isPending} className="rounded-md border px-3 py-2 text-body disabled:opacity-50" onClick={() => change.mutate(!data?.readOnly)}>
-      {data?.readOnly ? "Disable read-only mode" : "Enable read-only mode"}
-    </button>
-    {(change.error || error) && <p role="alert" className="mt-2 text-body text-destructive">{(change.error || error)?.message}</p>}
-  </section>;
+  return <Card title="Read-only mode">
+    <SettingRow
+      title="Prevent edits while you watch progress"
+      description="This setting applies to your current browser session."
+      control={
+        <ToggleButton
+          on={!!data?.readOnly}
+          disabled={!data || change.isPending}
+          onClick={() => change.mutate(!data?.readOnly)}
+        >
+          {data?.readOnly ? "Disable read-only mode" : "Enable read-only mode"}
+        </ToggleButton>
+      }
+    />
+    {(change.error || error) && <p role="alert" className="m-0 text-label text-destructive">{(change.error || error)?.message}</p>}
+  </Card>;
 }

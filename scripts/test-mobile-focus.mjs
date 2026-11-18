@@ -52,9 +52,14 @@ try {
   await page.getByRole("heading", { name: "Focus", exact: true }).waitFor();
   const cols = page.locator("[data-focus-column]");
   await cols.first().waitFor();
+  // The lanes settle once beads load and the page hydrates, so wait for the layout rather than read it once.
+  await page.waitForFunction(() => {
+    const [a, c] = [...document.querySelectorAll("[data-focus-column]")].slice(0, 2).map((e) => e.getBoundingClientRect());
+    return !!a && !!c && Math.abs(a.y - c.y) < 2 && c.x > a.x;
+  }, null, { timeout: 10000 }).catch(() => {});
   const a = await cols.nth(0).boundingBox();
   const c = await cols.nth(1).boundingBox();
-  assert.ok(Math.abs(a.y - c.y) < 2 && c.x > a.x, "desktop lanes sit side by side");
+  assert.ok(Math.abs(a.y - c.y) < 2 && c.x > a.x, `desktop lanes sit side by side (a=${a.x},${a.y} c=${c.x},${c.y})`);
   await d.close();
 } finally {
   await browser.close();

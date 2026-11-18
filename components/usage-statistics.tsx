@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { SettingRow, ToggleButton } from "@/components/settings-card";
 
 type Settings = { enabled: boolean; configured: boolean };
 
@@ -52,26 +53,28 @@ export function UsageStatisticsSetting() {
     onError: (e) => toast.error(e.message),
   });
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div>
-        <div id="usage-label" className="text-body">Share basic usage statistics</div>
-        <p id="usage-description" className="m-0 mt-1 text-meta text-[var(--text-3)]">
+    <SettingRow
+      titleId="usage-label"
+      descriptionId="usage-description"
+      title="Share basic usage statistics"
+      description={<>
           Reports one daily activity event with a random installation ID and app version to PostHog
           in the US while you use the app. Failed deliveries may retry. No bead content, project paths,
           names, emails, or session recordings.
           Enabled by default. Turning this off stops future events for all projects and browsers
           using this installation, including after restarting.
-        </p>
-        {query.data && !query.data.configured && <p className="mt-2 text-meta text-[var(--text-3)]">Usage reporting is not configured for this installation. No events are sent.</p>}
-        {query.isError && <p role="alert" className="text-label">Could not load usage preference. <button onClick={() => void query.refetch()}>Retry</button></p>}
-      </div>
-      <button role="switch" aria-checked={query.data?.enabled ?? false}
+      </>}
+      control={
+      <ToggleButton on={query.data?.enabled ?? false} role="switch" aria-checked={query.data?.enabled ?? false}
         aria-labelledby="usage-label" aria-describedby="usage-description"
         disabled={!query.data || save.isPending}
-        onClick={() => save.mutate(!query.data?.enabled)}
-        className="shrink-0 rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-2 text-label disabled:opacity-50">
+        onClick={() => save.mutate(!query.data?.enabled)}>
         {!query.data ? "Loading…" : save.isPending ? "Saving…" : query.data.enabled ? "Enabled" : "Disabled"}
-      </button>
-    </div>
+      </ToggleButton>
+      }
+    >
+        {query.data && !query.data.configured && <p className="mt-2 text-meta text-[var(--text-3)]">Usage reporting is not configured for this installation. No events are sent.</p>}
+        {query.isError && <p role="alert" className="text-label">Could not load usage preference. <button className="tap-target" onClick={() => void query.refetch()}>Retry</button></p>}
+    </SettingRow>
   );
 }
