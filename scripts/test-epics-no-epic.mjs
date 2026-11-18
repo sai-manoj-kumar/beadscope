@@ -53,12 +53,15 @@ try {
   const section = page.locator("[data-no-epic-section]");
   await section.waitFor();
   const rows = () => section.locator("[data-keyboard-bead-id]");
-  const ids = async () => (await rows().evaluateAll((els) => els.map((e) => e.getAttribute("data-keyboard-bead-id")))).sort();
+  const domIds = () => rows().evaluateAll((els) => els.map((e) => e.getAttribute("data-keyboard-bead-id")));
+  const ids = async () => (await domIds()).sort();
 
   assert.ok(await section.getByText("No epic", { exact: true }).isVisible(), "section is titled No epic");
   // Expanded by default; closed and archived beads are left out, epics and epic children never appear.
   assert.deepEqual(await ids(), ["loose-open", "task-child", "task-parent"],
     "No epic lists open beads without an epic parent");
+  assert.deepEqual(await domIds(), ["loose-open", "task-child", "task-parent"],
+    "rows are ordered by priority, then id");
   assert.ok(await section.getByText(/3 of 4 beads/).isVisible(), "header says how many are hidden by Hide Closed");
 
   // The listed bead opens its drawer like any epic child.

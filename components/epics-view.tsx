@@ -113,7 +113,7 @@ export function EpicsView({
     loading,
   } = useApp();
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
-  const [noEpicExpanded, setNoEpicExpanded] = React.useState<boolean | undefined>(undefined);
+  const [noEpicOpen, setNoEpicOpen] = React.useState(true);
   const [hideClosed, setHideClosed] = React.useState(true);
   const flashedElement = React.useRef<HTMLElement | null>(null);
   const focusFrame = React.useRef<number | null>(null);
@@ -138,7 +138,7 @@ export function EpicsView({
   );
 
   // Beads that belong to no epic, shown last under a "No epic" section so the
-  // screen accounts for every bead. Same Hide Closed and ordering rules as the
+  // screen accounts for every non-archived bead. Same Hide Closed and ordering rules as the
   // children above; the header count says how many are hidden.
   const noEpicAll = beadsWithoutEpic(beads);
   const noEpic = noEpicAll
@@ -149,7 +149,6 @@ export function EpicsView({
         a.priority - b.priority ||
         a.id.localeCompare(b.id),
     );
-  const noEpicOpen = noEpicExpanded ?? true;
 
   // Consume each focus request after scrolling. Keeping a handled request in
   // AppShell made its closed-epic exception permanent, so "Hide closed" could
@@ -381,12 +380,12 @@ export function EpicsView({
                 role="button"
                 tabIndex={0}
                 aria-expanded={noEpicOpen}
-                onClick={() => setNoEpicExpanded(!noEpicOpen)}
+                onClick={() => setNoEpicOpen(!noEpicOpen)}
                 onKeyDown={(ev) => {
                   if (ev.target !== ev.currentTarget) return;
                   if (ev.key === "Enter" || ev.key === " ") {
                     ev.preventDefault();
-                    setNoEpicExpanded(!noEpicOpen);
+                    setNoEpicOpen(!noEpicOpen);
                   }
                 }}
                 title={noEpicOpen ? "Hide beads" : "Show beads"}
