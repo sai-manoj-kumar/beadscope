@@ -40,7 +40,7 @@ export function NeedsYouView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 border-b border-border px-6 py-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-4 max-md:px-4">
         <Icon name="user" size={18} className="text-[var(--text-2)]" />
         <h1 className="m-0 text-page-title font-semibold tracking-[-.01em]">Needs You</h1>
         <span className="text-label text-[var(--text-3)]">
@@ -127,7 +127,7 @@ function GateCard({ gate }: { gate: Bead }) {
         <Icon name="gate" size={15} style={{ color: "var(--brand)" }} />
         <button
           onClick={() => openDetail(gate.id)}
-          className="font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
+          className="tap-target font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
         >
           {gate.id}
         </button>
@@ -198,7 +198,7 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         <Icon name={typeIconName(bead.issue_type)} size={14} style={{ color: typeColor(bead.issue_type) }} />
         <button
           onClick={() => openDetail(bead.id)}
-          className="font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
+          className="tap-target font-mono text-meta text-[var(--text-3)] hover:text-[var(--text)]"
         >
           {bead.id}
         </button>
@@ -233,14 +233,14 @@ function NeedsYouCard({ bead }: { bead: Bead }) {
         <button
           disabled={readOnly || busy}
           onClick={() => dismiss.mutate({ id: bead.id })}
-          className="h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
+          className="tap-target h-8 rounded-lg border border-border bg-[var(--surface-2)] px-3 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] disabled:opacity-50"
         >
           Dismiss
         </button>
         <button
           disabled={!canRespond}
           onClick={submit}
-          className="flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
+          className="tap-target flex h-8 items-center gap-[6px] rounded-lg px-3 text-label font-medium text-white disabled:opacity-50"
           style={{ background: "var(--brand)" }}
         >
           <Icon name="check" size={14} /> Respond

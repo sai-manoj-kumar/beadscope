@@ -12,8 +12,8 @@ import { VIEWS, auditView } from "./mobile-audit.mjs";
 const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 
-const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish", "list", "board", "focus", "epics"]);
-const TAP_TARGETS_OK = new Set(["list", "activity", "achievements", "board", "focus", "epics"]);
+const NO_OVERFLOW = new Set(["activity", "needsyou", "achievements", "publish", "list", "board", "focus", "epics", "insights"]);
+const TAP_TARGETS_OK = new Set(["list", "activity", "achievements", "board", "focus", "epics", "insights", "needsyou"]);
 const WIDTHS = [360, 390, 430];
 
 const browser = await chromium.launch({ executablePath: process.env.BEADSCOPE_BROWSER_EXECUTABLE || undefined });
