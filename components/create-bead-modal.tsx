@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ export function CreateBeadModal({
   // Set by the form while it holds typed text. A stray click on the backdrop
   // must not discard a half-written bead; Esc, Cancel and × still close it.
   const dirtyRef = React.useRef(false);
+  const mobile = useIsMobile();
   return (
     <Dialog
       open={open}
@@ -77,13 +79,14 @@ export function CreateBeadModal({
     >
       <DialogContent
         showCloseButton={false}
-        style={{ width, maxWidth: "96vw" }}
-        className="flex max-h-[92vh] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-[var(--surface)] p-0 shadow-[var(--shadow-lg)]"
+        style={{ width: mobile ? "100vw" : width, maxWidth: mobile ? "100vw" : "96vw" }}
+        // Phones: the whole screen, so the form scrolls inside it and Create stays reachable.
+        className="flex max-h-[92vh] flex-col gap-0 overflow-hidden rounded-2xl border border-border bg-[var(--surface)] p-0 shadow-[var(--shadow-lg)] max-md:h-dvh max-md:max-h-dvh max-md:rounded-none"
       >
         <div
           onPointerDown={startResize}
           title="Drag to resize"
-          className="absolute right-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-[var(--brand)]/40"
+          className="absolute right-0 top-0 z-20 h-full w-1.5 cursor-ew-resize hover:bg-[var(--brand)]/40 max-md:hidden"
         />
         {/* Conditionally mounted, so the form remounts on every open and the
             preset below is picked up fresh — no useEffect sync needed. */}
@@ -379,7 +382,7 @@ function CreateForm({
           )}
         </label>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
           {/* A div, not a label: a label would forward a click on an option back to the button and reopen the list. */}
           <div className="flex flex-col gap-[6px]">
             <span className={labelClass}>Assignee</span>
@@ -425,7 +428,7 @@ function CreateForm({
           />
         </label>
 
-        <label className="flex cursor-pointer select-none items-center gap-[9px]">
+        <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
           <input
             type="checkbox"
             checked={form.backlog}
@@ -439,8 +442,8 @@ function CreateForm({
         </label>
       </div>
 
-      <div className="flex shrink-0 items-center gap-[10px] border-t border-border p-[15px_20px]">
-        <div className="flex flex-1 items-center gap-[7px] text-meta text-[var(--text-3)]">
+      <div className="flex shrink-0 flex-wrap items-center gap-[10px] border-t border-border p-[15px_20px] max-md:p-[12px_16px]">
+        <div className="flex flex-1 items-center gap-[7px] text-meta text-[var(--text-3)] max-md:order-first max-md:basis-full">
           <Icon name="user" size={13} className="text-[var(--text-2)]" />
           <span>
             Stamped <span className="font-mono text-[var(--text-2)]">created_by={actor}</span>
@@ -448,14 +451,14 @@ function CreateForm({
         </div>
         <button
           onClick={onClose}
-          className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium text-[var(--text)] hover:bg-[var(--surface-3)]"
+          className="h-[38px] rounded-[9px] border border-border bg-[var(--surface-2)] px-4 text-body font-medium text-[var(--text)] hover:bg-[var(--surface-3)] max-md:flex-1"
         >
           Cancel
         </button>
         <button
           onClick={submit}
           disabled={!form.title.trim() || create.isPending}
-          className="flex h-[38px] items-center gap-[7px] rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50"
+          className="flex h-[38px] items-center justify-center gap-[7px] whitespace-nowrap rounded-[9px] px-4 text-body font-semibold text-white disabled:opacity-50 max-md:flex-[2]"
           style={{ background: "var(--brand)", boxShadow: "0 2px 8px -2px var(--brand)" }}
         >
           <Icon name="check" size={15} />
