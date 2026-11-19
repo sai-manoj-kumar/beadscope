@@ -38,6 +38,21 @@ try {
       return Math.round(card.bottom - e.getBoundingClientRect().bottom);
     }));
     for (const g of gaps) assert.ok(g <= 24, `${where} no dead band under the path, got ${g}px`);
+    // Bead bui-4e1.27: the title bar holds only the logo, the name and the two links. The subtitle is
+    // gone, the theme switch lives below the project list, and neither link wraps its text.
+    assert.equal(await page.getByText("Choose a beads project").count(), 0, `${where} no subtitle in the title bar`);
+    const header = page.locator("header").first();
+    assert.equal(await header.getByRole("button", { name: /^Theme: / }).count(), 0, `${where} no theme switch in the title bar`);
+    const theme = page.getByRole("button", { name: /^Theme: / });
+    assert.equal(await theme.count(), 1, `${where} one theme switch, below the project list`);
+    const themeBox = await theme.boundingBox();
+    const headerBox = await header.boundingBox();
+    assert.ok(themeBox.y > headerBox.y + headerBox.height, `${where} the theme switch is below the title bar`);
+    for (const name of [/^Needs You/, /^Agent Queue/]) {
+      const link = header.getByRole("link", { name });
+      const box = await link.boundingBox();
+      assert.ok(box.height <= 52, `${where} ${name} link is one line tall, got ${box.height}px`);
+    }
     const a = await page.evaluate(pageAudit);
     assert.equal(a.pageScroll, false, `${where} no horizontal page scroll`);
     assert.deepEqual(a.overflow, [], `${where} past the right edge: ${a.overflow.slice(0, 3)}`);
@@ -52,6 +67,8 @@ try {
   const remove = page.getByRole("button", { name: /^Remove .* from list$/ }).first();
   await remove.waitFor({ state: "attached" });
   assert.equal(await remove.evaluate((el) => getComputedStyle(el).opacity), "0", "desktop Remove appears only on hover");
+  assert.equal(await page.locator("header").first().getByRole("button", { name: /^Theme: / }).count(), 0, "desktop title bar has no theme switch");
+  assert.equal(await page.getByRole("button", { name: /^Theme: / }).count(), 1, "desktop has one theme switch, below the list");
   const h = await remove.evaluate((el) => el.closest("[role=button]").getBoundingClientRect().height);
   assert.ok(h >= 112, `desktop cards keep the uniform minimum height, got ${h}`);
   await ctx.close();
