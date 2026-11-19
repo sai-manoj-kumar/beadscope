@@ -12,7 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { initials, avatarColor, needsHuman, readyHumanGate } from "@/lib/beads-view";
+import { AssigneeAvatar } from "@/components/assignee-picker";
+import { needsHuman, readyHumanGate } from "@/lib/beads-view";
 import { useGamification } from "@/hooks/use-beads";
 // GITHUB_REPO is shared with the build badge (where bug/feature issues are filed).
 import { GITHUB_REPO } from "@/lib/build-info";
@@ -181,12 +182,11 @@ export function Sidebar({
         </DropdownMenu>
 
         <div className="flex items-center gap-2 px-1">
-          <div
-            className="flex h-6 w-6 items-center justify-center rounded-full text-meta font-semibold text-white"
-            style={{ background: meta ? avatarColor(actor) : "var(--surface-3)" }}
-          >
-            {meta ? initials(actor) : ""}
-          </div>
+          {meta ? (
+            <AssigneeAvatar name={actor} size={24} />
+          ) : (
+            <div className="h-6 w-6 shrink-0 rounded-full" style={{ background: "var(--surface-3)" }} />
+          )}
           <div className="flex-1 leading-[1.15]">
             <div className="text-label font-medium">{meta ? actor : "…"}</div>
             <div className="text-meta text-[var(--text-3)]">human actor</div>

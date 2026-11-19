@@ -4,6 +4,7 @@ import { Icon, typeIconName } from "@/components/icons";
 import { Button } from "@/components/controls";
 import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { useApp } from "@/components/app-context";
+import { AssigneeAvatar } from "@/components/assignee-picker";
 import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
 import { StatusChip } from "@/components/chip";
@@ -11,8 +12,6 @@ import { beadOrigin, originTitle } from "@/lib/attribution";
 import {
   catColor,
   typeColor,
-  avatarColor,
-  initials,
   childrenOf,
   epicProgress,
   beadsWithoutEpic,
@@ -86,12 +85,7 @@ function ChildRow({ k }: { k: Bead }) {
       <LabelChips labels={k.labels ?? []} max={2} />
       <PriorityChip p={k.priority} />
       <OriginBadge origin={o} title={originTitle(k.created_by, o)} />
-      <span
-        className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-        style={{ background: avatarColor(k.assignee ?? "") }}
-      >
-        {initials(k.assignee ?? "")}
-      </span>
+      <AssigneeAvatar name={k.assignee ?? ""} size={20} />
     </div>
   );
 }

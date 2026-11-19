@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { Bead } from "@/lib/schema";
 import { Icon, typeIconName } from "@/components/icons";
 import { useApp } from "@/components/app-context";
+import { AssigneeAvatar } from "@/components/assignee-picker";
 import { CopyableId } from "@/components/copyable-id";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { beadOrigin, originTitle } from "@/lib/attribution";
@@ -16,8 +17,6 @@ import {
   prioLabel,
   typeColor,
   typeLabel,
-  avatarColor,
-  initials,
   isBlocked,
   parentOf,
   checklistProgress,
@@ -140,12 +139,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
 
       <div className="mt-px flex items-center gap-[10px] border-t border-border pt-[9px]">
         <span className="inline-flex min-w-0 items-center gap-[6px]">
-          <span
-            className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-            style={{ background: avatarColor(bead.assignee ?? "") }}
-          >
-            {initials(bead.assignee ?? "")}
-          </span>
+          <AssigneeAvatar name={bead.assignee ?? ""} size={19} />
           <span className="overflow-hidden text-ellipsis whitespace-nowrap text-meta text-[var(--text-2)]">
             {bead.assignee || "Unassigned"}
           </span>

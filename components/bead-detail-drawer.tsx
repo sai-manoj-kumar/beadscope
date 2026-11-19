@@ -18,6 +18,7 @@ import { Icon, typeIconName } from "@/components/icons";
 import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { CopyableId } from "@/components/copyable-id";
 import { useApp, type DetailAction } from "@/components/app-context";
+import { AssigneeAvatar } from "@/components/assignee-picker";
 import { useImageDrop } from "@/hooks/use-image-drop";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { DescriptionContent } from "@/components/description-content";
@@ -43,8 +44,6 @@ import {
   statusLabel,
   typeColor,
   typeLabel,
-  avatarColor,
-  initials,
   parentOf,
   childrenOf,
   epicProgress,
@@ -929,12 +928,8 @@ function DrawerBody({
                   origin={beadOrigin(k, humanAllowlist)}
                   title={originTitle(k.created_by, beadOrigin(k, humanAllowlist))}
                 />
-                <span
-                  className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-                  style={{ background: avatarColor(k.assignee ?? "") }}
-                  title={k.assignee || "Unassigned"}
-                >
-                  {initials(k.assignee ?? "")}
+                <span className="flex flex-shrink-0" title={k.assignee || "Unassigned"}>
+                  <AssigneeAvatar name={k.assignee ?? ""} size={20} />
                 </span>
                 <IconButton
                   variant="ghost"
@@ -1012,11 +1007,8 @@ function DrawerBody({
           <Header icon="comment" label="Comments" count={comments.length} />
           {/* Newest first, so the composer sits above the list: a new comment lands right under it. */}
           <div className="mb-3 flex items-start gap-[9px]">
-            <span
-              className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-              style={{ background: "var(--brand-solid)" }}
-            >
-              {initials(actor)}
+            <span className="flex flex-shrink-0">
+              <AssigneeAvatar name={actor} size={26} />
             </span>
             <div className="flex flex-1 flex-col gap-2">
               <TextArea
@@ -1044,11 +1036,8 @@ function DrawerBody({
               const co = originOf(c.author, humanAllowlist);
               return (
                 <div key={c.id ?? i} className="flex gap-[10px]">
-                  <span
-                    className="flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-                    style={{ background: avatarColor(c.author) }}
-                  >
-                    {initials(c.author)}
+                  <span className="flex flex-shrink-0">
+                    <AssigneeAvatar name={c.author} size={26} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="mb-[3px] flex items-center gap-[7px]">

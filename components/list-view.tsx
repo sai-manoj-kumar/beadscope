@@ -17,6 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Icon, typeIconName } from "@/components/icons";
 import { useApp } from "@/components/app-context";
+import { AssigneeAvatar } from "@/components/assignee-picker";
 import { PriorityChip, OriginBadge } from "@/components/board/bead-card";
 import { CopyableId } from "@/components/copyable-id";
 import { FilterBar } from "@/components/filter-bar";
@@ -34,8 +35,6 @@ import {
   catColor,
   statusLabel,
   typeColor,
-  avatarColor,
-  initials,
   isBlocked,
   parentOf,
   childrenCountMap,
@@ -358,12 +357,7 @@ function Row({
         <OriginBadge origin={o} title={originTitle(bead.created_by, o)} />
       </span>
       <span className="flex min-w-0 max-w-[130px] flex-shrink-0 items-center gap-[6px]">
-        <span
-          className="flex h-[19px] w-[19px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-          style={{ background: avatarColor(bead.assignee ?? "") }}
-        >
-          {initials(bead.assignee ?? "")}
-        </span>
+        <AssigneeAvatar name={bead.assignee ?? ""} size={19} />
         <span className="truncate text-meta text-[var(--text-2)]">
           {bead.assignee || "Unassigned"}
         </span>
