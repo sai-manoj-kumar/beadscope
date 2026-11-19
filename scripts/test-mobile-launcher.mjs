@@ -1,5 +1,6 @@
 // Phone launcher (bead bui-4e1.15): Remove from list is visible and 44px without hover, every card
 // aligns its path the same way, and there is no empty band under the path.
+// Bead bui-4e1.27: the title bar is logo + name + two links; the theme switch sits below the list.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { pageAudit } from "./mobile-audit.mjs";
@@ -38,6 +39,23 @@ try {
       return Math.round(card.bottom - e.getBoundingClientRect().bottom);
     }));
     for (const g of gaps) assert.ok(g <= 24, `${where} no dead band under the path, got ${g}px`);
+    // Bead bui-4e1.27: the title bar holds only the logo, the name and the two links. The subtitle is
+    // gone, the theme switch lives below the project list, and neither link wraps its text.
+    assert.equal(await page.getByText("Choose a beads project").count(), 0, `${where} no subtitle in the title bar`);
+    const header = page.locator("header").first();
+    assert.equal(await header.getByRole("button", { name: /^Theme: / }).count(), 0, `${where} no theme switch in the title bar`);
+    const theme = page.getByRole("button", { name: /^Theme: / });
+    assert.equal(await theme.count(), 1, `${where} one theme switch, below the project list`);
+    const themeBox = await theme.boundingBox();
+    const headerBox = await header.boundingBox();
+    assert.ok(themeBox.y > headerBox.y + headerBox.height, `${where} the theme switch is below the title bar`);
+    // The links drop to their own row under the logo and name, side by side.
+    const title = await header.getByText("Beadscope", { exact: true }).boundingBox();
+    const needs = await header.getByRole("link", { name: /^Needs You/ }).boundingBox();
+    const queue = await header.getByRole("link", { name: /^Agent Queue/ }).boundingBox();
+    assert.ok(needs.y >= title.y + title.height, `${where} links sit below the title`);
+    assert.ok(Math.abs(needs.y - queue.y) < 2, `${where} the two links share a row`);
+    assert.ok(queue.x >= needs.x + needs.width, `${where} Agent Queue is beside Needs You`);
     const a = await page.evaluate(pageAudit);
     assert.equal(a.pageScroll, false, `${where} no horizontal page scroll`);
     assert.deepEqual(a.overflow, [], `${where} past the right edge: ${a.overflow.slice(0, 3)}`);
@@ -52,6 +70,11 @@ try {
   const remove = page.getByRole("button", { name: /^Remove .* from list$/ }).first();
   await remove.waitFor({ state: "attached" });
   assert.equal(await remove.evaluate((el) => getComputedStyle(el).opacity), "0", "desktop Remove appears only on hover");
+  assert.equal(await page.locator("header").first().getByRole("button", { name: /^Theme: / }).count(), 0, "desktop title bar has no theme switch");
+  assert.equal(await page.getByRole("button", { name: /^Theme: / }).count(), 1, "desktop has one theme switch, below the list");
+  const dTitle = await page.locator("header").first().getByText("Beadscope", { exact: true }).boundingBox();
+  const dNeeds = await page.locator("header").first().getByRole("link", { name: /^Needs You/ }).boundingBox();
+  assert.ok(dNeeds.y < dTitle.y + dTitle.height && dNeeds.y + dNeeds.height > dTitle.y, "desktop links share the title's row");
   const h = await remove.evaluate((el) => el.closest("[role=button]").getBoundingClientRect().height);
   assert.ok(h >= 112, `desktop cards keep the uniform minimum height, got ${h}`);
   await ctx.close();

@@ -14,6 +14,9 @@ import { useProjects } from "@/hooks/use-projects";
 import { FolderBrowserModal } from "@/components/folder-browser-modal";
 import { api, type ProjectInfo } from "@/lib/api-client";
 
+const ENTRY_LINK =
+  "tap-target inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-1.5 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)] max-md:flex-1";
+
 export function Launcher() {
   const { data, isLoading } = useProjects();
   const [addOpen, setAddOpen] = React.useState(false);
@@ -24,35 +27,26 @@ export function Launcher() {
 
   return (
     <div className="flex h-full flex-col overflow-y-auto bg-background text-foreground">
-      <header className="flex items-center gap-[12px] border-b border-border p-[20px_28px]">
+      {/* On a phone the two links drop to their own row, side by side, so neither wraps its label. */}
+      <header className="flex flex-wrap items-center gap-[12px] border-b border-border p-[20px_28px] max-md:p-4">
         <div
           className="flex h-[34px] w-[34px] items-center justify-center rounded-[10px] text-white"
           style={{ background: "var(--brand-solid)", boxShadow: "0 2px 8px -2px var(--brand)" }}
         >
           <Icon name="logo" size={19} />
         </div>
-        <div className="flex-1 leading-[1.15]">
-          <div className="text-page-title font-semibold tracking-[-.01em]">Beadscope</div>
-          <div className="text-label text-[var(--text-3)]">
-            Choose a beads project to view and manage
-          </div>
+        <div className="flex-1 text-page-title font-semibold leading-[1.15] tracking-[-.01em]">Beadscope</div>
+        <div className="flex items-center gap-[12px] max-md:w-full">
+          <Link href="/needs-you" className={ENTRY_LINK}>
+            <Icon name="user" size={15} />
+            Needs You
+            <NeedsYouBadge />
+          </Link>
+          <Link href="/agent-queue" className={ENTRY_LINK}>
+            <Icon name="bot" size={15} />
+            Agent Queue
+          </Link>
         </div>
-        <Link
-          href="/needs-you"
-          className="tap-target inline-flex items-center gap-1.5 rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-1.5 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
-        >
-          <Icon name="user" size={15} />
-          Needs You
-          <NeedsYouBadge />
-        </Link>
-        <Link
-          href="/agent-queue"
-          className="tap-target inline-flex items-center gap-1.5 rounded-[9px] border border-border bg-[var(--surface-2)] px-3 py-1.5 text-label font-medium text-[var(--text-2)] hover:bg-[var(--surface-3)] hover:text-[var(--text)]"
-        >
-          <Icon name="bot" size={15} />
-          Agent Queue
-        </Link>
-        <ThemeToggle size="lg" />
       </header>
 
       <div className="mx-auto w-full max-w-[860px] flex-1 p-[28px] max-md:p-4">
@@ -84,6 +78,11 @@ export function Launcher() {
             )}
           </div>
         )}
+
+        <div className="mt-[28px] flex items-center justify-between border-t border-border pt-[14px]">
+          <span className="text-label text-[var(--text-3)]">Colour theme</span>
+          <ThemeToggle size="lg" />
+        </div>
       </div>
 
       <FolderBrowserModal open={addOpen} onOpenChange={setAddOpen} />
