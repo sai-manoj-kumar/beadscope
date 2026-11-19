@@ -2,7 +2,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { AppProvider } from "@/components/app-context";
 import { SelectField } from "@/components/controls";
@@ -10,13 +9,12 @@ import { GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { beadsKey } from "@/hooks/use-beads";
+import { useAllRepoBeads } from "@/hooks/use-all-repo-beads";
 import { useBeadsStreams } from "@/hooks/use-beads-stream";
-import { useProjects } from "@/hooks/use-projects";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
-import { api, type BeadsResponse, type ProjectInfo } from "@/lib/api-client";
-import { makeIndex, needsHuman, readyHumanGate } from "@/lib/beads-view";
+import type { BeadsResponse, ProjectInfo } from "@/lib/api-client";
+import { countNeedsYou, makeIndex, needsHuman, readyHumanGate } from "@/lib/beads-view";
 
 /** `?repo=` value meaning "every repo" (the param is simply absent). */
 const ALL = "";
@@ -31,17 +29,8 @@ type Selection = { projectId: string; beadId: string };
  * Respond, Dismiss and Approve act on the right project exactly as they do in the project view.
  */
 export function AllNeedsYouView() {
-  const { data: projectData, isLoading: loadingProjects } = useProjects();
   // A folder that lost its .beads cannot be read; the launcher already flags it, so it is left out here.
-  const projects = React.useMemo(() => (projectData?.projects ?? []).filter((p) => p.hasBeads), [projectData]);
-  const results = useQueries({
-    queries: projects.map((p) => ({
-      queryKey: beadsKey(p.id),
-      queryFn: () => api.list(p.id),
-      retry: 1,
-      refetchInterval: (q: { state: { data?: BeadsResponse } }) => q.state.data?.meta.pollIntervalMs ?? 5000,
-    })),
-  });
+  const { projects, results, loadingProjects } = useAllRepoBeads();
   const viewerMode = useViewerMode();
   const readOnly = viewerMode.data?.readOnly ?? true;
   const { searchParams, updateUrl } = useUrlState();
@@ -66,12 +55,7 @@ export function AllNeedsYouView() {
   // Counts per repo are always the whole picture, so the filter labels stay honest.
   const counts = new Map<string, number>();
   for (const { project, query } of sections) {
-    const beads = query.data?.beads ?? [];
-    const index = makeIndex(beads);
-    counts.set(
-      project.id,
-      beads.filter(needsHuman).length + beads.filter((b) => readyHumanGate(b, index)).length,
-    );
+    counts.set(project.id, countNeedsYou(query.data?.beads ?? []));
   }
   const total = shown.reduce((sum, { project }) => sum + (counts.get(project.id) ?? 0), 0);
   const withItems = shown.filter(({ project }) => (counts.get(project.id) ?? 0) > 0);

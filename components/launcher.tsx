@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
+import { NeedsYouBadge } from "@/components/needs-you-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { IconButton } from "@/components/controls";
 import { useProjects } from "@/hooks/use-projects";
@@ -42,6 +43,7 @@ export function Launcher() {
         >
           <Icon name="user" size={15} />
           Needs You
+          <NeedsYouBadge />
         </Link>
         <Link
           href="/agent-queue"
