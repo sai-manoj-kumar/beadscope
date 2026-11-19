@@ -101,6 +101,7 @@ export function AllAgentQueueView() {
       <ReadOnlyBanner />
       <PageHeader
         title="Agent Queue"
+        standalone
         subtitle={
           !settled
             ? "Loading…"

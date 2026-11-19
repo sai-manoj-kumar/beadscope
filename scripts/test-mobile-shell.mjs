@@ -39,6 +39,15 @@ try {
     assert.ok(hb.width <= 2 && hb.height <= 2, `${view}: the h1 must be visually hidden on phones, got ${JSON.stringify(hb)}`);
     assert.equal(await page.getByText("Beadscope", { exact: true }).filter({ visible: true }).count(), 0, `${view}: the app name must not take the top bar`);
   }
+  // The all-repos pages sit outside the app shell, so there is no top bar: their h1 stays visible.
+  for (const [route, name] of [["needs-you", "Needs You"], ["agent-queue", "Agent Queue"]]) {
+    await page.goto(`${base}/${route}`, { waitUntil: "domcontentloaded" });
+    const h1 = page.locator("h1").first();
+    await h1.waitFor();
+    assert.equal((await h1.textContent()).trim(), name);
+    const hb = await h1.boundingBox();
+    assert.ok(hb.width > 20 && hb.height > 10, `${route}: the h1 must stay visible on phones, got ${JSON.stringify(hb)}`);
+  }
   await page.goto(`${base}/p/demo?view=activity`, { waitUntil: "domcontentloaded" });
   await menu.waitFor();
 
