@@ -308,7 +308,7 @@ try {
   };
 
   {
-    const { p, count, settled } = await failingPoll("/needs-you", 2) // one try and one retry;
+    const { p, count, settled } = await failingPoll("/needs-you", 2); // one try and one retry
     await p.getByText(/Couldn’t read Delta Repo/).waitFor();
     await p.clock.runFor(30_000);
     await p.waitForLoadState("networkidle");
@@ -320,7 +320,7 @@ try {
     await p.context().close();
   }
   {
-    const { p, count, settled } = await failingPoll("/p/delta", 4) // one try and three retries;
+    const { p, count, settled } = await failingPoll("/p/delta", 4); // one try and three retries
     await p.clock.runFor(30_000);
     await p.waitForLoadState("networkidle");
     assert.ok(count() - settled >= 3, `the project view keeps polling a failing repo every ~5s (${count() - settled} requests in 30s)`);
