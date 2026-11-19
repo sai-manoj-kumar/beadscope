@@ -30,6 +30,11 @@ export function isDesktopOnly(view: View): boolean {
   return DESKTOP_ONLY_VIEWS.includes(view);
 }
 
+/** The page name shown in the phone top bar: the same label the navigation uses. */
+export function viewLabel(view: View): string {
+  return VIEW_NAV.find((item) => item.key === view)?.label ?? view;
+}
+
 // Shared by the sidebar and the command palette so both offer the same views.
 export function navViews(gamification: boolean, mobile = false): ViewNavItem[] {
   return VIEW_NAV.filter(

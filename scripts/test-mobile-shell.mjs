@@ -25,6 +25,34 @@ try {
     assert.ok(b.width >= 44 && b.height >= 44, `${name} button must be 44px, got ${b.width}x${b.height}`);
   }
 
+  // Page name (bead bui-4e1.26): the top bar shows the current page, not the app name, and the
+  // page's own h1 stays in the page for screen readers without being drawn a second time.
+  for (const [view, name] of [["activity", "Activity"], ["epics", "Epics"], ["needsyou", "Needs You"]]) {
+    await page.goto(`${base}/p/demo?view=${view}`, { waitUntil: "domcontentloaded" });
+    const title = page.locator("[data-mobile-page-title]");
+    await title.waitFor();
+    assert.equal((await title.textContent()).trim(), name, `${view}: the top bar must name the page`);
+    const h1 = page.locator("h1").first();
+    await h1.waitFor();
+    assert.equal((await h1.textContent()).trim(), name, `${view}: the page keeps its h1`);
+    const hb = await h1.boundingBox();
+    assert.ok(hb.width <= 2 && hb.height <= 2, `${view}: the h1 must be visually hidden on phones, got ${JSON.stringify(hb)}`);
+    assert.equal(await page.getByText("Beadscope", { exact: true }).filter({ visible: true }).count(), 0, `${view}: the app name must not take the top bar`);
+  }
+  await page.goto(`${base}/p/demo?view=activity`, { waitUntil: "domcontentloaded" });
+  await menu.waitFor();
+
+  // Desktop keeps the visible h1 and has no phone top bar title
+  const desktop = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const dpage = await desktop.newPage();
+  await dpage.goto(`${base}/p/demo?view=epics`, { waitUntil: "domcontentloaded" });
+  const dh1 = dpage.locator("h1").first();
+  await dh1.waitFor();
+  const dhb = await dh1.boundingBox();
+  assert.ok(dhb.width > 20 && dhb.height > 10, `desktop h1 must stay visible, got ${JSON.stringify(dhb)}`);
+  assert.equal(await dpage.locator("[data-mobile-page-title]").isVisible(), false, "desktop has no phone top bar");
+  await desktop.close();
+
   // Nav sheet
   await page.waitForTimeout(500);
   await menu.click();
