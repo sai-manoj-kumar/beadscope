@@ -20,7 +20,7 @@ const SHEET = '[data-slot="sheet-content"]';
 const DIALOG = '[data-slot="dialog-content"]';
 const MENU = '[data-slot="dropdown-menu-content"]';
 
-export async function visitStates(page, { device, projectUrl, beadId = "", origin = new URL(projectUrl).origin, onState, onMissing, settleMs = 700 }) {
+export async function visitStates(page, { device, projectUrl, beadId = "", origin = new URL(projectUrl).origin, onState, onMissing, settleMs = 700, requireRename = false }) {
   const settle = (ms = settleMs) => page.waitForTimeout(ms);
   const phone = device === "phone";
   const attempt = async (name, fn) => {
@@ -97,7 +97,9 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await settle(300);
     await onState("project-menu", MENU);
     // The Demo project cannot be renamed, so Rename only exists when a real project is registered.
+    // `requireRename` (the quality gate registers a throwaway project) makes a missing Rename an error.
     const rename = page.getByRole("menuitem", { name: /^Rename / }).first();
+    if (requireRename && !(await rename.count())) throw new Error('no "Rename <project>" item in the project menu');
     if (await rename.count()) {
       await rename.click();
       await page.locator(DIALOG).waitFor({ timeout: 8000 });
