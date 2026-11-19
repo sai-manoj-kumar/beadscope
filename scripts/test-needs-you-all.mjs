@@ -40,6 +40,7 @@ const projects = [
   // Folder that lost its .beads: left out of the page and the filter.
   { id: "eps", name: "Eps Repo", path: "/tmp/eps", hasBeads: false },
 ];
+const allProjects = projects.filter((p) => p.hasBeads);
 const posts = [];
 let readOnly = true;
 
@@ -260,6 +261,71 @@ try {
   await demoLoaded;
   await page.waitForTimeout(300);
   assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "the badge skips Demo's flagged sample bead");
+
+  // A repo whose list keeps failing is asked again once a minute on the all-repos page (bui-ih7.9),
+  // not every five seconds; the project view still polls it at the usual pace. Time is faked
+  // (page.clock) so a minute costs nothing; every other repo's poll is five minutes, so the only
+  // list requests in these windows come from the failing repo.
+  projects.splice(0, projects.length, ...allProjects);
+  const failingPoll = async (path, attempts) => {
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    try {
+      const p = await context.newPage();
+      p.setDefaultTimeout(8000);
+      await p.clock.install();
+      await p.route("**/api/viewer-mode", (route) => route.fulfill({ json: { readOnly: true } }));
+      await p.route("**/api/projects", (route) => route.fulfill({ json: { projects } }));
+      let deltaLists = 0;
+      await p.route(/\/api\/p\/(alpha|beta|gamma|delta|eps|demo)\//, (route) => {
+        const url = new URL(route.request().url());
+        const [, , , id, ...rest] = url.pathname.split("/");
+        if (url.pathname.endsWith("/beads/stream")) return route.abort();
+        if (rest.join("/") === "beads" && id === "delta") {
+          deltaLists += 1;
+          return route.fulfill({ status: 500, json: { error: "bd unavailable" } });
+        }
+        if (rest.join("/") === "beads") {
+          return route.fulfill({
+            json: { beads: data[id] ?? [], meta: { kind: "bd", humanActor: "reviewer", humanAllowlist: ["reviewer"], pollIntervalMs: 300000 } },
+          });
+        }
+        return route.fulfill({ json: {} });
+      });
+      await p.goto(`${base}${path}`);
+      // Step page time until the first request and all its retries have failed (the retries wait
+      // 1s, 2s, 4s of page time), so the polls counted afterwards are the interval ones.
+      for (let i = 0; i < 20 && deltaLists < attempts; i++) {
+        await p.clock.runFor(1_000);
+        await p.waitForLoadState("networkidle");
+      }
+      const settled = deltaLists;
+      assert.equal(settled, attempts, "the failing repo's list was requested, then retried");
+      return { p, count: () => deltaLists, settled };
+    } catch (error) {
+      await context.close();
+      throw error;
+    }
+  };
+
+  {
+    const { p, count, settled } = await failingPoll("/needs-you", 2) // one try and one retry;
+    await p.getByText(/Couldn’t read Delta Repo/).waitFor();
+    await p.clock.runFor(30_000);
+    await p.waitForLoadState("networkidle");
+    assert.equal(count(), settled, "the all-repos page does not re-ask a failing repo within 30s");
+    await p.clock.runFor(60_000);
+    await p.waitForLoadState("networkidle");
+    // One poll is a try plus its one retry (two requests); the next poll is another minute away.
+    assert.equal(count(), settled + 2, "the all-repos page re-asks a failing repo once after a minute");
+    await p.context().close();
+  }
+  {
+    const { p, count, settled } = await failingPoll("/p/delta", 4) // one try and three retries;
+    await p.clock.runFor(30_000);
+    await p.waitForLoadState("networkidle");
+    assert.ok(count() - settled >= 3, `the project view keeps polling a failing repo every ~5s (${count() - settled} requests in 30s)`);
+    await p.context().close();
+  }
 
   assert.deepEqual(errors, []);
   console.log("PASS: /needs-you lists every repo's waiting beads and gates, filters by repo, and acts on the right project");
