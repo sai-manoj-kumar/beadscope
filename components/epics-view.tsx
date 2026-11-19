@@ -197,22 +197,25 @@ export function EpicsView({
             {hideClosed && allEpics.length !== epics.length ? ` of ${allEpics.length}` : ""} epics ·
             progress = closed ÷ children
         </>}
-        actions={<BrandButton
-          icon="plus"
-          disabled={readOnly}
-          onClick={() => openCreate({ type: "epic" })}
-        >
-          New epic
-        </BrandButton>}
-        controls={<>
-        <span className="flex-1 max-md:hidden" />
-        <Button
-          icon={hideClosed ? "check" : "x"}
-          onClick={() => setHideClosed((v) => !v)}
-          title={hideClosed ? "Show closed epics and children" : "Hide closed epics and children"}
-        >
-          {hideClosed ? "Show Closed" : "Hide Closed"}
-        </Button>
+        actions={<>
+          {/* Beside New epic rather than in `controls`: on a phone `controls`
+              is a full-width row of its own, which this one button filled. The
+              text is visually hidden under md and stays the accessible name. */}
+          <Button
+            icon={hideClosed ? "check" : "x"}
+            onClick={() => setHideClosed((v) => !v)}
+            title={hideClosed ? "Show closed epics and children" : "Hide closed epics and children"}
+            className="max-md:w-11 max-md:px-0"
+          >
+            <span className="max-md:sr-only">{hideClosed ? "Show Closed" : "Hide Closed"}</span>
+          </Button>
+          <BrandButton
+            icon="plus"
+            disabled={readOnly}
+            onClick={() => openCreate({ type: "epic" })}
+          >
+            New epic
+          </BrandButton>
         </>}
       />
 

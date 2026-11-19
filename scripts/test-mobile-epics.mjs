@@ -18,6 +18,17 @@ try {
     await page.waitForTimeout(400);
     const where = `@${width}px`;
 
+    // The Hide/Show Closed toggle sits beside New epic, not on a row of its own (bui-4e1.25).
+    const toggle = page.getByRole("button", { name: /^(Hide|Show) Closed$/ });
+    const newEpic = page.getByRole("button", { name: "New epic", exact: true });
+    const tg = await toggle.boundingBox();
+    const ne = await newEpic.boundingBox();
+    assert.ok(tg.height >= 44 && tg.width >= 44, `${where} Closed toggle is 44px, got ${tg.width}x${tg.height}`);
+    assert.ok(Math.abs(tg.y - ne.y) < 4, `${where} Closed toggle shares New epic's row (${tg.y} vs ${ne.y})`);
+    assert.ok(tg.x + tg.width <= ne.x, `${where} Closed toggle sits left of New epic`);
+    const hdr = await page.locator("header").filter({ has: page.getByRole("heading", { name: "Epics", exact: true }) }).boundingBox();
+    assert.ok(hdr.height < 140, `${where} Epics header is one block, not an extra row, got ${hdr.height}`);
+
     const title = card.locator("div.text-section").first();
     const t = await title.boundingBox();
     assert.ok(t.width >= 170, `${where} epic title keeps a readable width, got ${t.width}`);
@@ -47,6 +58,8 @@ try {
   await page.getByRole("heading", { name: "Epics", exact: true }).waitFor();
   const card = page.locator("section", { has: page.getByRole("button", { name: /^Open details for / }) }).first();
   await card.waitFor();
+  const closedToggle = page.getByRole("button", { name: /^(Hide|Show) Closed$/ });
+  assert.ok(await closedToggle.getByText(/Closed$/).isVisible(), "desktop Closed toggle keeps its visible text");
   const title = await card.locator("div.text-section").first().boundingBox();
   const details = await card.getByRole("button", { name: /^Open details for / }).boundingBox();
   assert.ok(details.x > title.x + title.width - 1 && Math.abs(details.y - title.y) < 60, "desktop Details sits on the same row, right of the title");
