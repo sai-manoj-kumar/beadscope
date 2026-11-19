@@ -259,9 +259,12 @@ export function EpicsView({
                     }
                   }}
                   title={isOpen ? "Hide children" : "Show children"}
-                  className={`flex cursor-pointer items-center gap-[14px] p-[16px_18px] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-3 max-md:p-[14px] ${
-                    selectedBeadId === e.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""
-                  }`}
+                  className={`flex cursor-pointer items-center gap-[14px] rounded-t-[13px] p-[16px_18px] focus-visible:outline-none max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-3 max-md:p-[14px] ${
+                    /* 13px = the card's 14px radius minus its 1px border, so the inset
+                       ring follows the card's rounded corners instead of being clipped
+                       by overflow-hidden. The bottom corners only round while collapsed. */
+                    isOpen ? "" : "rounded-b-[13px]"
+                  } ${selectedBeadId === e.id ? "ring-2 ring-inset ring-[var(--brand)]" : ""}`}
                 >
                   <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] bg-[var(--brand-weak)] text-[var(--brand)]">
                     <Icon name="target" size={19} />
@@ -386,7 +389,9 @@ export function EpicsView({
                   }
                 }}
                 title={noEpicOpen ? "Hide beads" : "Show beads"}
-                className="flex cursor-pointer items-center gap-[14px] p-[16px_18px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] max-md:gap-3 max-md:p-[14px]"
+                className={`flex cursor-pointer items-center gap-[14px] rounded-t-[13px] p-[16px_18px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--brand)] max-md:gap-3 max-md:p-[14px] ${
+                  noEpicOpen ? "" : "rounded-b-[13px]"
+                }`}
               >
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[10px] bg-[var(--surface-2)] text-[var(--text-3)]">
                   <Icon name="list" size={19} />
