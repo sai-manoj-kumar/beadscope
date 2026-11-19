@@ -1,6 +1,7 @@
 // Needs You across every repo (bead bui-ih7.4): /needs-you gathers the human-flagged beads and ready
 // human gates of all registered projects, groups them by repo, filters by repo, and acts on the
-// right project. Isolated demo server only; all project requests are intercepted, nothing is written.
+// right project. Bead bui-ih7.7 adds live updates over each repo's change stream and a single
+// selection ring across repos. Isolated demo server only; all project requests are intercepted, nothing is written.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
@@ -49,6 +50,31 @@ try {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (m) => m.type() === "error" && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
+
+  // Stand-in for EventSource: remembers every stream the page opens so the test can send a change.
+  await page.addInitScript(() => {
+    window.__streams = [];
+    window.EventSource = class {
+      constructor(url) {
+        this.url = url;
+        this.closed = false;
+        this.listeners = {};
+        window.__streams.push(this);
+      }
+      addEventListener(type, fn) {
+        (this.listeners[type] ??= []).push(fn);
+      }
+      close() {
+        this.closed = true;
+      }
+    };
+  });
+  const sendChange = (repo) =>
+    page.evaluate((r) => {
+      for (const es of window.__streams) {
+        if (!es.closed && es.url === `/api/p/${r}/beads/stream`) (es.listeners.change ?? []).forEach((fn) => fn(new Event("change")));
+      }
+    }, repo);
 
   await page.route("**/api/viewer-mode", (route) => route.fulfill({ json: { readOnly } }));
   await page.route("**/api/projects", (route) => route.fulfill({ json: { projects } }));
@@ -144,6 +170,32 @@ try {
     { project: "alpha", status: "closed" },
     "approving a gate closes it in its own repo",
   );
+
+  // Live (bui-ih7.7): a flag raised in a repo shows up when its stream signals a change, without
+  // waiting for the (here five-minute) poll.
+  assert.deepEqual(
+    await page.evaluate(() => window.__streams.filter((es) => !es.closed).map((es) => es.url).sort()),
+    ["alpha", "beta", "delta", "gamma"].map((r) => `/api/p/${r}/beads/stream`),
+    "every repo on the page is streamed",
+  );
+  data.beta = [...data.beta, bead("be-3", "Beta new flag", { labels: ["human"] })];
+  await page.waitForTimeout(500);
+  assert.deepEqual(await cardIds(), ["al-1"], "nothing changes before the stream signals");
+  await sendChange("beta");
+  await page.locator('[data-keyboard-bead-id="be-3"]').waitFor();
+  assert.deepEqual((await cardIds()).sort(), ["al-1", "be-3"]);
+
+  // One selection ring across repos: focusing a card in another repo moves it.
+  await page.locator('[data-keyboard-bead-id="al-1"]').focus();
+  await page.locator('[data-keyboard-bead-id="be-3"]').focus();
+  assert.deepEqual(
+    await page.locator('[aria-current="true"][data-keyboard-bead-id]').evaluateAll((els) => els.map((e) => e.getAttribute("data-keyboard-bead-id"))),
+    ["be-3"],
+    "only the last-focused card is selected, even across repos",
+  );
+  // Filtering to one repo stops streaming the others.
+  await page.getByLabel("Filter by repo").selectOption("alpha");
+  await page.waitForFunction(() => window.__streams.filter((es) => !es.closed).length === 1);
 
   // Opening a bead goes to its repo with the drawer on it.
   await page.locator('[data-keyboard-bead-id="al-1"]').getByRole("button", { name: "al-1", exact: true }).click();
