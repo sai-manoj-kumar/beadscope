@@ -36,3 +36,33 @@ export function useBeadsStream(projectId: string): { live: boolean } {
 
   return { live };
 }
+
+/**
+ * Browsers allow about six connections per host over plain HTTP/1.1, and every open stream holds
+ * one, so an all-repos page streams only this many repos and leaves room for ordinary requests.
+ */
+export const MAX_PAGE_STREAMS = 4;
+
+/**
+ * Like `useBeadsStream`, for a page that shows several projects at once: refetch each project's
+ * beads query when its `.beads/` changes. Only the first `max` projects are streamed; the rest
+ * keep to their polling interval.
+ */
+export function useBeadsStreams(projectIds: string[], max: number = MAX_PAGE_STREAMS): void {
+  const qc = useQueryClient();
+  // A stable key, so a new array with the same ids does not reopen the connections.
+  const key = projectIds.filter((id) => id !== "demo").slice(0, max).join("\n");
+
+  React.useEffect(() => {
+    if (!key) return;
+    const sources = key.split("\n").map((projectId) => {
+      const es = new EventSource(`/api/p/${encodeURIComponent(projectId)}/beads/stream`);
+      es.addEventListener("change", () => {
+        qc.invalidateQueries({ queryKey: beadsKey(projectId) });
+        qc.invalidateQueries({ queryKey: activityKey(projectId) });
+      });
+      return es;
+    });
+    return () => sources.forEach((es) => es.close());
+  }, [key, qc]);
+}
