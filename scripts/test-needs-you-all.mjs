@@ -221,6 +221,22 @@ try {
   await badge(sidebarLink).waitFor();
   assert.equal(await badge(sidebarLink).textContent(), "2", "the sidebar badge is the all-repos total");
 
+  // The page agrees with the badge (bui-ih7.9): Demo is left out of the list, the filter and the
+  // count while real repos exist, and its sample beads are not even requested.
+  const demoRequests = [];
+  page.on("request", (r) => /\/api\/p\/demo\//.test(r.url()) && demoRequests.push(r.url()));
+  await page.goto(`${base}/needs-you`);
+  await page.locator("[data-keyboard-bead-id]").first().waitFor();
+  await page.getByText("2 waiting on you · all repos").waitFor();
+  assert.deepEqual((await cardIds()).sort(), ["al-1", "be-3"], "Demo's sample bead is not listed");
+  assert.equal(await page.locator('[data-repo-section="demo"]').count(), 0);
+  assert.deepEqual(
+    await page.getByLabel("Filter by repo").locator("option").allTextContents(),
+    ["All repos", "Alpha Repo (1)", "Beta Repo (1)", "Gamma Repo", "Delta Repo"],
+    "Demo is not in the filter",
+  );
+  assert.deepEqual(demoRequests, [], "Demo's beads are not fetched for the all-repos views");
+
   // No badge when nothing is waiting anywhere.
   data.alpha = data.alpha.map((b) => ({ ...b, labels: [] }));
   data.beta = data.beta.map((b) => ({ ...b, labels: [] }));
@@ -231,6 +247,19 @@ try {
   assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "no badge at zero");
   await page.getByRole("link", { name: /^Needs You/ }).click();
   await page.waitForURL(/\/needs-you$/);
+
+  // Demo is the only project (a fresh install): the page shows its sample beads rather than nothing.
+  projects.splice(0, projects.length, { id: "demo", name: "Demo", path: null, hasBeads: true });
+  await page.goto(`${base}/needs-you`);
+  await page.locator('[data-repo-section="demo"]').waitFor();
+  assert.deepEqual(await cardIds(), ["demo-1"]);
+  await page.getByText("1 waiting on you · all repos").waitFor();
+  const demoLoaded = page.waitForResponse((r) => /\/api\/p\/demo\/beads$/.test(r.url()));
+  await page.goto(`${base}/`);
+  await page.getByRole("link", { name: /^Needs You/ }).waitFor();
+  await demoLoaded;
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "the badge skips Demo's flagged sample bead");
 
   assert.deepEqual(errors, []);
   console.log("PASS: /needs-you lists every repo's waiting beads and gates, filters by repo, and acts on the right project");
