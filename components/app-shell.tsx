@@ -32,6 +32,7 @@ import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { useNotificationActivation } from "@/hooks/use-notifications";
 import { Menu, Search } from "lucide-react";
 import { OPEN_PALETTE_EVENT } from "@/lib/breakpoints";
+import { viewLabel } from "@/lib/views";
 import { IconButton } from "@/components/controls";
 
 /**
@@ -270,8 +271,12 @@ export function AppShell({ projectId }: { projectId: string }) {
               />
             </SheetContent>
           </Sheet>
-          <div className="min-w-0 flex-1 truncate text-label font-semibold text-[var(--text)]">
-            Beadscope
+          {/* The page name, not the app name. The page's own h1 is visually hidden on phones (PageHeader). */}
+          <div
+            data-mobile-page-title
+            className="min-w-0 flex-1 truncate text-section font-semibold tracking-[-.01em] text-[var(--text)]"
+          >
+            {viewLabel(view)}
           </div>
           {/* The command palette (search, jump to a bead, change status) has no keyboard on a phone. */}
           <IconButton

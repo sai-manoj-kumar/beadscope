@@ -73,6 +73,7 @@ export function AllNeedsYouView() {
       <ReadOnlyBanner />
       <PageHeader
         title="Needs You"
+        standalone
         subtitle={
           !settled ? "Loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you · ${repo === ALL ? "all repos" : "1 repo"}`
         }
