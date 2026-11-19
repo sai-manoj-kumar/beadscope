@@ -21,9 +21,10 @@ const FAILING_POLL_MS = 60_000;
 export function useAllRepoBeads() {
   const { data, isLoading: loadingProjects } = useProjects();
   const projects: ProjectInfo[] = React.useMemo(() => {
-    const readable = (data?.projects ?? []).filter((p) => p.hasBeads);
-    const real = readable.filter((p) => p.id !== "demo");
-    return real.length > 0 ? real : readable;
+    const all = data?.projects ?? [];
+    const readable = all.filter((p) => p.hasBeads);
+    // Demo stays only when it is the only registered project (not when the real ones are unreadable).
+    return all.some((p) => p.id !== "demo") ? readable.filter((p) => p.id !== "demo") : readable;
   }, [data]);
   const results = useQueries({
     queries: projects.map((p) => ({

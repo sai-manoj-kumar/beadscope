@@ -230,7 +230,11 @@ try {
   await page.getByText("2 waiting on you · all repos").waitFor();
   assert.deepEqual((await cardIds()).sort(), ["al-1", "be-3"], "Demo's sample bead is not listed");
   assert.equal(await page.locator('[data-repo-section="demo"]').count(), 0);
-  assert.ok(!(await page.getByLabel("Filter by repo").locator("option").allTextContents()).includes("Demo"), "Demo is not in the filter");
+  assert.deepEqual(
+    await page.getByLabel("Filter by repo").locator("option").allTextContents(),
+    ["All repos", "Alpha Repo (1)", "Beta Repo (1)", "Gamma Repo", "Delta Repo"],
+    "Demo is not in the filter",
+  );
   assert.deepEqual(demoRequests, [], "Demo's beads are not fetched for the all-repos views");
 
   // No badge when nothing is waiting anywhere.
@@ -250,10 +254,12 @@ try {
   await page.locator('[data-repo-section="demo"]').waitFor();
   assert.deepEqual(await cardIds(), ["demo-1"]);
   await page.getByText("1 waiting on you · all repos").waitFor();
+  const demoLoaded = page.waitForResponse((r) => /\/api\/p\/demo\/beads$/.test(r.url()));
   await page.goto(`${base}/`);
   await page.getByRole("link", { name: /^Needs You/ }).waitFor();
-  await page.waitForLoadState("networkidle");
-  assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "the badge still skips Demo");
+  await demoLoaded;
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "the badge skips Demo's flagged sample bead");
 
   assert.deepEqual(errors, []);
   console.log("PASS: /needs-you lists every repo's waiting beads and gates, filters by repo, and acts on the right project");
