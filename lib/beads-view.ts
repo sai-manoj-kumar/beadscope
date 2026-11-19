@@ -163,6 +163,12 @@ export function makeIndex(beads: Bead[]): Map<string, Bead> {
   return m;
 }
 
+/** How many beads are waiting on a human: agent-flagged beads (`bd human`) plus ready human gates. */
+export function countNeedsYou(beads: Bead[]): number {
+  const index = makeIndex(beads);
+  return beads.filter(needsHuman).length + beads.filter((b) => readyHumanGate(b, index)).length;
+}
+
 export function isBlocked(b: Bead, index: Map<string, Bead>): boolean {
   if (b.status === "blocked") return true;
   if (b.status !== "open") return false;

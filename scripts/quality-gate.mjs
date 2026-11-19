@@ -9,8 +9,10 @@
 //   - every state can still be reached (a renamed button fails the test instead of shrinking coverage)
 //
 // The Demo project cannot be renamed, so the gate registers a throwaway project (an empty .beads folder
-// in a temp dir) to make the project menu offer Rename and the Rename dialog audited. It is removed once
-// the project menu states are done: the pages that read every project would log errors for an empty one.
+// in a temp dir) to make the project menu offer Rename and the Rename dialog audited. It has no readable
+// beads (no bd behind it), so the pages that read every project (the sidebar and launcher Needs You badge,
+// the all-repos pages) get an HTTP error for it; the browser logs that as a console error, which is expected
+// for this project only and ignored by URL. It is removed once the project menu states are done.
 //
 // Each state is loaded once and audited in both themes (the app follows prefers-color-scheme live).
 // The phone rules that need a sized viewport (44px targets, 16px fields, nothing past the edge) stay
@@ -64,6 +66,8 @@ export async function runQualityGate(device) {
     let current = "load";
     page.on("pageerror", (e) => problems.push(`${device}/${current}: uncaught error: ${e.message.split("\n")[0]}`));
     page.on("console", (m) => {
+      // The throwaway project cannot be read (see above); its failed requests are expected, nothing else is.
+      if (m.type() === "error" && m.location().url.includes(`/api/p/${spareId}/`)) return;
       if (m.type() === "error") problems.push(`${device}/${current}: console error: ${m.text().split("\n")[0].slice(0, 140)}`);
     });
     await visitStates(page, {

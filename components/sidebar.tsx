@@ -19,6 +19,7 @@ import { useGamification } from "@/hooks/use-beads";
 import { GITHUB_REPO } from "@/lib/build-info";
 import { BuildBadge } from "@/components/build-badge";
 import { UpdateIndicator } from "@/components/update-indicator";
+import { NeedsYouBadge } from "@/components/needs-you-badge";
 import { ResizeHandle } from "@/components/resize-handle";
 import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { cn } from "@/lib/utils";
@@ -129,6 +130,7 @@ export function Sidebar({
         >
           <Icon name="user" size={17} className="flex-shrink-0" />
           <span className="flex-1">Needs You · all repos</span>
+          <NeedsYouBadge />
         </Link>
         <Link
           href="/agent-queue"
