@@ -78,6 +78,7 @@ Options (start, run, add):
       --host <h>   Host to bind (default from Next; or $HOST).
       --no-open    Don't open a browser, just print the URL.
   -h, --help       Show this help.
+  -v, --version    Print the Beadscope version and exit.
 
 The background server's PID and log live in
 \${XDG_CONFIG_HOME:-~/.config}/beadscope/.
@@ -90,6 +91,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "-h" || a === "--help") opts.help = true;
+    else if (a === "-v" || a === "--version") opts.version = true;
     else if (a === "--no-open") opts.open = false;
     else if (a === "-f" || a === "--follow") opts.follow = true;
     else if (a === "-n" || a === "--lines") opts.lines = Number(argv[++i]);
@@ -731,6 +733,11 @@ async function cmdRun(opts) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
+
+  if (opts.version) {
+    console.log(JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8")).version);
+    process.exit(0);
+  }
 
   // No subcommand (or --help): show usage. A bare `beadscope` deliberately does
   // not start a server any more — `beadscope start` does.

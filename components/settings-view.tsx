@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
 import { Button, CheckInput, LinkButton, SelectField, Segmented, TextInput } from "@/components/controls";
 import { AgentsSettings } from "@/components/agents-settings";
+import { APP_VERSION, BUILD_NUMBER, BUILD_SHA } from "@/lib/build-info";
 
 
 export function SettingsView() {
@@ -354,6 +355,14 @@ function UpdatesCard() {
   const on = prefs.checkUpdates;
   return (
     <Card title="Software updates">
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span data-testid="app-version" className="text-label font-medium text-[var(--text-2)]">Beadscope v{APP_VERSION}</span>
+        {BUILD_SHA && (
+          <span className="font-mono text-meta text-[var(--text-3)]">
+            build {BUILD_NUMBER || "—"} · {BUILD_SHA}
+          </span>
+        )}
+      </div>
       <SettingRow
         title="Check for new versions"
         description="Check GitHub every five minutes and show new versions in the sidebar. This choice applies to this browser."
