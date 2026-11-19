@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/page-header";
 import { useApp } from "@/components/app-context";
 import { useActivity } from "@/hooks/use-beads";
 import { OriginBadge } from "@/components/board/bead-card";
-import { avatarColor, initials, relTime, fmtDateTime } from "@/lib/beads-view";
+import { AssigneeAvatar } from "@/components/assignee-picker";
+import { relTime, fmtDateTime } from "@/lib/beads-view";
 
 /**
  * Mission Control — live activity feed. A newest-first stream of what humans and
@@ -41,11 +42,8 @@ export function ActivityView() {
                     selectedBeadId === it.issueId ? "ring-2 ring-inset ring-[var(--brand)]" : ""
                   }`}
                 >
-                  <span
-                    className="mt-[1px] flex h-[26px] w-[26px] flex-shrink-0 items-center justify-center rounded-full text-meta font-semibold text-white"
-                    style={{ background: avatarColor(it.actor) }}
-                  >
-                    {initials(it.actor)}
+                  <span className="mt-[1px] flex flex-shrink-0">
+                    <AssigneeAvatar name={it.actor} size={26} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-[6px] gap-y-1 text-body">

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { useApp } from "@/components/app-context";
 import { useGamification } from "@/hooks/use-beads";
 import { Icon } from "@/components/icons";
-import { avatarColor, initials } from "@/lib/beads-view";
+import { AssigneeAvatar } from "@/components/assignee-picker";
 import type { ActorStat } from "@/lib/api-client";
 
 /**
@@ -130,12 +130,7 @@ function LeaderColumn({ title, actors, you }: { title: string; actors: ActorStat
               }`}
             >
               <span className="w-4 text-center font-mono text-meta text-[var(--text-3)]">{i + 1}</span>
-              <span
-                className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-meta font-semibold text-white"
-                style={{ background: avatarColor(a.actor) }}
-              >
-                {initials(a.actor)}
-              </span>
+              <AssigneeAvatar name={a.actor} size={22} />
               <span className="flex-1 truncate">{a.actor}</span>
               {a.currentStreak >= 2 && <span className="text-meta" title="current streak">🔥{a.currentStreak}</span>}
               <span className="font-mono text-label font-semibold">{a.xp}</span>
