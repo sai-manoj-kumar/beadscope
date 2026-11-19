@@ -27,9 +27,14 @@ export function useAllRepoBeads() {
 
 /**
  * Items waiting on you across all repos (the number on the Needs You links in the launcher and the
- * sidebar). A repo that cannot be read counts as zero; the Needs You page itself reports it.
+ * sidebar). A repo that cannot be read counts as zero; the Needs You page itself reports it. The
+ * built-in Demo project is not counted: it is always listed and its sample beads would put a number
+ * on every install that has nothing waiting.
  */
 export function useNeedsYouTotal(): number {
-  const { results } = useAllRepoBeads();
-  return results.reduce((sum, q) => sum + (q.data ? countNeedsYou(q.data.beads) : 0), 0);
+  const { projects, results } = useAllRepoBeads();
+  return results.reduce(
+    (sum, q, i) => sum + (q.data && projects[i].id !== "demo" ? countNeedsYou(q.data.beads) : 0),
+    0,
+  );
 }

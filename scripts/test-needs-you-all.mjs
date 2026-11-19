@@ -78,7 +78,7 @@ try {
 
   await page.route("**/api/viewer-mode", (route) => route.fulfill({ json: { readOnly } }));
   await page.route("**/api/projects", (route) => route.fulfill({ json: { projects } }));
-  await page.route(/\/api\/p\/(alpha|beta|gamma|delta|eps)\//, async (route) => {
+  await page.route(/\/api\/p\/(alpha|beta|gamma|delta|eps|demo)\//, async (route) => {
     const url = new URL(route.request().url());
     const [, , , id, ...rest] = url.pathname.split("/");
     if (url.pathname.endsWith("/beads/stream")) return route.abort();
@@ -204,6 +204,9 @@ try {
   // Entry points: the launcher and a project's sidebar both link here.
   // Badge (bui-ih7.8): the Needs You links carry the total across all repos. Alpha has al-1, beta
   // has be-3 (be-1 was dismissed, the alpha gate approved), the unreadable repo counts as zero.
+  // The built-in Demo project is always listed and has flagged sample beads; it is not counted.
+  data.demo = [bead("demo-1", "Demo question", { labels: ["human"] })];
+  projects.push({ id: "demo", name: "Demo", path: null, hasBeads: true });
   const badge = (scope) => scope.locator("[data-needs-you-total]");
   await page.goto(`${base}/`);
   const launcherLink = page.getByRole("link", { name: /^Needs You/ });
@@ -223,7 +226,8 @@ try {
   data.beta = data.beta.map((b) => ({ ...b, labels: [] }));
   await page.goto(`${base}/`);
   await page.getByRole("link", { name: /^Needs You/ }).waitFor();
-  await page.waitForTimeout(500);
+  await page.waitForLoadState("networkidle"); // every repo's list has arrived (the poll is five minutes)
+  await page.waitForTimeout(300);
   assert.equal(await page.locator("[data-needs-you-total]").count(), 0, "no badge at zero");
   await page.getByRole("link", { name: /^Needs You/ }).click();
   await page.waitForURL(/\/needs-you$/);
