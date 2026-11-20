@@ -174,6 +174,8 @@ export function AssigneeSuggestions({
           // mousedown, so the text field keeps focus and does not blur before the pick lands.
           onMouseDown={(e) => {
             e.preventDefault();
+            // Only a plain left click picks; a right or Ctrl click must not write to the bead.
+            if (e.button !== 0 || e.ctrlKey) return;
             onPick(name);
           }}
           className={optionClass(i === active, name === typed.trim())}

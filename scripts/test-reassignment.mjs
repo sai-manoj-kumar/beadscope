@@ -22,6 +22,7 @@ const target = bead("target", { assignee: "Alice" });
 const beads = [target, bead("existing", { assignee: "Bob" }), bead("unassigned")];
 const writes = [];
 let failOnce = true;
+let failPick = true;
 let releasePending;
 let markPending;
 const pendingRequest = new Promise((resolve) => { markPending = resolve; });
@@ -48,6 +49,10 @@ try {
     if (path.endsWith("/beads/target") && body.assignee === "Retry Agent" && failOnce) {
       failOnce = false;
       return route.fulfill({ status: 500, json: { error: "temporary reassignment failure" } });
+    }
+    if (path.endsWith("/beads/target") && body.assignee === "reviewer" && failPick) {
+      failPick = false;
+      return route.fulfill({ status: 500, json: { error: "pick failure" } });
     }
     if (path.endsWith("/beads/target") && body.assignee === "Slow Agent") {
       markPending();
@@ -146,6 +151,20 @@ try {
   assert.equal(await cancel().isDisabled(), true, "pending writes cannot be cancelled locally");
   releasePending();
   await save().waitFor({ state: "detached" });
+
+  // A picked suggestion that fails to save stays in the field, with the list closed, and Save retries that name.
+  await change().click();
+  await editor().waitFor();
+  await editor().fill("");
+  await drawer.getByRole("option", { name: "reviewer", exact: true }).waitFor();
+  const reviewerIndex = (await drawer.getByRole("option").locator("span.truncate").allInnerTexts()).indexOf("reviewer");
+  for (let i = 0; i <= reviewerIndex; i++) await editor().press("ArrowDown");
+  await editor().press("Enter");
+  await page.getByText(/pick failure/i).waitFor();
+  assert.equal(await editor().inputValue(), "reviewer", "a failed keyboard pick keeps the picked name, not the typed text");
+  await save().click();
+  await save().waitFor({ state: "detached" });
+  assert.equal(writes.filter((write) => write.body.assignee === "reviewer").length, 2, "Save retries the picked name");
 
   // Toggling viewer mode while an editor is visible locks every reassignment control and sends nothing.
   await change().click();

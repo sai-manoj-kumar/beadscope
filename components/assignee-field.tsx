@@ -34,6 +34,8 @@ export function AssigneeField({ bead }: { bead: Bead }) {
       onSettled: () => { submitting.current = false; },
     });
   };
+  // Picking a name (click or Enter) assigns it at once and closes the list; no Save click or click outside needed.
+  const pick = (name: string) => { setDraft(name); setActive(-1); setFocused(false); save(name); };
   const showList = focused && suggestions.length > 0;
   return (
     <div className="flex min-w-0 flex-col gap-[5px]">
@@ -65,7 +67,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
                 event.preventDefault();
                 event.stopPropagation();
                 // A suggestion highlighted with the arrows is taken; otherwise whatever was typed.
-                if (showList && active >= 0) save(suggestions[active]);
+                if (showList && active >= 0) pick(suggestions[active]);
                 else save();
               } else if (event.key === "Escape") {
                 event.preventDefault();
@@ -82,8 +84,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
               names={suggestions}
               typed={draft}
               active={active}
-              // Picking a name assigns it at once and closes the list; no Save click or click outside needed.
-              onPick={name => { setDraft(name); setActive(-1); setFocused(false); save(name); }}
+              onPick={pick}
             />
           )}
           </div>
