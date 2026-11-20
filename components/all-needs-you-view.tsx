@@ -73,13 +73,14 @@ export function AllNeedsYouView() {
           <>
             <Link
               href="/"
-              className="tap-target inline-flex items-center gap-1.5 text-label text-[var(--text-3)] hover:text-[var(--text)]"
+              className="tap-target inline-flex items-center justify-center gap-1.5 text-label text-[var(--text-3)] hover:text-[var(--text)] max-md:-ml-2 max-md:px-2"
             >
-              <ArrowLeft size={14} aria-hidden="true" />
-              Projects
+              <ArrowLeft size={14} aria-hidden="true" className="max-md:size-5" />
+              {/* Phones show the arrow alone, as a 44px target; the name stays for screen readers. */}
+              <span className="max-md:sr-only">Projects</span>
             </Link>
             <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
-              Repo
+              <span className="max-md:sr-only">Repo</span>
               <SelectField
                 size="sm"
                 className="min-w-0 max-w-full"
