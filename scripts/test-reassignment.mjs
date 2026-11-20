@@ -22,6 +22,7 @@ const target = bead("target", { assignee: "Alice" });
 const beads = [target, bead("existing", { assignee: "Bob" }), bead("unassigned")];
 const writes = [];
 let failOnce = true;
+let failPick = true;
 let releasePending;
 let markPending;
 const pendingRequest = new Promise((resolve) => { markPending = resolve; });
@@ -48,6 +49,10 @@ try {
     if (path.endsWith("/beads/target") && body.assignee === "Retry Agent" && failOnce) {
       failOnce = false;
       return route.fulfill({ status: 500, json: { error: "temporary reassignment failure" } });
+    }
+    if (path.endsWith("/beads/target") && body.assignee === "reviewer" && failPick) {
+      failPick = false;
+      return route.fulfill({ status: 500, json: { error: "pick failure" } });
     }
     if (path.endsWith("/beads/target") && body.assignee === "Slow Agent") {
       markPending();
@@ -79,10 +84,27 @@ try {
   assert.ok(suggestions.includes("Alice"), "existing assignees are suggested");
   assert.ok(suggestions.includes("Bob"), "every fixture assignee is suggested");
   assert.ok(suggestions.includes("reviewer"), "the current human actor is suggested");
+  // The suggestions float over the content below: opening them must not move anything down.
+  const listbox = drawer.getByRole("listbox", { name: "Suggested assignees" });
+  await listbox.waitFor();
+  assert.equal(await listbox.evaluate((el) => getComputedStyle(el).position), "absolute", "suggestions overlay the content instead of pushing it down");
+  const saveTopOpen = (await save().boundingBox()).y;
+  await editor().press("Escape");
+  await listbox.waitFor({ state: "detached" });
+  assert.equal((await save().boundingBox()).y, saveTopOpen, "closing the suggestions does not shift the controls below");
+  await editor().press("ArrowDown");
+  await listbox.waitFor();
+  // Picking a suggestion assigns it and closes the editor and the list without a click outside.
+  await drawer.getByRole("option", { name: "Bob", exact: true }).click();
+  await save().waitFor({ state: "detached" });
+  await listbox.waitFor({ state: "detached" });
+  assert.deepEqual(writes[0], { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "Bob" } }, "picking a suggestion patches only assignee");
+  await change().click();
+  await editor().waitFor();
   await editor().fill("New Agent");
   await editor().press("Enter");
   await save().waitFor({ state: "detached" });
-  assert.deepEqual(writes[0], { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "New Agent" } }, "saving a new arbitrary assignee patches only assignee");
+  assert.deepEqual(writes[1],{ method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "New Agent" } }, "saving a new arbitrary assignee patches only assignee");
   assert.equal(await comment.inputValue(), "Keep this comment draft through reassignment.", "assignee saves do not disturb the comment draft");
   assert.equal(await drawer.count(), 1, "assignee saves leave the drawer open");
 
@@ -95,7 +117,7 @@ try {
   await editor().press("Enter");
   await save().waitFor({ state: "detached" });
   await comment.fill("Keep this comment draft through reassignment.");
-  assert.deepEqual(writes[1], { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "" } }, "clearing uses an empty assignee patch");
+  assert.deepEqual(writes[2], { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "" } }, "clearing uses an empty assignee patch");
 
   const beforeCancel = writes.length;
   await change().click();
@@ -114,7 +136,7 @@ try {
   assert.equal(await comment.inputValue(), "Keep this comment draft through reassignment.", "a failed save retains the comment draft too");
   await save().click();
   await save().waitFor({ state: "detached" });
-  assert.deepEqual(writes.slice(2, 4), [
+  assert.deepEqual(writes.slice(3, 5), [
     { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "Retry Agent" } },
     { method: "PATCH", path: "/api/p/demo/beads/target", body: { assignee: "Retry Agent" } },
   ], "failure retries exactly the same assignee-only patch");
@@ -129,6 +151,20 @@ try {
   assert.equal(await cancel().isDisabled(), true, "pending writes cannot be cancelled locally");
   releasePending();
   await save().waitFor({ state: "detached" });
+
+  // A picked suggestion that fails to save stays in the field, with the list closed, and Save retries that name.
+  await change().click();
+  await editor().waitFor();
+  await editor().fill("");
+  await drawer.getByRole("option", { name: "reviewer", exact: true }).waitFor();
+  const reviewerIndex = (await drawer.getByRole("option").locator("span.truncate").allInnerTexts()).indexOf("reviewer");
+  for (let i = 0; i <= reviewerIndex; i++) await editor().press("ArrowDown");
+  await editor().press("Enter");
+  await page.getByText(/pick failure/i).waitFor();
+  assert.equal(await editor().inputValue(), "reviewer", "a failed keyboard pick keeps the picked name, not the typed text");
+  await save().click();
+  await save().waitFor({ state: "detached" });
+  assert.equal(writes.filter((write) => write.body.assignee === "reviewer").length, 2, "Save retries the picked name");
 
   // Toggling viewer mode while an editor is visible locks every reassignment control and sends nothing.
   await change().click();

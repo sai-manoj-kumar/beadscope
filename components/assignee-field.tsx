@@ -34,12 +34,15 @@ export function AssigneeField({ bead }: { bead: Bead }) {
       onSettled: () => { submitting.current = false; },
     });
   };
+  // Picking a name (click or Enter) assigns it at once and closes the list; no Save click or click outside needed.
+  const pick = (name: string) => { setDraft(name); setActive(-1); setFocused(false); save(name); };
   const showList = focused && suggestions.length > 0;
   return (
     <div className="flex min-w-0 flex-col gap-[5px]">
       <span className="text-meta font-medium uppercase tracking-[.03em] text-[var(--text-3)]">Assignee</span>
       {editing ? (
         <div className="flex flex-col gap-2">
+          <div className="relative">
           <TextInput
             autoFocus
             role="combobox"
@@ -64,7 +67,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
                 event.preventDefault();
                 event.stopPropagation();
                 // A suggestion highlighted with the arrows is taken; otherwise whatever was typed.
-                if (showList && active >= 0) save(suggestions[active]);
+                if (showList && active >= 0) pick(suggestions[active]);
                 else save();
               } else if (event.key === "Escape") {
                 event.preventDefault();
@@ -81,9 +84,10 @@ export function AssigneeField({ bead }: { bead: Bead }) {
               names={suggestions}
               typed={draft}
               active={active}
-              onPick={name => { setDraft(name); setActive(-1); }}
+              onPick={pick}
             />
           )}
+          </div>
           <span className="text-meta text-[var(--text-3)]">Choose or type a name. Leave blank to unassign.</span>
           <div className="flex gap-2">
             <BrandButton size="sm" aria-label="Save assignee" disabled={readOnly || update.isPending} onClick={() => save()}>Save</BrandButton>
