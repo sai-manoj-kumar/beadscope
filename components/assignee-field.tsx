@@ -40,6 +40,7 @@ export function AssigneeField({ bead }: { bead: Bead }) {
       <span className="text-meta font-medium uppercase tracking-[.03em] text-[var(--text-3)]">Assignee</span>
       {editing ? (
         <div className="flex flex-col gap-2">
+          <div className="relative">
           <TextInput
             autoFocus
             role="combobox"
@@ -81,9 +82,11 @@ export function AssigneeField({ bead }: { bead: Bead }) {
               names={suggestions}
               typed={draft}
               active={active}
-              onPick={name => { setDraft(name); setActive(-1); }}
+              // Picking a name assigns it at once and closes the list; no Save click or click outside needed.
+              onPick={name => { setDraft(name); setActive(-1); setFocused(false); save(name); }}
             />
           )}
+          </div>
           <span className="text-meta text-[var(--text-3)]">Choose or type a name. Leave blank to unassign.</span>
           <div className="flex gap-2">
             <BrandButton size="sm" aria-label="Save assignee" disabled={readOnly || update.isPending} onClick={() => save()}>Save</BrandButton>

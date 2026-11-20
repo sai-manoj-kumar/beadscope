@@ -147,6 +147,7 @@ export function AssigneeSelect({
 /**
  * Suggestions for a free-text assignee field: each name with its icon, filtered by what is
  * typed. The text field itself stays the source of truth, so any name can still be typed.
+ * The list floats over the content below, so render it inside a `relative` wrapper around the field.
  */
 export function AssigneeSuggestions({
   id,
@@ -163,7 +164,7 @@ export function AssigneeSuggestions({
 }) {
   if (names.length === 0) return null;
   return (
-    <ul id={id} role="listbox" aria-label="Suggested assignees" className={`${listClass} !static !mt-0`}>
+    <ul id={id} role="listbox" aria-label="Suggested assignees" className={listClass}>
       {names.map((name, i) => (
         <li
           key={name}
