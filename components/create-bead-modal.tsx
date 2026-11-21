@@ -145,7 +145,14 @@ function CreateForm({
       ? "New child bead"
       : "New bead";
 
-  const hasText = [form.title, form.description, form.assignee, form.labels, form.due].some((v) => v.trim() !== "");
+  // A datetime-local input reads "" until every part is filled, so a half-filled date looks empty in
+  // `form.due`. `validity.badInput` is the browser saying there is something in it. A complete value
+  // that is out of range (a year before 1900) is just as unusable. Either blocks Create and counts as
+  // typed text for the outside-press guard.
+  const [dueIncomplete, setDueIncomplete] = React.useState(false);
+  const dueUnusable = dueIncomplete || (form.due !== "" && inputValueToDue(form.due) === null);
+  const hasText =
+    dueUnusable || [form.title, form.description, form.assignee, form.labels, form.due].some((v) => v.trim() !== "");
   React.useEffect(() => {
     dirtyRef.current = hasText;
     return () => {
@@ -197,7 +204,7 @@ function CreateForm({
   const assignees = useAssigneeNames();
 
   function submit() {
-    if (!form.title.trim() || create.isPending) return;
+    if (!form.title.trim() || dueUnusable || create.isPending) return;
     create.mutate(
       {
         title: form.title.trim(),
@@ -207,7 +214,7 @@ function CreateForm({
         assignee: form.assignee,
         labels: form.labels.split(",").map((s) => s.trim()).filter(Boolean),
         parent: form.parent,
-        // An unfinished date (the field reads "" until it is complete) means no due date.
+        // submit() has already refused an unfinished date; "" here means no due date was set.
         due: inputValueToDue(form.due) ?? "",
         backlog: form.backlog,
       },
@@ -434,8 +441,21 @@ function CreateForm({
               type="datetime-local"
               className="min-w-0"
               value={form.due}
+              aria-invalid={dueUnusable ? true : undefined}
+              aria-describedby={dueUnusable ? "create-due-error" : undefined}
               onChange={(e) => set("due", e.target.value)}
+              // The value stays "" while the date is half filled, so the browser fires no input or change
+              // event for it (and React would drop a change event that leaves "" as ""). Read
+              // `validity.badInput` after each key and on blur as well as on input (picker, Clear).
+              onInput={(e) => setDueIncomplete(e.currentTarget.validity.badInput)}
+              onKeyUp={(e) => setDueIncomplete(e.currentTarget.validity.badInput)}
+              onBlur={(e) => setDueIncomplete(e.currentTarget.validity.badInput)}
             />
+            {dueUnusable && (
+              <span id="create-due-error" role="alert" className="text-label text-destructive">
+                Finish the due date and time, or clear it. As it is, the bead would be created with no due date.
+              </span>
+            )}
           </label>
         </div>
 
@@ -460,7 +480,7 @@ function CreateForm({
         <BrandButton
           icon="check"
           onClick={submit}
-          disabled={!form.title.trim() || create.isPending}
+          disabled={!form.title.trim() || dueUnusable || create.isPending}
           className="max-md:flex-[2]"
         >
           Create bead

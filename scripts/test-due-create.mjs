@@ -91,6 +91,40 @@ try {
   assert.equal(dueOf(without), null, "a bead made without a due date has none");
   await page.close();
 
+  // A half-filled due date reads empty to the page, so it must be caught: Create is blocked with a
+  // hint, the shortcut cannot create it, and finishing the date lifts the block.
+  ({ page, dialog, title, due, create } = await openCreate(desktop));
+  await title.fill("half filled due");
+  await due.focus(); // focus() lands on the month part; a click lands on whichever part is under it
+  // Month, day and year only; the time stays empty. Month and day are both 04, so the order the
+  // browser's locale puts them in does not matter.
+  await page.keyboard.type("04042030");
+  assert.equal(await due.inputValue(), "", "a half-filled field reads empty");
+  assert.equal(await due.evaluate((el) => el.validity.badInput), true, "the browser flags the half-filled field");
+  const hint = dialog.getByRole("alert").filter({ hasText: /Finish the due date/ });
+  await hint.waitFor();
+  assert.equal(await due.getAttribute("aria-invalid"), "true", "the field is marked invalid");
+  assert.equal(await create.isDisabled(), true, "Create is blocked while the date is half filled");
+  await page.keyboard.press("Control+Enter");
+  await page.waitForTimeout(600);
+  assert.equal(idByTitle("half filled due"), undefined, "the keyboard shortcut cannot create it either");
+  await page.keyboard.press("Tab"); // the year takes up to six digits, so move on to the hour by hand
+  await page.keyboard.type("0815AM"); // finish the time
+  assert.equal(await due.inputValue(), "2030-04-04T08:15", "the finished field holds the date");
+  await hint.waitFor({ state: "detached" });
+  assert.equal(await create.isDisabled(), false, "Create works again once the date is finished");
+  await page.close();
+
+  // With only a half-filled due date typed, a click outside keeps the dialog open (typed text guard).
+  ({ page, dialog, due } = await openCreate(desktop));
+  await due.focus();
+  await page.keyboard.type("0704");
+  await dialog.getByRole("alert").filter({ hasText: /Finish the due date/ }).waitFor();
+  await page.mouse.click(5, 5);
+  await page.waitForTimeout(500);
+  assert.equal(await dialog.isVisible(), true, "a half-filled date counts as typed text and keeps the dialog open");
+  await page.close();
+
   // The API refuses a due value that is not an ISO date and time, and creates nothing.
   const body = (due) => JSON.stringify({ title: "bad due", due });
   const bad = await fetch(`${base}/api/p/${projectId}/beads`, { method: "POST", headers: json, body: body("next monday") });
