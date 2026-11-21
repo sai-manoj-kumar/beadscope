@@ -131,6 +131,7 @@ try {
     const r = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: v }) });
     assert.equal(r.status, 400, `${v} does not exist and is rejected`);
   }
+  assert.equal(dueOf(without), "2030-07-04T12:15:00Z", "a rejected value changes nothing");
   // A leap day that does exist is still accepted (2032 is a leap year).
   const leap = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2032-02-29T10:00:00Z" }) });
   assert.equal(leap.status, 200, "a real leap day is accepted");
@@ -138,7 +139,6 @@ try {
   const restore = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2030-07-04T12:15:00Z" }) });
   assert.equal(restore.status, 200);
   await waitDue(without, "2030-07-04T12:15:00Z");
-  assert.equal(dueOf(without), "2030-07-04T12:15:00Z", "a rejected value changes nothing");
 
   // Phone: targets and text are big enough.
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: "America/New_York", locale: "en-US", hasTouch: true, isMobile: true });
