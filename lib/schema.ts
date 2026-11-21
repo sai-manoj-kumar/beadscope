@@ -153,10 +153,25 @@ export function unwrapEnvelope(raw: unknown): unknown {
 
 /** A due time as the browser sends it: an ISO timestamp with an explicit zone (see lib/due-input.ts). */
 const DUE_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+/**
+ * True when the date and clock fields of an ISO timestamp name a real moment. `Date.parse` is not
+ * enough: it rolls "2030-02-30" over to March 2 and accepts hour 24, so the fields are checked
+ * against a UTC round trip of year, month and day, and against the clock ranges.
+ */
+function isRealDue(v: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/.exec(v);
+  if (!m) return false;
+  const [year, month, day, hour, minute, second = 0, offH = 0, offM = 0] = m.slice(1).map((p) => (p === undefined ? undefined : Number(p))) as number[];
+  if (hour > 23 || minute > 59 || second > 59 || offH > 23 || offM > 59) return false;
+  const d = new Date(0);
+  d.setUTCFullYear(year, month - 1, day); // unlike Date.UTC, keeps years 0-99 as written
+  if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) return false;
+  return Number.isFinite(Date.parse(v));
+}
 const dueIsoSchema = z
   .string()
   .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
-  .refine((v) => Number.isFinite(Date.parse(v)), "Due must be a real date and time");
+  .refine(isRealDue, "Due must be a real date and time");
 
 export const createInputSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),

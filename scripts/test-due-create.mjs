@@ -97,6 +97,11 @@ try {
   assert.equal(bad.status, 400, "a loose date string is rejected");
   const impossible = await fetch(`${base}/api/p/${projectId}/beads`, { method: "POST", headers: json, body: body("2030-02-30T25:00:00Z") });
   assert.equal(impossible.status, 400, "an impossible date is rejected");
+  // A day that does not exist in its month, or hour 24, must not roll over into a real date.
+  for (const v of ["2030-02-30T10:00:00Z", "2031-02-29T10:00:00Z", "2030-04-31T10:00:00Z", "2030-01-01T24:00:00Z", "2030-01-01T10:00:00+24:00"]) {
+    const r = await fetch(`${base}/api/p/${projectId}/beads`, { method: "POST", headers: json, body: body(v) });
+    assert.equal(r.status, 400, `${v} does not exist and is rejected`);
+  }
   assert.equal(idByTitle("bad due"), undefined, "a rejected request creates nothing");
   // The API takes an ISO instant straight too.
   const api = await fetch(`${base}/api/p/${projectId}/beads`, { method: "POST", headers: json, body: JSON.stringify({ title: "made by api", due: "2031-01-02T03:04:00.000Z" }) });
