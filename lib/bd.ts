@@ -191,6 +191,7 @@ export function createBdStore(repoPath: string): BeadsStore {
         if (input.assignee) args.push("--assignee", input.assignee);
         if (input.labels?.length) args.push("-l", input.labels.join(","));
         if (input.parent) args.push("--parent", input.parent);
+        if (input.due) args.push("--due", input.due);
         const created = await runBdJson<{ id: string }>(args, rw(actor));
         const id = created.id;
         if (input.backlog) {

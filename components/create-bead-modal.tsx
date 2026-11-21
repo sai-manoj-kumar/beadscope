@@ -19,6 +19,7 @@ import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { DescriptionContent, hasImageRef } from "@/components/description-content";
 import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
+import { inputValueToDue } from "@/lib/due-input";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { BEAD_TYPES, type BeadType } from "@/lib/schema";
 import { AssigneeSelect, useAssigneeNames } from "@/components/assignee-picker";
@@ -33,6 +34,8 @@ interface FormState {
   assignee: string;
   parent: string;
   labels: string;
+  /** A datetime-local value in the browser's time zone; "" when no due date is set. */
+  due: string;
   backlog: boolean;
 }
 
@@ -121,6 +124,7 @@ function CreateForm({
     assignee: "",
     parent,
     labels: "",
+    due: "",
     backlog: false,
   });
 
@@ -141,7 +145,7 @@ function CreateForm({
       ? "New child bead"
       : "New bead";
 
-  const hasText = [form.title, form.description, form.assignee, form.labels].some((v) => v.trim() !== "");
+  const hasText = [form.title, form.description, form.assignee, form.labels, form.due].some((v) => v.trim() !== "");
   React.useEffect(() => {
     dirtyRef.current = hasText;
     return () => {
@@ -203,6 +207,8 @@ function CreateForm({
         assignee: form.assignee,
         labels: form.labels.split(",").map((s) => s.trim()).filter(Boolean),
         parent: form.parent,
+        // An unfinished date (the field reads "" until it is complete) means no due date.
+        due: inputValueToDue(form.due) ?? "",
         backlog: form.backlog,
       },
       {
@@ -407,17 +413,31 @@ function CreateForm({
           </label>
         </div>
 
-        <label className="flex flex-col gap-[6px]">
-          <span className={labelClass}>
-            Labels <span className="font-normal text-[var(--text-3)]">· comma separated</span>
-          </span>
-          <TextInput
-            mono
-            value={form.labels}
-            onChange={(e) => set("labels", e.target.value)}
-            placeholder="ui, dnd, m3"
-          />
-        </label>
+        <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
+          <label className="flex flex-col gap-[6px]">
+            <span className={labelClass}>
+              Labels <span className="font-normal text-[var(--text-3)]">· comma separated</span>
+            </span>
+            <TextInput
+              mono
+              value={form.labels}
+              onChange={(e) => set("labels", e.target.value)}
+              placeholder="ui, dnd, m3"
+            />
+          </label>
+          <label className="flex flex-col gap-[6px]">
+            <span className={labelClass}>
+              Due <span className="font-normal text-[var(--text-3)]">· optional</span>
+            </span>
+            {/* Local time zone in, ISO UTC out (lib/due-input.ts), the same as the drawer's Due field. */}
+            <TextInput
+              type="datetime-local"
+              className="min-w-0"
+              value={form.due}
+              onChange={(e) => set("due", e.target.value)}
+            />
+          </label>
+        </div>
 
         <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
           <CheckInput checked={form.backlog} onChange={(e) => set("backlog", e.target.checked)} />

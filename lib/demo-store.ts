@@ -42,6 +42,7 @@ export const demoStore: BeadsStore = {
       created_at: nowIso(),
       updated_at: nowIso(),
       closed_at: null,
+      due_at: input.due || null,
       labels: input.labels ?? [],
       dependencies,
       comments: [],
