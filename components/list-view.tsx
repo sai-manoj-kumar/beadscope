@@ -361,12 +361,10 @@ function Row({
         <Chip
           data-testid="due-chip"
           data-overdue={overdue ? "true" : undefined}
-          title={overdue ? `Overdue since ${due}` : `Due ${due}`}
           color={overdue ? "#ef4444" : undefined}
-          mono={!overdue}
           className="flex-shrink-0 whitespace-nowrap"
         >
-          Due {due}
+          {overdue ? "Overdue" : "Due"} {due}
         </Chip>
       )}
       <span className="hidden w-[26px] flex-shrink-0 justify-center sm:flex">

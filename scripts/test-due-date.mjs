@@ -34,7 +34,8 @@ try {
   await page.goto(`${base}/p/demo?view=list`);
   const row = (id) => page.locator(`[data-keyboard-bead-id="${id}"]`);
   await row('due-late').waitFor();
-  assert.equal((await row('due-late').getByTestId('due-chip').textContent())?.trim(), 'Due Jan 2, 2020, 3:30 PM', 'overdue row shows the due date and time');
+  assert.equal((await row('due-late').getByTestId('due-chip').textContent())?.trim(), 'Overdue Jan 2, 2020, 3:30 PM', 'overdue row says so in words and shows the due date and time');
+  assert.equal((await row('due-done').getByTestId('due-chip').textContent())?.trim(), 'Due Jan 2, 2020, 3:30 PM', 'closed row is not marked overdue');
   assert.equal(await row('due-late').getByTestId('due-chip').getAttribute('data-overdue'), 'true', 'open bead past due is overdue');
   assert.equal((await row('due-soon').getByTestId('due-chip').textContent())?.trim(), 'Due Dec 31, 2099, 9:05 AM');
   assert.equal(await row('due-soon').getByTestId('due-chip').getAttribute('data-overdue'), null, 'future due is not overdue');
