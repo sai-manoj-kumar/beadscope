@@ -126,6 +126,18 @@ try {
   assert.equal(bad.status, 400, "a loose date string is rejected");
   const impossible = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2030-02-30T25:00:00Z" }) });
   assert.equal(impossible.status, 400, "an impossible date is rejected");
+  // A day that does not exist in its month, or hour 24, must not roll over into a real date.
+  for (const v of ["2030-02-30T10:00:00Z", "2031-02-29T10:00:00Z", "2030-04-31T10:00:00Z", "2030-01-01T24:00:00Z", "2030-01-01T10:00:00+24:00"]) {
+    const r = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: v }) });
+    assert.equal(r.status, 400, `${v} does not exist and is rejected`);
+  }
+  // A leap day that does exist is still accepted (2032 is a leap year).
+  const leap = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2032-02-29T10:00:00Z" }) });
+  assert.equal(leap.status, 200, "a real leap day is accepted");
+  await waitDue(without, "2032-02-29T10:00:00Z");
+  const restore = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2030-07-04T12:15:00Z" }) });
+  assert.equal(restore.status, 200);
+  await waitDue(without, "2030-07-04T12:15:00Z");
   assert.equal(dueOf(without), "2030-07-04T12:15:00Z", "a rejected value changes nothing");
 
   // Phone: targets and text are big enough.
