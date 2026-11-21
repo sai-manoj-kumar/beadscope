@@ -53,17 +53,18 @@ try {
   };
   let dialog = await open('due-late');
   const field = dialog.getByTestId('due-field');
-  assert.match((await field.textContent()) ?? '', /Jan 2, 2020, 3:30 PM/, 'drawer shows the due date and time');
+  assert.equal(await field.locator('input').inputValue(), '2020-01-02T15:30', 'drawer shows the due date and time');
+  assert.equal(await field.locator('input').isDisabled(), true, 'a read-only server cannot edit it');
   assert.match((await field.textContent()) ?? '', /Overdue/, 'drawer marks an overdue bead');
   if (shots) {
     await page.waitForTimeout(600); // let the drawer finish sliding in
     await page.screenshot({ path: `${shots}/drawer-desktop.png` });
   }
   dialog = await open('due-soon');
-  assert.match((await dialog.getByTestId('due-field').textContent()) ?? '', /Dec 31, 2099, 9:05 AM/);
+  assert.equal(await dialog.getByTestId('due-field').locator('input').inputValue(), '2099-12-31T09:05');
   assert.doesNotMatch((await dialog.getByTestId('due-field').textContent()) ?? '', /Overdue/);
   dialog = await open('due-done');
-  assert.match((await dialog.getByTestId('due-field').textContent()) ?? '', /Jan 2, 2020, 3:30 PM/);
+  assert.equal(await dialog.getByTestId('due-field').locator('input').inputValue(), '2020-01-02T15:30');
   assert.doesNotMatch((await dialog.getByTestId('due-field').textContent()) ?? '', /Overdue/, 'a closed bead is never overdue');
   dialog = await open('due-none');
   assert.equal(await dialog.getByTestId('due-field').count(), 0, 'no due date, no field');

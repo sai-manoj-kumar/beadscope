@@ -6,6 +6,7 @@ import { StatusChip, Chip } from "@/components/chip";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { GateApproval } from "@/components/gate-approval";
 import { AssigneeField } from "@/components/assignee-field";
+import { DueField } from "@/components/due-field";
 import { DependencyEditor } from "@/components/dependency-editor";
 import { toast } from "sonner";
 import {
@@ -51,8 +52,6 @@ import {
   relTime,
   fmtDate,
   fmtDateTime,
-  fmtDue,
-  isOverdue,
   checklistProgress,
   toggleTask,
   closeReasonOf,
@@ -398,7 +397,6 @@ function DrawerBody({
       (left, right) => Number(right.active) - Number(left.active),
     );
   }, [bead, beads, deps, index]);
-  const dueText = fmtDue(bead);
   const notes = bead.notes?.trim() ?? "";
   const design = bead.design?.trim() ?? "";
   const acceptance = bead.acceptance_criteria?.trim() ?? "";
@@ -588,15 +586,7 @@ function DrawerBody({
               </div>
             )}
           </div>
-          {dueText && (
-            <div data-testid="due-field" className="col-span-2 flex flex-col gap-[5px]">
-              <span className={fieldLabel}>Due</span>
-              <div className="flex flex-wrap items-center gap-2 text-label text-[var(--text-2)]">
-                <span>{dueText}</span>
-                {isOverdue(bead) && <Chip color="#ef4444">Overdue</Chip>}
-              </div>
-            </div>
-          )}
+          <DueField bead={bead} />
         </div>
 
         <LabelsField
