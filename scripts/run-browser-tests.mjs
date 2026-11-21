@@ -25,6 +25,7 @@ const scriptsDir = path.join(root, "scripts");
 const NEEDS_WRITABLE = new Set([
   "test-close-actor.mjs",
   "test-rename-project.mjs", // adds a throwaway project and renames it
+  "test-due-edit.mjs", // sets and clears a due date in a throwaway project
   "test-mobile-header.mjs",
   "test-mobile-drawer.mjs",
   "test-quality-phone.mjs", // opens the create dialog and the drawer editor
