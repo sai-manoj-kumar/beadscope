@@ -151,6 +151,13 @@ export function unwrapEnvelope(raw: unknown): unknown {
 
 // ---- Input shapes for writes ----
 
+/** A due time as the browser sends it: an ISO timestamp with an explicit zone (see lib/due-input.ts). */
+const DUE_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
+const dueIsoSchema = z
+  .string()
+  .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
+  .refine((v) => Number.isFinite(Date.parse(v)), "Due must be a real date and time");
+
 export const createInputSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   issue_type: z.enum(BEAD_TYPES).default("task"),
@@ -161,11 +168,10 @@ export const createInputSchema = z.object({
   parent: z.string().optional().default(""),
   /** When true, the bead starts in the Backlog (deferred) instead of Ready. */
   backlog: z.boolean().optional().default(false),
+  /** Due date and time (`bd create --due`) as an ISO timestamp with a zone; absent or "" means none. */
+  due: z.union([z.literal(""), dueIsoSchema]).optional().default(""),
 });
 export type CreateInput = z.infer<typeof createInputSchema>;
-
-/** A due time as the browser sends it: an ISO timestamp with an explicit zone (see lib/due-input.ts). */
-const DUE_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 export const updateInputSchema = z.object({
   title: z.string().min(1).max(500).optional(),
@@ -193,15 +199,7 @@ export const updateInputSchema = z.object({
    * New due date and time as an ISO timestamp with a zone (`bd update --due`). Same absent-vs-empty
    * contract as `parent`: absent leaves the due date alone, `""` clears it.
    */
-  due: z
-    .union([
-      z.literal(""),
-      z
-        .string()
-        .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
-        .refine((v) => Number.isFinite(Date.parse(v)), "Due must be a real date and time"),
-    ])
-    .optional(),
+  due: z.union([z.literal(""), dueIsoSchema]).optional(),
 });
 export type UpdateInput = z.infer<typeof updateInputSchema>;
 
