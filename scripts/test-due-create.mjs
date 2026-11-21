@@ -104,6 +104,7 @@ try {
   const hint = dialog.getByRole("alert").filter({ hasText: /Finish the due date/ });
   await hint.waitFor();
   assert.equal(await due.getAttribute("aria-invalid"), "true", "the field is marked invalid");
+  if (shots) await page.screenshot({ path: `${shots}/create-due-half-filled.png` });
   assert.equal(await create.isDisabled(), true, "Create is blocked while the date is half filled");
   await page.keyboard.press("Control+Enter");
   await page.waitForTimeout(600);

@@ -432,6 +432,8 @@ function CreateForm({
               placeholder="ui, dnd, m3"
             />
           </label>
+          {/* A div around the label, so the error text is not part of the field's accessible name. */}
+          <div className="flex flex-col gap-[6px]">
           <label className="flex flex-col gap-[6px]">
             <span className={labelClass}>
               Due <span className="font-normal text-[var(--text-3)]">· optional</span>
@@ -451,12 +453,14 @@ function CreateForm({
               onKeyUp={(e) => setDueIncomplete(e.currentTarget.validity.badInput)}
               onBlur={(e) => setDueIncomplete(e.currentTarget.validity.badInput)}
             />
+          </label>
             {dueUnusable && (
-              <span id="create-due-error" role="alert" className="text-label text-destructive">
+              // --text-2 is AA on every surface; the red --destructive is not for small text.
+              <span id="create-due-error" role="alert" className="text-label font-medium text-[var(--text-2)]">
                 Finish the due date and time, or clear it. As it is, the bead would be created with no due date.
               </span>
             )}
-          </label>
+          </div>
         </div>
 
         <label className="flex cursor-pointer select-none items-center gap-[9px] max-md:min-h-11">
