@@ -16,9 +16,12 @@ export function dueToInputValue(dueAt?: string | null): string {
   return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}T${two(d.getHours())}:${two(d.getMinutes())}`;
 }
 
-/** A datetime-local value (local time zone) as an ISO UTC timestamp; null when it is not a full date and time. */
+/**
+ * A datetime-local value (local time zone) as an ISO UTC timestamp; null when it is not a full date
+ * and time. A year before 1900 is treated as unfinished typing (the field reads "0002" after one digit).
+ */
 export function inputValueToDue(value: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  return Number.isNaN(d.getTime()) || d.getFullYear() < 1900 ? null : d.toISOString();
 }

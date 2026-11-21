@@ -193,7 +193,15 @@ export const updateInputSchema = z.object({
    * New due date and time as an ISO timestamp with a zone (`bd update --due`). Same absent-vs-empty
    * contract as `parent`: absent leaves the due date alone, `""` clears it.
    */
-  due: z.union([z.literal(""), z.string().regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")]).optional(),
+  due: z
+    .union([
+      z.literal(""),
+      z
+        .string()
+        .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
+        .refine((v) => Number.isFinite(Date.parse(v)), "Due must be a real date and time"),
+    ])
+    .optional(),
 });
 export type UpdateInput = z.infer<typeof updateInputSchema>;
 

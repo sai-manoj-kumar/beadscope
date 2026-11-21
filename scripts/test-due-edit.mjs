@@ -51,7 +51,7 @@ try {
   const errors = [];
   const open = async (context, id) => {
     const page = await context.newPage();
-    page.setDefaultTimeout(8000);
+    page.setDefaultTimeout(20000); // generous: the first run after a build is slow
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(`${base}/p/${projectId}?bead=${id}`);
     const dialog = page.getByRole("dialog");
@@ -88,7 +88,25 @@ try {
   await input.press("Enter");
   await waitDue(withDue, "2030-03-01T13:00:00Z");
 
-  // Clear it.
+  // A year that is only started ("0002") is not saved.
+  await input.fill("0002-05-05T10:00");
+  await input.blur();
+  await page.waitForFunction(() => document.querySelector('[data-testid="due-field"] input')?.value === "2030-03-01T08:00");
+  assert.equal(dueOf(withDue), "2030-03-01T13:00:00Z", "a year before 1900 is not saved");
+
+  // Clear it straight after an edit, with no blur in between: one click is enough.
+  await input.fill("2030-04-01T09:00");
+  await clear.click();
+  await waitDue(withDue, null);
+  await page.waitForFunction(() => document.querySelector('[data-testid="due-field"] input')?.value === "");
+  await clear.waitFor({ state: "detached" }); // no Clear button without a due date
+  await page.close();
+
+  // Clear a saved date.
+  ({ page, input, clear } = await open(desktop, withDue));
+  await input.fill("2030-05-01T09:00");
+  await input.press("Enter");
+  await waitDue(withDue, "2030-05-01T13:00:00Z");
   await clear.click();
   await waitDue(withDue, null);
   await page.waitForFunction(() => document.querySelector('[data-testid="due-field"] input')?.value === "");
@@ -106,6 +124,8 @@ try {
   // The API refuses a due value that is not an ISO date and time.
   const bad = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "next monday" }) });
   assert.equal(bad.status, 400, "a loose date string is rejected");
+  const impossible = await fetch(`${base}/api/p/${projectId}/beads/${without}`, { method: "PATCH", headers: json, body: JSON.stringify({ due: "2030-02-30T25:00:00Z" }) });
+  assert.equal(impossible.status, 400, "an impossible date is rejected");
   assert.equal(dueOf(without), "2030-07-04T12:15:00Z", "a rejected value changes nothing");
 
   // Phone: targets and text are big enough.

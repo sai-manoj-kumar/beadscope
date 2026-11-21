@@ -12,35 +12,54 @@ import type { Bead } from "@/lib/schema";
  * A bead's due date and time: set, change or clear it. Times are read and written in the browser's
  * time zone and saved as an instant (`bd update --due`). The change is saved when the field loses
  * focus or on Enter, not on each keystroke: the field passes through several valid dates while
- * someone types a year. An incomplete value goes back to the saved one; Clear removes the date.
+ * someone types a year. An incomplete value goes back to the last saved one; Clear removes the date.
  */
 export function DueField({ bead }: { bead: Bead }) {
-  // Keyed by the saved value so the draft starts over when the bead changes underneath it (another save, a refresh).
-  return <DueEditor key={dueToInputValue(bead.due_at)} bead={bead} />;
-}
-
-function DueEditor({ bead }: { bead: Bead }) {
   const { readOnly } = useApp();
   const update = useUpdateBead();
   const saved = dueToInputValue(bead.due_at);
   const [draft, setDraft] = React.useState(saved);
+  // The value last sent to bd. Comparing against it, not `saved`, stops a second blur from sending
+  // the same value again while the list is still refreshing.
+  const [sent, setSent] = React.useState(saved);
+  const [seen, setSeen] = React.useState(saved);
+  // The bead changed underneath us (our own save landing, another save, a refresh): follow it,
+  // unless the user has typed something new since the last save.
+  if (saved !== seen) {
+    setSeen(saved);
+    setSent(saved);
+    if (draft === sent || draft === seen) setDraft(saved);
+  }
   const dueText = fmtDue(bead);
   // Nothing to show on a read-only server when no due date is set.
   if (readOnly && !dueText) return null;
 
+  const save = (value: string, due: string) => {
+    const previous = sent;
+    setSent(value);
+    update.mutate(
+      { id: bead.id, patch: { due } },
+      {
+        onError: () => {
+          setSent(previous);
+          setDraft(previous);
+        },
+      },
+    );
+  };
   const commit = () => {
-    if (readOnly || update.isPending) return;
+    if (readOnly) return;
     const due = inputValueToDue(draft);
-    if (due === null || draft === saved) {
-      setDraft(saved); // incomplete or unchanged: keep what is saved
+    if (due === null) {
+      setDraft(sent); // incomplete or out of range: keep what is saved
       return;
     }
-    update.mutate({ id: bead.id, patch: { due } }, { onError: () => setDraft(saved) });
+    if (draft !== sent) save(draft, due);
   };
   const clear = () => {
-    if (readOnly || update.isPending) return;
+    if (readOnly) return;
     setDraft("");
-    update.mutate({ id: bead.id, patch: { due: "" } }, { onError: () => setDraft(saved) });
+    save("", "");
   };
 
   return (
@@ -54,9 +73,14 @@ function DueEditor({ bead }: { bead: Bead }) {
           type="datetime-local"
           className="min-w-0 flex-1"
           value={draft}
-          disabled={readOnly || update.isPending}
+          disabled={readOnly}
+          aria-busy={update.isPending}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
+          // Pressing Clear blurs the field first; skip that save so it cannot race the clear.
+          onBlur={(e) => {
+            if (e.relatedTarget instanceof HTMLElement && e.relatedTarget.dataset.dueClear) return;
+            commit();
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -64,8 +88,15 @@ function DueEditor({ bead }: { bead: Bead }) {
             }
           }}
         />
-        {saved && !readOnly && (
-          <Button variant="outline" aria-label="Clear due date" disabled={update.isPending} onClick={clear}>
+        {(saved || sent) && !readOnly && (
+          <Button
+            variant="outline"
+            aria-label="Clear due date"
+            data-due-clear="true"
+            // Keeps focus in the field on mouse down, so the field does not blur and save before Clear runs.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={clear}
+          >
             Clear
           </Button>
         )}
