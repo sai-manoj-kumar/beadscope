@@ -283,6 +283,24 @@ export function fmtDate(iso?: string | null): string {
   });
 }
 
+/** A bead's due time in ms, or null when it has none (or an unreadable one). */
+export function dueMs(bead: Pick<Bead, "due_at">): number | null {
+  if (!bead.due_at) return null;
+  const t = Date.parse(bead.due_at);
+  return Number.isFinite(t) ? t : null;
+}
+
+/** True when the bead is not closed and its due time has passed. */
+export function isOverdue(bead: Pick<Bead, "due_at" | "status">, now: Date = new Date()): boolean {
+  const due = dueMs(bead);
+  return due !== null && bead.status !== "closed" && due < now.getTime();
+}
+
+/** Due date and time for display, e.g. "Dec 1, 2026, 3:30 PM"; "" when there is none. */
+export function fmtDue(bead: Pick<Bead, "due_at">): string {
+  return dueMs(bead) === null ? "" : fmtDateTime(bead.due_at);
+}
+
 /** Full absolute timestamp, e.g. "Jun 24, 2026, 2:15 PM" — used as the hover
  *  title behind relative times like "3d ago" (bead hl2). */
 export function fmtDateTime(iso?: string | null): string {

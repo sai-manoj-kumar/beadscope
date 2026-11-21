@@ -18,6 +18,7 @@ interface Extra {
   created_at?: string;
   updated_at?: string;
   closed_at?: string;
+  due_at?: string;
   close_reason?: string;
   labels?: string[];
   comments?: Comment[];
@@ -55,6 +56,7 @@ function D(
     created_at: extra.created_at ?? "2026-06-09T10:00:00Z",
     updated_at: extra.updated_at ?? "2026-06-14T15:00:00Z",
     closed_at: status === "closed" ? extra.closed_at ?? "2026-06-15T11:00:00Z" : null,
+    due_at: extra.due_at ?? null,
     // Faithful to bd: closing without `--reason` still records the literal
     // "Closed", which `closeReasonOf` treats as no reason at all.
     close_reason: status === "closed" ? extra.close_reason ?? "Closed" : null,
@@ -80,9 +82,9 @@ export function demoBeads(): Bead[] {
     // M0 children
     D("bd-9f2a.1", "bd adapter: execFile + JSON envelope", "task", "closed", 0, "claude-agent", "claude-agent", "bd-9f2a", { description: "Spawn bd with BD_JSON_ENVELOPE=1, args as an array, parse {schema_version,data}.", comments: [cm("stevey", "Confirmed args-as-array kills the injection risk. Nice.", "2026-06-05T12:00:00Z")] }),
     D("bd-9f2a.2", "Zod schemas for Bead / Dependency / Comment", "task", "closed", 1, "stevey", "stevey", "bd-9f2a", { description: "One schema set parses bd --json output and validates form input." }),
-    D("bd-9f2a.3", "Config module (repo path, actor, allowlist)", "task", "in_progress", 2, "stevey", "stevey", "bd-9f2a", { description: "Small JSON config under the OS config dir. No new persisted bead schema.", comments: [cm("dana", "Can we derive the default actor from git config user.email?", "2026-06-14T09:30:00Z"), cm("stevey", "Yep, falling back to whoami if git is unset.", "2026-06-14T10:05:00Z")] }),
+    D("bd-9f2a.3", "Config module (repo path, actor, allowlist)", "task", "in_progress", 2, "stevey", "stevey", "bd-9f2a", { due_at: "2026-06-30T17:00:00Z", description: "Small JSON config under the OS config dir. No new persisted bead schema.", comments: [cm("dana", "Can we derive the default actor from git config user.email?", "2026-06-14T09:30:00Z"), cm("stevey", "Yep, falling back to whoami if git is unset.", "2026-06-14T10:05:00Z")] }),
     D("bd-9f2a.4", "bd doctor / version preflight", "chore", "open", 2, "amp-bot", "amp-bot", "bd-9f2a", { description: "Run bd doctor + bd --version on boot; warn on schema_version drift." }),
-    D("bd-9f2a.5", "Serialize writes through a mutex queue", "task", "open", 1, "stevey", "stevey", "bd-9f2a", { description: "Embedded Dolt is single-writer. Queue writes so concurrent UI actions can't collide.", blocks: ["bd-9f2a.1"] }),
+    D("bd-9f2a.5", "Serialize writes through a mutex queue", "task", "open", 1, "stevey", "stevey", "bd-9f2a", { due_at: "2027-12-15T17:00:00Z", description: "Embedded Dolt is single-writer. Queue writes so concurrent UI actions can't collide.", blocks: ["bd-9f2a.1"] }),
     // M1 children
     D("bd-3c71.1", "Board columns + card component", "feature", "in_progress", 1, "cursor-agent", "cursor-agent", "bd-3c71", { description: "Five-column board; dense cards with id, type, priority, assignee, origin, counts.", comments: [cm("stevey", "Let's keep cards draggable but open detail on click.", "2026-06-15T14:00:00Z")] }),
     D("bd-3c71.2", "Top bar filters + text search", "feature", "open", 2, "stevey", "", "bd-3c71", { description: "Status/type/priority/label/assignee filters + fuzzy text search.", blocks: ["bd-3c71.1"] }),

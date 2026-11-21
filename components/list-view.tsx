@@ -40,6 +40,8 @@ import {
   childrenCountMap,
   relTime,
   fmtDateTime,
+  fmtDue,
+  isOverdue,
 } from "@/lib/beads-view";
 import { type Bead } from "@/lib/schema";
 
@@ -250,6 +252,8 @@ function Row({
   });
   const o = beadOrigin(bead, humanAllowlist);
   const labels = (bead.labels ?? []).filter((l) => l !== "archived").slice(0, 2);
+  const due = fmtDue(bead);
+  const overdue = isOverdue(bead);
   const openFromKeyboard = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -353,6 +357,18 @@ function Row({
       <span className="flex-shrink-0">
         <PriorityChip p={bead.priority} />
       </span>
+      {due && (
+        <Chip
+          data-testid="due-chip"
+          data-overdue={overdue ? "true" : undefined}
+          title={overdue ? `Overdue since ${due}` : `Due ${due}`}
+          color={overdue ? "#ef4444" : undefined}
+          mono={!overdue}
+          className="flex-shrink-0 whitespace-nowrap"
+        >
+          Due {due}
+        </Chip>
+      )}
       <span className="hidden w-[26px] flex-shrink-0 justify-center sm:flex">
         <OriginBadge origin={o} title={originTitle(bead.created_by, o)} />
       </span>
