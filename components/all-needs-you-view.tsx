@@ -134,27 +134,27 @@ export function AllNeedsYouView() {
               {/* The arrow stands alone (a 44px target on phones); the name stays for screen readers. */}
               <span className="sr-only">Projects</span>
             </Link>
-            <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
-              <span className="max-md:sr-only">Repo</span>
-              <SelectField
-                size="sm"
-                className="min-w-0 max-w-full"
-                aria-label="Filter by repo"
-                value={repo}
-                onChange={(e) => setRepo(e.target.value)}
-              >
-                <option value={ALL}>All repos</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                    {(counts.get(p.id) ?? 0) > 0 ? ` (${counts.get(p.id)})` : ""}
-                  </option>
-                ))}
-              </SelectField>
-            </label>
-            <CompletedToggle on={showDone} onChange={setShowDone} />
           </>
         }
+        center={
+          // No visible "Repo" label: it would push the dropdown off the centre, and the first option ("All repos") says what it is.
+          <SelectField
+            size="sm"
+            className="min-w-0 max-w-full"
+            aria-label="Filter by repo"
+            value={repo}
+            onChange={(e) => setRepo(e.target.value)}
+          >
+            <option value={ALL}>All repos</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+                {(counts.get(p.id) ?? 0) > 0 ? ` (${counts.get(p.id)})` : ""}
+              </option>
+            ))}
+          </SelectField>
+        }
+        extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
         actions={<ThemeToggle />}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
