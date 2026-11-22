@@ -53,10 +53,11 @@ export const demoStore: BeadsStore = {
   },
   async update(id, patch: UpdateInput) {
     const b = find(id);
-    const { due, ...rest } = patch;
+    const { due, defer, ...rest } = patch;
     Object.assign(b, rest, { updated_at: nowIso() });
     // `due` is the write-side name; the bead carries it as `due_at` ("" clears, like `bd update --due ""`).
     if (due !== undefined) b.due_at = due || null;
+    if (defer !== undefined) b.defer_until = defer || null;
     if (patch.status === "closed" && !b.closed_at) b.closed_at = nowIso();
     // Reparenting: mirror bd's semantics (absent = leave alone, "" = detach)
     // and keep the parent-child EDGE in sync with the field. The rest of the UI

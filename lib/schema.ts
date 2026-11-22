@@ -121,6 +121,8 @@ export const beadSchema = z
     closed_at: z.string().optional().nullable(),
     /** Due date and time (`bd create --due`) as an ISO timestamp; absent when none is set. */
     due_at: z.string().optional().nullable(),
+    /** Defer date and time (`bd update --defer`) as an ISO timestamp; absent when none is set. */
+    defer_until: z.string().optional().nullable(),
     close_reason: z.string().optional().nullable(),
     labels: z.array(z.string()).optional().default([]),
     dependencies: z.array(dependencySchema).optional().default([]),
@@ -215,6 +217,11 @@ export const updateInputSchema = z.object({
    * contract as `parent`: absent leaves the due date alone, `""` clears it.
    */
   due: z.union([z.literal(""), dueIsoSchema]).optional(),
+  /**
+   * New defer date and time as an ISO timestamp with a zone (`bd update --defer`). Same absent-vs-empty
+   * contract as `due`: absent leaves it alone, `""` clears it.
+   */
+  defer: z.union([z.literal(""), dueIsoSchema]).optional(),
 });
 export type UpdateInput = z.infer<typeof updateInputSchema>;
 

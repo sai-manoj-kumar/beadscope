@@ -6,6 +6,7 @@ import { StatusChip, Chip } from "@/components/chip";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { GateApproval } from "@/components/gate-approval";
 import { AssigneeField } from "@/components/assignee-field";
+import { DeferField } from "@/components/defer-field";
 import { DueField } from "@/components/due-field";
 import { DependencyEditor } from "@/components/dependency-editor";
 import { toast } from "sonner";
@@ -685,6 +686,7 @@ function DrawerBody({
             </datalist>
           </div>
           <DueField bead={bead} />
+          <DeferField bead={bead} />
         </div>
 
         <LabelsField
