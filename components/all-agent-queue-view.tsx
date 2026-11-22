@@ -156,12 +156,12 @@ export function AllAgentQueueView() {
           </>
         }
         center={
-          // Both dropdowns sit together, the pair centred in the bar. On phones they share the row, each taking half.
+          // Both dropdowns sit together, the pair centred in the bar. On phones they share the row, each taking half; on desktop their width is capped so a long repo name cannot squeeze the Completed and theme buttons at the right.
           <div className="flex min-w-0 items-center justify-center gap-2 max-md:w-full md:gap-3">
             {/* No visible labels: the first options ("All repos", "All agents") say what the dropdowns are, and a label would push the pair off the centre. */}
             <SelectField
               size="sm"
-              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0"
+              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0 md:max-w-[10.5rem] lg:max-w-[16rem]"
               aria-label="Filter by repo"
               value={repo}
               onChange={(e) => setParam("repo", e.target.value)}
@@ -176,7 +176,7 @@ export function AllAgentQueueView() {
             </SelectField>
             <SelectField
               size="sm"
-              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0"
+              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0 md:max-w-[10.5rem] lg:max-w-[16rem]"
               aria-label="Filter by agent"
               value={agent?.id ?? ALL}
               onChange={(e) => setParam("agent", e.target.value)}

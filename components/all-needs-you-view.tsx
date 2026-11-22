@@ -140,7 +140,7 @@ export function AllNeedsYouView() {
           // No visible "Repo" label: it would push the dropdown off the centre, and the first option ("All repos") says what it is.
           <SelectField
             size="sm"
-            className="min-w-0 max-w-full"
+            className="min-w-0 max-w-full md:max-w-[20rem]"
             aria-label="Filter by repo"
             value={repo}
             onChange={(e) => setRepo(e.target.value)}

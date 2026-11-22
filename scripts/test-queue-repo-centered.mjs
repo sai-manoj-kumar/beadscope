@@ -10,7 +10,8 @@ const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 const projects = [
   { id: "alpha", name: "Alpha Repo", path: "/tmp/alpha", hasBeads: true },
-  { id: "beta", name: "Beta Repo With A Fairly Long Name", path: "/tmp/beta", hasBeads: true },
+  // A very long name: the dropdown must stay capped so it cannot squeeze the buttons at the right.
+  { id: "beta", name: "Beta Repo With An Extremely Long Name That Keeps Going And Going For Ages", path: "/tmp/beta", hasBeads: true },
 ];
 const meta = { kind: "bd", humanActor: "reviewer", humanAllowlist: ["reviewer"], pollIntervalMs: 300000 };
 const shots = process.env.SHOTS_DIR;
@@ -48,6 +49,25 @@ const centres = (page) =>
     return { select: (left + right) / 2, header: header.left + header.width / 2 };
   });
 
+/** Pairs of visible header items whose boxes overlap, and items that stick out of the header's sides. */
+const overlaps = (page) =>
+  page.evaluate(() => {
+    const header = document.querySelector("header").getBoundingClientRect();
+    const items = [...document.querySelectorAll("header h1, header a, header button, header select")]
+      .map((el) => ({ name: (el.getAttribute("aria-label") || el.textContent || el.tagName).trim().slice(0, 20), r: el.getBoundingClientRect() }))
+      .filter(({ r }) => r.width >= 2 && r.height >= 2);
+    const out = [];
+    for (const { name, r } of items) if (r.left < header.left - 1 || r.right > header.right + 1) out.push(`${name} sticks out`);
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const a = items[i].r;
+        const b = items[j].r;
+        if (a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1) out.push(`${items[i].name} overlaps ${items[j].name}`);
+      }
+    }
+    return out;
+  });
+
 const browser = await chromium.launch({ executablePath: process.env.BEADSCOPE_BROWSER_EXECUTABLE || undefined });
 try {
   for (const path of ["/needs-you", "/agent-queue"]) {
@@ -73,25 +93,14 @@ try {
         assert.deepEqual(a.smallTargets, [], `${where} targets under 44px: ${a.smallTargets.slice(0, 4)}`);
         assert.deepEqual(a.smallInputs, [], `${where} fields under 16px: ${a.smallInputs.slice(0, 3)}`);
       }
-      // Nothing in the header overlaps the dropdown.
-      const overlaps = await page.evaluate(() => {
-        const select = document.querySelector("select[aria-label='Filter by repo']").getBoundingClientRect();
-        const out = [];
-        for (const el of document.querySelectorAll("header h1, header a, header button, header [data-completed-toggle]")) {
-          const r = el.getBoundingClientRect();
-          if (r.width < 2 || r.height < 2) continue;
-          if (r.left < select.right - 1 && r.right > select.left + 1 && r.top < select.bottom - 1 && r.bottom > select.top + 1) {
-            out.push(el.tagName.toLowerCase() + " " + (el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 20));
-          }
-        }
-        return out;
-      });
-      assert.deepEqual(overlaps, [], `${where} header items overlap the dropdown`);
+      // No two items in the header overlap (the dropdowns, title, back arrow, Completed and theme buttons).
+      assert.deepEqual(await overlaps(page), [], `${where} header items overlap`);
 
       // Choosing a repo narrows the page and keeps the dropdown centred (the long name widens it).
       await page.getByLabel("Filter by repo").selectOption("beta");
       const after = await centres(page);
       assert.ok(Math.abs(after.select - after.header) <= 1.5, `${where} still centred after choosing a long repo name`);
+      assert.deepEqual(await overlaps(page), [], `${where} header items overlap after choosing a long repo name`);
       if (mobile) {
         const a2 = await page.evaluate(pageAudit);
         assert.equal(a2.pageScroll, false, `${where} long repo name: no horizontal page scroll`);
