@@ -65,11 +65,14 @@ export function RepoBeadDrawer({
   // A bead that was deleted or archived away while open closes the drawer instead of leaving it empty.
   const openId = top && index.has(top) ? top : null;
 
-  const [create, setCreate] = React.useState({ open: false, parent: "" });
+  const [create, setCreate] = React.useState<{ open: boolean; parent: string; cloneOf?: string }>({
+    open: false,
+    parent: "",
+  });
   const openCreate = React.useCallback(
-    (opts: { parent?: string } = {}) => {
+    (opts: { parent?: string; cloneOf?: string } = {}) => {
       if (readOnly) return;
-      setCreate({ open: true, parent: opts.parent ?? "" });
+      setCreate({ open: true, parent: opts.parent ?? "", cloneOf: opts.cloneOf });
     },
     [readOnly],
   );
@@ -127,6 +130,7 @@ export function RepoBeadDrawer({
       <CreateBeadModal
         open={create.open && !readOnly}
         parent={create.parent}
+        cloneOf={create.cloneOf}
         onOpenChange={(o) => setCreate((c) => ({ ...c, open: o }))}
       />
     </AppProvider>
