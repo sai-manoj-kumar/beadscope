@@ -38,8 +38,8 @@ type Selection = { projectId: string; beadId: string };
 
 /**
  * "Needs You" across every registered repo: the same inbox as the per-project view (beads an agent
- * flagged with `bd human`, and human-approval gates that are ready to approve), gathered from all
- * projects, with a repo filter. Each repo's cards render inside that repo's own app scope, so
+ * flagged with `bd human`, human-approval gates that are ready to approve, and beads assigned to
+ * you), gathered from all projects, with a repo filter. Each repo's cards render inside that repo's own app scope, so
  * Respond, Dismiss and Approve act on the right project exactly as they do in the project view.
  */
 export function AllNeedsYouView() {
@@ -175,9 +175,9 @@ export function AllNeedsYouView() {
               <div className="p-10 text-center text-body text-[var(--text-3)]">
                 {failed.length > 0 ? "Nothing waiting in the repos that could be read" : "🎉 Nothing needs you right now"}
                 {failed.length > 0 ? "" : repo === ALL ? " in any repo" : " in this repo"}. Agents flag beads here with{" "}
-                <span className="font-mono">bd human</span>, and human-approval gates (
+                <span className="font-mono">bd human</span>, human-approval gates (
                 <span className="font-mono">bd gate create --type human</span>) show up once their
-                blockers clear.
+                blockers clear, and beads assigned to you are listed too.
               </div>
             ) : (
               withItems.map(({ project, query }) => (

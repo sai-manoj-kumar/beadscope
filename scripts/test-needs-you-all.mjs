@@ -131,7 +131,7 @@ try {
   assert.equal(new URL(page.url()).searchParams.get("repo"), "beta");
   await page.getByText("1 waiting on you · 1 repo").waitFor();
   await filter.selectOption("gamma");
-  await page.getByText(/Nothing needs you right now in this repo/).waitFor();
+  await page.getByText(/Nothing needs you right now in this repo.*beads assigned to you are listed too/).waitFor();
   assert.equal(await page.getByText(/Couldn’t read/).count(), 0, "a failing repo is not reported while it is filtered out");
   await filter.selectOption("delta");
   await page.getByText(/Couldn’t read Delta Repo/).waitFor();
