@@ -171,24 +171,22 @@ export function AllAgentQueueView() {
                 ))}
               </SelectField>
             </label>
-            <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
-              Agent
-              <SelectField
-                size="sm"
-                className="min-w-0 max-w-full"
-                aria-label="Filter by agent"
-                value={agent?.id ?? ALL}
-                onChange={(e) => setParam("agent", e.target.value)}
-              >
-                <option value={ALL}>All agents</option>
-                {enabledAgents.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                    {agentCount(a) > 0 ? ` (${agentCount(a)})` : ""}
-                  </option>
-                ))}
-              </SelectField>
-            </label>
+            {/* No visible label: the first option ("All agents") says what the dropdown is. */}
+            <SelectField
+              size="sm"
+              className="min-w-0 max-w-full"
+              aria-label="Filter by agent"
+              value={agent?.id ?? ALL}
+              onChange={(e) => setParam("agent", e.target.value)}
+            >
+              <option value={ALL}>All agents</option>
+              {enabledAgents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                  {agentCount(a) > 0 ? ` (${agentCount(a)})` : ""}
+                </option>
+              ))}
+            </SelectField>
             <CompletedToggle on={showDone} onChange={setShowDone} />
           </>
         }
