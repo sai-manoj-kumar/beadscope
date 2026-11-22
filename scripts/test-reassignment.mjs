@@ -63,7 +63,7 @@ try {
     return route.fulfill({ json: changed ?? {} });
   });
 
-  await page.goto(`${base}/p/demo`);
+  await page.goto(`${base}/p/demo?view=board`);
   await context.request.put(`${base}/api/viewer-mode`, { data: { readOnly: false } });
   await page.getByRole("button", { name: "Read Only Mode", exact: true }).waitFor({ state: "detached" });
   await page.getByText("Reassignment target", { exact: true }).click();

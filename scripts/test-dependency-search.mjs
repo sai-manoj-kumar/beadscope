@@ -52,7 +52,7 @@ try {
     return route.fulfill({ json: source });
   });
 
-  await page.goto(`${base}/p/demo`);
+  await page.goto(`${base}/p/demo?view=board`);
   await context.request.put(`${base}/api/viewer-mode`, { data: { readOnly: false } });
   await page.getByText("Current dependency host", { exact: true }).first().click();
   const drawer = page.getByRole("dialog");

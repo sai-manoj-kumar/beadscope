@@ -29,7 +29,7 @@ try {
  const item=id=>page.locator(`[data-keyboard-bead-id="${id}"]`).first();
  const chord=async key=>{await page.keyboard.press('g');await page.keyboard.press(key);};
  const close=async()=>{const dialog=page.getByRole('dialog');await dialog.getByTitle('Close',{exact:true}).click();await dialog.waitFor({state:'detached'});};
- await page.goto(`${base}/p/demo`);
+ await page.goto(`${base}/p/demo?view=board`);
  await item('ready-a').waitFor();
  // Navigation must work even when a clicked sidebar button retains focus.
  await page.getByRole('button',{name:'Board',exact:true}).click();

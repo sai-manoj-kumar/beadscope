@@ -10,36 +10,55 @@ try {
   const nav = name => page.getByRole('button', { name, exact: true }).click();
   const heading = name => page.getByRole('heading', { name, exact: true }).waitFor();
   const project = async name => { await page.goto(`${base}/p/demo`); await heading(name); };
-  const toggle = page.getByRole('switch', { name: 'Use Focus as the default view' });
-  await project('Board');
-  await page.evaluate(() => localStorage.setItem('beadscope.view.demo', 'focus'));
-  await project('Board'); // Old remembered-view storage is still ignored.
+  const select = page.getByRole('combobox', { name: 'Default page' });
+  // Nothing saved yet: Epics. Old settings (the Focus switch, remembered views) are ignored.
+  await page.goto(`${base}/p/demo`);
+  await heading('Epics');
+  await page.evaluate(() => {
+    localStorage.setItem('beadscope.view.demo', 'focus');
+    localStorage.setItem('beadscope.default-focus', 'true');
+  });
+  await project('Epics');
   await nav('Settings');
-  assert.equal(await toggle.getAttribute('aria-checked'), 'false');
-  await toggle.click();
-  assert.equal(await toggle.getAttribute('aria-checked'), 'true');
-  await page.reload();
-  await heading('Settings'); // Explicit URLs override the default, including reload.
-  await project('Focus');
-  await nav('List');
-  await page.reload();
-  await heading('List');
-  await project('Focus');
-  await nav('Settings');
-  assert.equal(await toggle.getAttribute('aria-checked'), 'true');
-  await toggle.click();
-  await project('Board');
-  await nav('Focus');
-  await page.reload();
-  await heading('Focus');
-  await project('Board'); // Visiting Focus does not opt into a different default.
-  await nav('Settings');
-  assert.equal(await toggle.getAttribute('aria-checked'), 'false');
-  await toggle.click();
+  assert.equal(await select.inputValue(), 'epics');
+  assert.deepEqual(
+    await select.locator('option').allTextContents(),
+    ['Epics', 'Focus', 'List', 'Needs You', 'Agent Queue'],
+  );
+  // Each choice that is a view of the project opens it, on reload too; explicit view links still win.
+  for (const [value, name] of [['focus', 'Focus'], ['list', 'List'], ['needsyou', 'Needs You']]) {
+    await select.selectOption(value);
+    assert.equal(await select.inputValue(), value);
+    await page.reload();
+    await heading('Settings'); // The reload stays on the explicit settings link.
+    assert.equal(await select.inputValue(), value);
+    await project(name);
+    await nav('Board');
+    await page.reload();
+    await heading('Board');
+    await project(name); // Visiting another view does not change the default.
+    await nav('Settings');
+  }
+  // Agent Queue has no project view: a bare project link goes to the all-repos page.
+  await select.selectOption('agent-queue');
+  await page.goto(`${base}/p/demo`);
+  await page.waitForURL(`${base}/agent-queue`);
+  await page.getByRole('heading', { name: 'Agent Queue', exact: true }).first().waitFor();
+  // A link that names a view still opens that project view.
+  await page.goto(`${base}/p/demo?view=board`);
+  await heading('Board');
+  await page.goto(`${base}/p/demo?view=settings`);
+  await heading('Settings');
+  assert.equal(await select.inputValue(), 'agent-queue');
+  // Back to the Epics default.
+  await select.selectOption('epics');
+  await project('Epics');
+  // Another browser profile has its own preference.
   const other = await browser.newContext();
   const otherPage = await other.newPage();
   await otherPage.goto(`${base}/p/demo`);
+  await otherPage.getByRole('heading', { name: 'Epics', exact: true }).waitFor();
   await otherPage.getByRole('button', { name: 'Settings', exact: true }).click();
-  assert.equal(await otherPage.getByRole('switch', { name: 'Use Focus as the default view' }).getAttribute('aria-checked'), 'false');
-  console.log('PASS: Board default, explicit Focus opt-in, explicit view URLs and reloads, ignored legacy view preference, browser isolation');
+  assert.equal(await otherPage.getByRole('combobox', { name: 'Default page' }).inputValue(), 'epics');
+  console.log('PASS: Epics default, five-way default page, explicit view URLs and reloads, Agent Queue redirect, ignored legacy settings, browser isolation');
 } finally { await browser.close(); }

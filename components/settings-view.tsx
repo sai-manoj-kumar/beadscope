@@ -10,7 +10,8 @@ import { useApp } from "@/components/app-context";
 import { api, type DoctorResponse } from "@/lib/api-client";
 import { useNotificationPrefs, type NotifPrefs } from "@/hooks/use-notifications";
 import { useBoardPrefs } from "@/hooks/use-board-prefs";
-import { useDefaultFocus } from "@/hooks/use-default-view";
+import { useDefaultPage } from "@/hooks/use-default-view";
+import { DEFAULT_PAGES, isDefaultPage } from "@/lib/default-page";
 import { ViewerModeSetting } from "@/components/read-only-banner";
 import { KEYBOARD_SHORTCUT_GROUPS, isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { KeyboardHelpDialog, ShortcutKeys } from "@/components/keyboard-help-dialog";
@@ -49,28 +50,28 @@ export function SettingsView() {
 }
 
 function DefaultViewSetting() {
-  const { enabled, save } = useDefaultFocus();
+  const { page, save } = useDefaultPage();
   return (
     <Card title="Default view">
       <SettingRow
-        titleId="default-focus-label"
-        descriptionId="default-focus-description"
-        title="Use Focus as the default view"
-        description="Off opens projects in Board. Turn on to open in Focus instead, showing current work, blockers, and high-priority next steps. Links to a specific view open that view, including on reload. Switching views does not change this setting. Saved automatically for all projects in this browser."
+        titleId="default-page-label"
+        descriptionId="default-page-description"
+        title="Default page"
+        description="The page a project opens on. Links to a specific view open that view, including on reload. Switching views does not change this setting. Agent Queue opens the page across all repos. Saved automatically for all projects in this browser."
         control={
-          <ToggleButton
-            on={enabled}
-            onText="On"
-            offText="Off"
-            role="switch"
-            aria-checked={enabled}
-            aria-labelledby="default-focus-label"
-            aria-describedby="default-focus-description"
-            onClick={() => {
-              try { save(!enabled); }
-              catch { toast.error("Could not save the default view. Browser storage may be unavailable."); }
+          <SelectField
+            value={page}
+            aria-labelledby="default-page-label"
+            aria-describedby="default-page-description"
+            onChange={(e) => {
+              const next = e.target.value;
+              if (!isDefaultPage(next)) return;
+              try { save(next); }
+              catch { toast.error("Could not save the default page. Browser storage may be unavailable."); }
             }}
-          />
+          >
+            {DEFAULT_PAGES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </SelectField>
         }
       />
     </Card>
