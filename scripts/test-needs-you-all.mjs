@@ -198,9 +198,12 @@ try {
   await page.getByLabel("Filter by repo").selectOption("alpha");
   await page.waitForFunction(() => window.__streams.filter((es) => !es.closed).length === 1);
 
-  // Opening a bead goes to its repo with the drawer on it.
+  // Opening a bead shows its drawer over the page, without leaving it (bui-ih7.17.2).
   await page.locator('[data-keyboard-bead-id="al-1"]').getByRole("button", { name: "al-1", exact: true }).click();
-  await page.waitForURL(/\/p\/alpha\?bead=al-1/);
+  await page.locator("[data-bead-drawer]").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/needs-you", "the page stays on Needs You");
+  await page.keyboard.press("Escape");
+  await page.locator("[data-bead-drawer]").waitFor({ state: "detached" });
 
   // Entry points: the launcher and a project's sidebar both link here.
   // Badge (bui-ih7.8): the Needs You links carry the total across all repos. Alpha has al-1, beta

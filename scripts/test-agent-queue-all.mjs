@@ -135,13 +135,19 @@ try {
   await page.locator("[data-keyboard-bead-id]").first().waitFor();
   assert.equal((await cardIds()).length, 6);
 
-  // Opening a bead goes to its repo with the drawer on it: by click and by keyboard.
+  // Opening a bead shows its drawer over the page (bui-ih7.17.2), without leaving it: by click and by keyboard.
+  const drawer = page.locator("[data-bead-drawer]");
   await page.locator('[data-keyboard-bead-id="be-1"]').click();
-  await page.waitForURL(/\/p\/beta\?bead=be-1/);
-  await page.goto(`${base}/agent-queue`);
+  await drawer.getByText("Beta claude work").first().waitFor();
+  assert.equal(new URL(page.url()).pathname, "/agent-queue", "the page stays on the queue");
+  await page.keyboard.press("Escape");
+  await drawer.waitFor({ state: "detached" });
   await page.locator('[data-keyboard-bead-id="al-3"]').focus();
   await page.keyboard.press("Enter");
-  await page.waitForURL(/\/p\/alpha\?bead=al-3/);
+  await drawer.getByText("Alpha codex work").first().waitFor();
+  assert.equal(new URL(page.url()).pathname, "/agent-queue");
+  await page.keyboard.press("Escape");
+  await drawer.waitFor({ state: "detached" });
 
   // Entry point: the launcher links here.
   await page.goto(`${base}/`);

@@ -1,9 +1,9 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AppProvider } from "@/components/app-context";
+import { RepoBeadDrawer, useRepoDrawer } from "@/components/repo-bead-drawer";
 import { SelectField } from "@/components/controls";
 import { AssignedCard, GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
@@ -53,6 +53,24 @@ export function AllNeedsYouView() {
   useBeadsStreams(shown.map(({ project }) => project.id));
   // One selection for the whole page, so only one card carries the ring whichever repo it is in.
   const [selected, setSelected] = React.useState<Selection | null>(null);
+  // Opening a bead shows its drawer over this page, as the Epics page does.
+  const drawer = useRepoDrawer();
+  const openBead = drawer.openBead;
+  const dataFor = React.useCallback(
+    (id: string) => results[projects.findIndex((p) => p.id === id)]?.data,
+    [results, projects],
+  );
+  const selectIn = React.useCallback(
+    (projectId: string, id: string | null) => setSelected(id ? { projectId, beadId: id } : null),
+    [],
+  );
+  const openIn = React.useCallback(
+    (projectId: string, id: string) => {
+      selectIn(projectId, id);
+      openBead(projectId, id);
+    },
+    [selectIn, openBead],
+  );
 
   // Counts per repo are always the whole picture, so the filter labels stay honest.
   const counts = new Map<string, number>();
@@ -135,12 +153,14 @@ export function AllNeedsYouView() {
                   showHeading={repo === ALL}
                   selectedBeadId={selected?.projectId === project.id ? selected.beadId : null}
                   onSelect={setSelected}
+                  onOpen={openIn}
                 />
               ))
             )}
           </div>
         )}
       </div>
+      <RepoBeadDrawer drawer={drawer} dataFor={dataFor} readOnly={readOnly} onSelect={selectIn} />
     </div>
   );
 }
@@ -153,6 +173,7 @@ function RepoSection({
   showHeading,
   selectedBeadId,
   onSelect,
+  onOpen,
 }: {
   project: ProjectInfo;
   data: BeadsResponse | undefined;
@@ -160,8 +181,8 @@ function RepoSection({
   showHeading: boolean;
   selectedBeadId: string | null;
   onSelect: (selection: Selection | null) => void;
+  onOpen: (projectId: string, id: string) => void;
 }) {
-  const router = useRouter();
   const { page } = useDefaultPage();
   const beads = React.useMemo(() => data?.beads ?? [], [data]);
   const index = React.useMemo(() => makeIndex(beads), [beads]);
@@ -174,11 +195,7 @@ function RepoSection({
     (id: string | null) => onSelect(id ? { projectId, beadId: id } : null),
     [onSelect, projectId],
   );
-  // Opening a bead leaves this page for the repo, where the drawer opens on it.
-  const openDetail = React.useCallback(
-    (id: string) => router.push(`/p/${encodeURIComponent(projectId)}?bead=${encodeURIComponent(id)}`),
-    [router, projectId],
-  );
+  const openDetail = React.useCallback((id: string) => onOpen(projectId, id), [onOpen, projectId]);
   const noop = React.useCallback(() => {}, []);
 
   return (

@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { AgentIcon } from "@/components/agent-icon";
@@ -10,12 +9,14 @@ import { StatusChip } from "@/components/chip";
 import { SelectField } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
+import { RepoBeadDrawer, useRepoDrawer } from "@/components/repo-bead-drawer";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { beadsKey } from "@/hooks/use-beads";
 import { useDefaultPage } from "@/hooks/use-default-view";
 import { projectHref } from "@/lib/default-page";
 import { useProjects } from "@/hooks/use-projects";
 import { useUrlState } from "@/hooks/use-url-state";
+import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { api, type BeadsResponse, type ProjectInfo } from "@/lib/api-client";
 import { agentByName, type AgentIdentity } from "@/lib/agents";
 import { blockingDeps, isBlocked, makeIndex, relTime } from "@/lib/beads-view";
@@ -34,7 +35,7 @@ type Item = { bead: Bead; blocked: boolean; blockers: string[] };
 /**
  * The Agent Queue across every registered repo: each open bead assigned to an agent identity
  * (Settings → Agents), gathered from all projects, with a repo filter and an agent filter. It is the
- * all-repos form of the Agent filter on a project's Focus view. Opening a bead goes to its repo.
+ * all-repos form of the Agent filter on a project's Focus view. Opening a bead shows its drawer over the page.
  */
 export function AllAgentQueueView() {
   const { data: projectData, isLoading: loadingProjects } = useProjects();
@@ -49,6 +50,14 @@ export function AllAgentQueueView() {
     })),
   });
   const { searchParams, updateUrl } = useUrlState();
+  // Opening a bead shows its drawer over this page, as the Epics page does.
+  const drawer = useRepoDrawer();
+  const viewerMode = useViewerMode();
+  const readOnly = viewerMode.data?.readOnly ?? true;
+  const dataFor = React.useCallback(
+    (id: string) => results[projects.findIndex((p) => p.id === id)]?.data,
+    [results, projects],
+  );
 
   // Agent identities are one app-wide setting, so any repo's response carries them.
   const identities: AgentIdentity[] = React.useMemo(
@@ -190,12 +199,14 @@ export function AllAgentQueueView() {
                   items={items}
                   agents={identities}
                   showHeading={repo === ALL}
+                  onOpen={drawer.openBead}
                 />
               ))
             )}
           </div>
         )}
       </div>
+      <RepoBeadDrawer drawer={drawer} dataFor={dataFor} readOnly={readOnly} />
     </div>
   );
 }
@@ -206,11 +217,13 @@ function RepoSection({
   items,
   agents,
   showHeading,
+  onOpen,
 }: {
   project: ProjectInfo;
   items: Item[];
   agents: AgentIdentity[];
   showHeading: boolean;
+  onOpen: (projectId: string, id: string) => void;
 }) {
   const { page } = useDefaultPage();
   return (
@@ -224,18 +237,26 @@ function RepoSection({
         </h2>
       )}
       {items.map((item) => (
-        <QueueCard key={item.bead.id} projectId={project.id} item={item} agents={agents} />
+        <QueueCard key={item.bead.id} projectId={project.id} item={item} agents={agents} onOpen={onOpen} />
       ))}
     </section>
   );
 }
 
-function QueueCard({ projectId, item, agents }: { projectId: string; item: Item; agents: AgentIdentity[] }) {
-  const router = useRouter();
+function QueueCard({
+  projectId,
+  item,
+  agents,
+  onOpen,
+}: {
+  projectId: string;
+  item: Item;
+  agents: AgentIdentity[];
+  onOpen: (projectId: string, id: string) => void;
+}) {
   const { bead, blocked, blockers } = item;
   const agent = agentByName(agents, bead.assignee);
-  // Opening a bead leaves this page for the repo, where the drawer opens on it.
-  const open = () => router.push(`/p/${encodeURIComponent(projectId)}?bead=${encodeURIComponent(bead.id)}`);
+  const open = () => onOpen(projectId, bead.id);
   return (
     <article
       role="button"
