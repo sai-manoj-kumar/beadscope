@@ -100,6 +100,8 @@ export interface DoctorResponse {
     humanAllowlist: string[];
     agents: AgentIdentity[];
     pollIntervalMs: number;
+    /** The built-in Demo project is hidden from the project lists. */
+    hideDemo?: boolean;
   };
 }
 

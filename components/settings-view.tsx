@@ -201,6 +201,8 @@ function SettingsForm({ data }: { data: DoctorResponse }) {
         <AgentsSettings agents={data.config.agents} />
       </Card>
 
+      <DemoProjectCard hidden={!!data.config.hideDemo} />
+
       <Card title="Freshness & theme">
         <SettingRow
           title="Fallback refresh interval"
@@ -389,6 +391,42 @@ function UpdatesCard() {
         Stable follows published versions and includes release notes. Development follows the latest
         commits on main and requires a Git checkout. Updates only install when you choose Update now.
       </p>
+    </Card>
+  );
+}
+
+function DemoProjectCard({ hidden }: { hidden: boolean }) {
+  const qc = useQueryClient();
+  const save = useMutation({
+    mutationFn: (hideDemo: boolean) => api.saveConfig({ hideDemo }),
+    onSuccess: () => {
+      toast.success("Settings saved");
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["doctor"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <Card title="Demo project">
+      <SettingRow
+        titleId="show-demo-label"
+        descriptionId="show-demo-description"
+        title="Show the Demo project"
+        description="The built-in sample project. Turn off to hide it from the project list, the project menu and the all-repos pages. Applies to every project in this install."
+        control={
+          <ToggleButton
+            on={!hidden}
+            onText="On"
+            offText="Off"
+            role="switch"
+            aria-checked={!hidden}
+            aria-labelledby="show-demo-label"
+            aria-describedby="show-demo-description"
+            onClick={() => save.mutate(!hidden)}
+            disabled={save.isPending}
+          />
+        }
+      />
     </Card>
   );
 }

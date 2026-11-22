@@ -16,7 +16,8 @@ const FAILING_POLL_MS = 60_000;
  *
  * The built-in Demo project is left out while real repos exist: its sample beads would put waiting
  * items on every install that has nothing waiting, and the badge, the page count and the page list
- * must agree. When Demo is the only project it stays, so the page is not empty.
+ * must agree. When Demo is the only project it stays, so the page is not empty. Once the user hides
+ * Demo (Settings → Demo project) the projects list no longer holds it, so it is gone from here too.
  */
 export function useAllRepoBeads() {
   const { data, isLoading: loadingProjects } = useProjects();

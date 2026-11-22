@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
+import { Plus, Trash2, EyeOff, FlaskConical, FolderGit2, Loader2 } from "lucide-react";
 import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
 import { NeedsYouBadge } from "@/components/needs-you-badge";
@@ -114,6 +114,16 @@ function CardShell({
 
 function DemoCard() {
   const router = useRouter();
+  const qc = useQueryClient();
+  const hide = useMutation({
+    mutationFn: () => api.saveConfig({ hideDemo: true }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["doctor"] });
+      toast.success("Demo project hidden. Turn it back on in Settings.");
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
   return (
     <CardShell onClick={() => router.push("/p/demo")}>
       <div className="flex items-center gap-[10px]">
@@ -124,6 +134,20 @@ function DemoCard() {
           <div className="truncate text-section font-semibold">Demo</div>
           <div className="text-meta text-[var(--text-3)]">built-in</div>
         </div>
+        {/* Visible without hover, like the remove button on a project card. Hiding is undone in Settings. */}
+        <IconButton
+          variant="ghost"
+          label="Hide Demo project"
+          title="Hide Demo project"
+          disabled={hide.isPending}
+          onClick={(e) => {
+            e.stopPropagation();
+            hide.mutate();
+          }}
+          className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100 [@media(hover:none)]:opacity-100"
+        >
+          <EyeOff size={14} />
+        </IconButton>
       </div>
       <div className="text-label text-[var(--text-3)]">
         Seeded sample data — explore every view without bd installed.
