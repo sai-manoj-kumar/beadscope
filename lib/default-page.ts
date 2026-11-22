@@ -20,6 +20,15 @@ export function isDefaultPage(value: string | null | undefined): value is Defaul
   return DEFAULT_PAGES.some((p) => p.id === value);
 }
 
+/**
+ * A link that opens a project from the all-repos pages. A bare project link follows the default
+ * page, which would bounce an Agent Queue user straight back to the page they are on, so name a view.
+ */
+export function projectHref(projectId: string, page: DefaultPage): string {
+  const base = `/p/${encodeURIComponent(projectId)}`;
+  return page === "agent-queue" ? `${base}?view=focus` : base;
+}
+
 /** The project view a default page opens, or null when it is a page outside the project. */
 export function defaultPageView(page: DefaultPage): View | null {
   return page === "agent-queue" ? null : page;

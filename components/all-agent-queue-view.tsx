@@ -12,6 +12,8 @@ import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { beadsKey } from "@/hooks/use-beads";
+import { useDefaultPage } from "@/hooks/use-default-view";
+import { projectHref } from "@/lib/default-page";
 import { useProjects } from "@/hooks/use-projects";
 import { useUrlState } from "@/hooks/use-url-state";
 import { api, type BeadsResponse, type ProjectInfo } from "@/lib/api-client";
@@ -210,11 +212,12 @@ function RepoSection({
   agents: AgentIdentity[];
   showHeading: boolean;
 }) {
+  const { page } = useDefaultPage();
   return (
     <section data-repo-section={project.id} aria-label={project.name} className="flex flex-col gap-3">
       {showHeading && (
         <h2 className="flex items-baseline gap-2 text-body font-semibold text-[var(--text)]">
-          <Link href={`/p/${encodeURIComponent(project.id)}`} className="hover:underline">
+          <Link href={projectHref(project.id, page)} className="hover:underline">
             {project.name}
           </Link>
           <span className="text-meta font-normal text-[var(--text-3)]">{items.length} queued</span>

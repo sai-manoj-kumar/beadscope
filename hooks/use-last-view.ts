@@ -24,8 +24,11 @@ export function useLastView(): [View, (v: View) => void, boolean] {
   // breakpoint while on it.
   const view = isView(requested) && !(mobile && isDesktopOnly(requested)) ? requested : fallback;
   // A link that names a view or a bead is a request for that project; only a bare project link
-  // follows the default page out of the project.
-  const toAgentQueue = page === "agent-queue" && requested === null && !searchParams.has("bead");
+  // follows the default page out of the project. Whether the project was opened bare is decided
+  // once, from the URL it was opened with: closing the bead drawer later also leaves a bare URL,
+  // and that must not throw the person out of the project.
+  const [openedBare] = React.useState(() => requested === null && !searchParams.has("bead"));
+  const toAgentQueue = page === "agent-queue" && openedBare && requested === null && !searchParams.has("bead");
   React.useEffect(() => {
     if (toAgentQueue) router.replace(AGENT_QUEUE_PATH);
   }, [toAgentQueue, router]);
