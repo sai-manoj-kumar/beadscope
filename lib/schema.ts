@@ -172,8 +172,8 @@ function isRealDue(v: string): boolean {
 }
 const dueIsoSchema = z
   .string()
-  .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
-  .refine(isRealDue, "Due must be a real date and time");
+  .regex(DUE_ISO_PATTERN, "Date must be an ISO date and time")
+  .refine(isRealDue, "Date must be a real date and time");
 
 export const createInputSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),

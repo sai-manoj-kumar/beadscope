@@ -4,7 +4,7 @@ import type { Bead } from "@/lib/schema";
 
 /**
  * A bead's defer date and time (`bd update --defer`): until then the bead stays out of `bd ready`.
- * Most beads have none, so an unset field says "Not deferred" and Clear removes a set one.
+ * Most beads have none, so an unset field says "No defer date" and Clear removes a set one.
  */
 export function DeferField({ bead }: { bead: Bead }) {
   return (
@@ -15,7 +15,7 @@ export function DeferField({ bead }: { bead: Bead }) {
       patchKey="defer"
       testId="defer-field"
       clearLabel="Clear defer date"
-      hint="Not deferred. Pick a date to keep this bead out of ready work until then."
+      hint="No defer date. Pick one to keep this bead out of ready work until then."
     />
   );
 }

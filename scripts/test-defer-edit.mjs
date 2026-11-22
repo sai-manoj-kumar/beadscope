@@ -1,6 +1,6 @@
 // Isolated writable server only. Uses a throwaway bd repo; skips when bd is not installed.
 // A bead's defer date and time shows in the drawer and can be set, changed and cleared. A bead with
-// no defer date shows an empty field and a "Not deferred" hint, not an error or a broken date. The
+// no defer date shows an empty field and a "No defer date" hint, not an error or a broken date. The
 // time is shown in the browser's time zone (New York here, so a UTC mix-up would show), bd stores
 // the instant, an incomplete value reverts, and on a phone the field and Clear keep 44px targets.
 import assert from "node:assert/strict";
@@ -67,7 +67,7 @@ try {
       dialog,
       input: dialog.getByLabel("Defer until", { exact: true }),
       clear: dialog.getByRole("button", { name: "Clear defer date" }),
-      hint: dialog.getByText("Not deferred."),
+      hint: dialog.getByText("No defer date."),
     };
   };
   const fieldValue = (page) => page.evaluate(() => document.querySelector('[data-testid="defer-field"] input')?.value);
