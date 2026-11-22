@@ -296,6 +296,9 @@ function DrawerBody({
   const [previewEdit, setPreviewEdit] = React.useState(false);
   const [titleDraft, setTitleDraft] = React.useState(bead.title);
   const [descDraft, setDescDraft] = React.useState(bead.description ?? "");
+  const [editingParent, setEditingParent] = React.useState(false);
+  const [parentDraft, setParentDraft] = React.useState("");
+  const parentListId = React.useId();
   const progress = checklistProgress(bead.description);
   const descRef = React.useRef<HTMLTextAreaElement>(null);
   const fileRef = React.useRef<HTMLInputElement>(null);
@@ -345,6 +348,32 @@ function DrawerBody({
 
   const o = beadOrigin(bead, humanAllowlist);
   const ep = parentOf(bead, index);
+  const parentCandidates = React.useMemo(() => {
+    const descendants = new Set([bead.id]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const candidate of beads) {
+        if (
+          !descendants.has(candidate.id) &&
+          (candidate.dependencies ?? []).some(
+            (dependency) => dependency.type === "parent-child" && descendants.has(dependency.depends_on_id),
+          )
+        ) {
+          descendants.add(candidate.id);
+          changed = true;
+        }
+      }
+    }
+    return beads
+      .filter((candidate) => candidate.status !== "closed" && !descendants.has(candidate.id))
+      .sort(
+        (a, b) =>
+          Number(a.issue_type !== "epic") - Number(b.issue_type !== "epic") ||
+          a.priority - b.priority ||
+          a.id.localeCompare(b.id),
+      );
+  }, [bead.id, beads]);
   // Children come from the parent-child dependency EDGE, never `bead.parent` —
   // `bd export --json` (the source for the list cache) omits the parent field,
   // so an edge-based lookup is the only one correct in every context.
@@ -567,29 +596,93 @@ function DrawerBody({
                 empty screen with nothing highlighted. */}
             <span className={fieldLabel}>{ep && ep.issue_type !== "epic" ? "Parent" : "Epic"}</span>
             {ep ? (
-              <button
-                type="button"
-                onClick={() => pushDetail(ep.id)}
-                title={`Open ${ep.id}`}
-                className="flex h-[38px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left text-[var(--brand)] hover:border-[var(--brand)] hover:bg-[var(--brand-weak)]"
-              >
-                <Icon
-                  name={ep.issue_type === "epic" ? "target" : typeIconName(ep.issue_type)}
-                  size={14}
-                  className="flex-shrink-0"
-                />
-                <span className="overflow-hidden text-ellipsis whitespace-nowrap text-label">
-                  {ep.title}
-                </span>
-                <span className="flex-1" />
-                <Icon name="chevron" size={13} className="-rotate-90 flex-shrink-0 text-[var(--text-3)]" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => pushDetail(ep.id)}
+                  title={`Open ${ep.id}`}
+                  className="flex h-[38px] min-w-0 flex-1 items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-left text-[var(--brand)] hover:border-[var(--brand)] hover:bg-[var(--brand-weak)]"
+                >
+                  <Icon
+                    name={ep.issue_type === "epic" ? "target" : typeIconName(ep.issue_type)}
+                    size={14}
+                    className="flex-shrink-0"
+                  />
+                  <span className="overflow-hidden text-ellipsis whitespace-nowrap text-label">
+                    {ep.title}
+                  </span>
+                  <span className="flex-1" />
+                  <Icon name="chevron" size={13} className="-rotate-90 flex-shrink-0 text-[var(--text-3)]" />
+                </button>
+                {!readOnly && (
+                  <Button
+                    aria-label="Change parent"
+                    title="Change parent"
+                    variant="ghost"
+                    size="sm"
+                    icon="pencil"
+                    onClick={() => {
+                      setParentDraft(`${ep.id} · ${ep.title}`);
+                      setEditingParent(true);
+                    }}
+                  >
+                    Change
+                  </Button>
+                )}
+              </div>
             ) : (
               <div className="flex h-[38px] items-center gap-[7px] rounded-[9px] border border-border bg-[var(--surface-2)] px-[10px] text-[var(--text-3)]">
                 <Icon name="target" size={14} />
                 <span className="text-label">—</span>
+                {!readOnly && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-label text-[var(--brand)] hover:underline"
+                    onClick={() => { setParentDraft(""); setEditingParent(true); }}
+                  >
+                    Set parent
+                  </Button>
+                )}
               </div>
             )}
+            {editingParent && !readOnly && (
+              <TextInput
+                aria-label="Parent bead"
+                list={parentListId}
+                value={parentDraft}
+                placeholder="No parent — type to search…"
+                autoFocus
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setParentDraft(value);
+                  // Save only on a cleared field or an exact pick from the list, so editing
+                  // the text of the prefilled current parent does not save a half-typed value.
+                  const picked = parentCandidates.find((candidate) => value === `${candidate.id} · ${candidate.title}`);
+                  if (value === "" ? ep : picked && picked.id !== ep?.id) {
+                    update.mutate(
+                      { id: bead.id, patch: { parent: picked ? picked.id : "" } },
+                      { onSuccess: () => setEditingParent(false) },
+                    );
+                  }
+                }}
+                // Leaving the field or pressing Escape cancels the edit.
+                onBlur={() => setEditingParent(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.stopPropagation();
+                    setEditingParent(false);
+                  }
+                }}
+              />
+            )}
+            <datalist id={parentListId}>
+              {parentCandidates.map((candidate) => (
+                <option key={candidate.id} value={`${candidate.id} · ${candidate.title}`}>
+                  {typeLabel(candidate.issue_type)}
+                </option>
+              ))}
+            </datalist>
           </div>
           <DueField bead={bead} />
         </div>
