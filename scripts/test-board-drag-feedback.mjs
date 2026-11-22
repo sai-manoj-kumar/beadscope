@@ -90,7 +90,7 @@ try {
     page.evaluate(({ x, y, text }) =>
       document.elementsFromPoint(x, y).some((element) => element.closest("article")?.textContent?.includes(text)), { ...point, text: title });
 
-  await page.goto(`${base}/p/demo`);
+  await page.goto(`${base}/p/demo?view=board`);
   await page.getByRole("heading", { name: "Board", exact: true }).waitFor();
   const unlock = await context.request.put(`${base}/api/viewer-mode`, { data: { readOnly: false } });
   assert.equal(unlock.status(), 200, "isolated demo can be unlocked for mutation assertions");

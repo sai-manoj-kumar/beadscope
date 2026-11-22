@@ -67,7 +67,7 @@ try {
   assert.ok(!names.includes('gemini'), 'an unchecked identity is not offered');
 
   // The create modal's dropdown shows each agent with its icon too (a native select cannot).
-  await page.goto(`${base}/p/demo`);
+  await page.goto(`${base}/p/demo?view=board`);
   await page.getByRole('heading', { name: 'Board', exact: true }).waitFor();
   await page.getByRole('button', { name: 'Read Only Mode', exact: true }).waitFor({ state: 'detached' });
   // The heading renders before React attaches the keyboard handler, so a key pressed too early is lost: press again until the dialog opens.

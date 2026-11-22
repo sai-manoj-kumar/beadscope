@@ -11,6 +11,8 @@ import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAllRepoBeads } from "@/hooks/use-all-repo-beads";
 import { useBeadsStreams } from "@/hooks/use-beads-stream";
+import { useDefaultPage } from "@/hooks/use-default-view";
+import { projectHref } from "@/lib/default-page";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import type { BeadsResponse, ProjectInfo } from "@/lib/api-client";
@@ -160,6 +162,7 @@ function RepoSection({
   onSelect: (selection: Selection | null) => void;
 }) {
   const router = useRouter();
+  const { page } = useDefaultPage();
   const beads = React.useMemo(() => data?.beads ?? [], [data]);
   const index = React.useMemo(() => makeIndex(beads), [beads]);
   const gates = React.useMemo(() => beads.filter((b) => readyHumanGate(b, index)), [beads, index]);
@@ -197,7 +200,7 @@ function RepoSection({
       <section data-repo-section={projectId} aria-label={project.name} className="flex flex-col gap-3">
         {showHeading && (
           <h2 className="flex items-baseline gap-2 text-body font-semibold text-[var(--text)]">
-            <Link href={`/p/${encodeURIComponent(projectId)}`} className="hover:underline">
+            <Link href={projectHref(projectId, page)} className="hover:underline">
               {project.name}
             </Link>
             <span className="text-meta font-normal text-[var(--text-3)]">{gates.length + inbox.length} waiting</span>

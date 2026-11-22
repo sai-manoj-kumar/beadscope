@@ -40,9 +40,9 @@ try {
     return route.fulfill({ json: beads.find(b => path.endsWith(`/beads/${b.id}`)) ?? {} });
   });
   await page.goto(`${base}/p/demo`);
-  await page.locator('article').first().waitFor();
+  await page.getByRole('heading', { name: 'Epics', exact: true }).waitFor();
   assert.equal(await page.evaluate(() => localStorage.getItem('beadscope.view.demo')), null);
-  assert.equal(await page.getByRole('heading', { name: 'Focus', exact: true }).count(), 0, 'Board is first-visit default');
+  assert.equal(await page.getByRole('heading', { name: 'Focus', exact: true }).count(), 0, 'Epics is first-visit default');
   await page.getByRole('button', { name: 'Focus', exact: true }).click();
   await page.getByRole('heading', { name: 'Focus', exact: true }).waitFor();
   const column = name => page.locator('section').filter({ has: page.getByRole('heading', { name, exact: true }) });
@@ -71,7 +71,7 @@ try {
   assert.equal(await page.getByRole('dialog').locator('select').first().isDisabled(), true);
   await page.getByTitle('Close', { exact: true }).click();
   await page.goto(`${base}/p/demo`); // An ordinary project link uses the default.
-  await page.locator('article').first().waitFor();
+  await page.getByRole('heading', { name: 'Epics', exact: true }).waitFor();
   assert.equal(await page.getByRole('heading', { name: 'Focus', exact: true }).count(), 0);
   await page.getByRole('button', { name: 'Focus', exact: true }).click();
   await page.getByRole('button', { name: 'alpha', exact: true }).click();
@@ -90,5 +90,5 @@ try {
   await page.locator('article').first().waitFor();
   assert.equal(await page.getByRole('heading', { name: 'Focus', exact: true }).count(), 0);
   assert.deepEqual(errors, []);
-  console.log('PASS: Board default, optional Focus, blocking columns, hierarchy, lane filters, archived exclusion, and read-only detail navigation');
+  console.log('PASS: Epics default, optional Focus, blocking columns, hierarchy, lane filters, archived exclusion, and read-only detail navigation');
 } finally { await browser.close(); }

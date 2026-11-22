@@ -56,7 +56,7 @@ function RestoreBeadParam({ openId }: { openId: string | null }) {
 }
 
 export function AppShell({ projectId }: { projectId: string }) {
-  const [view, setView] = useLastView();
+  const [view, setView, redirecting] = useLastView();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const { toggle: toggleTheme } = useTheme();
   // Drawer navigation TRAIL, not a single id: clicking a subtask from its
@@ -220,6 +220,9 @@ export function AppShell({ projectId }: { projectId: string }) {
     desktop.addEventListener("change", onChange);
     return () => desktop.removeEventListener("change", onChange);
   }, []);
+
+  // The default page is the Agent Queue, which lives outside the project: draw nothing while the redirect happens.
+  if (redirecting) return null;
 
   return (
     <AppProvider

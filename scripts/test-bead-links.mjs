@@ -66,6 +66,7 @@ try {
   await page.getByRole("dialog").getByText("Child bead", { exact: true }).waitFor();
   await beadParamIs(page, "child");
   await page.getByRole("dialog").getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByRole("button", { name: "Board", exact: true }).click(); // The default page is Epics; the cards below are on the Board.
   await page.locator("article").filter({ hasText: "blocked" }).click();
   await page.getByRole("dialog").getByText("Blocked bead", { exact: true }).waitFor();
   await page.getByRole("dialog").getByText("Dependency bead", { exact: true }).click();

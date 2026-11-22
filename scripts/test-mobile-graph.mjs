@@ -7,7 +7,8 @@ import { chromium } from "playwright";
 const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, "BEADSCOPE_TEST_URL is required; use an isolated demo server");
 const browser = await chromium.launch({ executablePath: process.env.BEADSCOPE_BROWSER_EXECUTABLE || undefined });
-const board = (page) => page.getByRole("heading", { name: "Board", exact: true });
+// A phone that is sent away from the Graph lands on the default page, which is Epics.
+const board = (page) => page.getByRole("heading", { name: "Epics", exact: true });
 const graph = (page) => page.getByRole("heading", { name: "Dependency graph", exact: true });
 try {
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

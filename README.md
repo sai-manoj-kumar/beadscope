@@ -242,9 +242,11 @@ under your OS config dir, not in beads).
 ### Focus view
 
 **Focus** is an optional view for current work: In flight, Blocked, and Next up
-(open, unblocked P0/P1 work). Board is the default whenever you open or reload a
-project. Enable **Use Focus as the default view** in Settings to start in Focus instead. This toggle is off
-by default and saves automatically for all projects in the current browser.
+(open, unblocked P0/P1 work). Epics is the default whenever you open or reload a
+project. Choose a different **Default page** in Settings (Epics, Focus, List, Needs You or
+Agent Queue) to start there instead. The choice saves automatically for all projects in the
+current browser. Agent Queue has no view inside a project, so it opens the Agent Queue page
+across all repos.
 Lower-priority backlog and completed work remain
 available in Board and List.
 
