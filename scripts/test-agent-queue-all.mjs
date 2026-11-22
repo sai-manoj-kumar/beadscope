@@ -101,6 +101,8 @@ try {
   const agentFilter = page.getByLabel("Filter by agent");
   assert.deepEqual(await repoFilter.locator("option").allTextContents(), ["All repos", "Alpha Repo (4)", "Beta Repo (2)", "Gamma Repo", "Delta Repo"]);
   assert.deepEqual(await agentFilter.locator("option").allTextContents(), ["All agents", "claude-code (4)", "codex (1)"]);
+  // The agent dropdown stands alone: no visible "Agent" label beside it (its name is the aria-label).
+  assert.equal(await page.getByText("Agent", { exact: true }).count(), 0, "no visible Agent label beside the dropdown");
 
   // Agent filter narrows the page; counts for the repos follow it; the URL carries it.
   await agentFilter.selectOption("codex");
