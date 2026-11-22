@@ -2,6 +2,7 @@
 import * as React from "react";
 import { AppProvider } from "@/components/app-context";
 import { BeadDetailDrawer } from "@/components/bead-detail-drawer";
+import { CreateBeadModal } from "@/components/create-bead-modal";
 import type { BeadsResponse } from "@/lib/api-client";
 import { makeIndex } from "@/lib/beads-view";
 
@@ -64,14 +65,24 @@ export function RepoBeadDrawer({
   // A bead that was deleted or archived away while open closes the drawer instead of leaving it empty.
   const openId = top && index.has(top) ? top : null;
 
+  const [create, setCreate] = React.useState({ open: false, parent: "" });
+  const openCreate = React.useCallback(
+    (opts: { parent?: string } = {}) => {
+      if (readOnly) return;
+      setCreate({ open: true, parent: opts.parent ?? "" });
+    },
+    [readOnly],
+  );
+
   const back = React.useCallback(() => {
+    onSelect?.(projectId, null);
     setOpen((cur) => {
       if (!cur) return cur;
       const next = cur.stack.slice(0, -1);
       while (next.length && !index.has(next[next.length - 1])) next.pop();
       return next.length ? { ...cur, stack: next, nonce: cur.nonce } : null;
     });
-  }, [setOpen, index]);
+  }, [setOpen, index, onSelect, projectId]);
 
   const pushDetail = React.useCallback(
     (id: string) => {
@@ -99,7 +110,7 @@ export function RepoBeadDrawer({
         selectBead: noop,
         openDetail: (id) => pushDetail(id),
         pushDetail,
-        openCreate: noop,
+        openCreate,
         openEpic: noop,
       }}
     >
@@ -111,6 +122,12 @@ export function RepoBeadDrawer({
         backTo={stack.length > 1 ? stack[stack.length - 2] : null}
         onBack={back}
         onClose={closeDetail}
+      />
+      {/* "Add subtask" in the drawer opens the same dialog as in the project view, for this repo. */}
+      <CreateBeadModal
+        open={create.open && !readOnly}
+        parent={create.parent}
+        onOpenChange={(o) => setCreate((c) => ({ ...c, open: o }))}
       />
     </AppProvider>
   );
