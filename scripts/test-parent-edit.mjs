@@ -40,6 +40,7 @@ try {
   await drawer.getByText("Epic A", { exact: true }).waitFor();
   await drawer.getByRole("button", { name: "Change parent" }).click();
   const input = drawer.getByRole("textbox", { name: "Parent bead" });
+  await input.waitFor({ state: "visible", timeout: 7000 });
   const options = await input.getAttribute("list");
   assert.ok(options);
   assert.equal(await page.locator(`#${options} option[value^="child ·"]`).count(), 0, "cannot parent a bead to itself");

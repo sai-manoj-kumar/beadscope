@@ -615,17 +615,19 @@ function DrawerBody({
                   <Icon name="chevron" size={13} className="-rotate-90 flex-shrink-0 text-[var(--text-3)]" />
                 </button>
                 {!readOnly && (
-                  <IconButton
-                    label="Change parent"
+                  <Button
+                    aria-label="Change parent"
                     title="Change parent"
                     variant="ghost"
+                    size="sm"
+                    icon="pencil"
                     onClick={() => {
                       setParentDraft(`${ep.id} · ${ep.title}`);
-                      setEditingParent((value) => !value);
+                      setEditingParent(true);
                     }}
                   >
-                    <Icon name="pencil" size={14} />
-                  </IconButton>
+                    Change
+                  </Button>
                 )}
               </div>
             ) : (
