@@ -89,10 +89,13 @@ try {
   await page.getByLabel("Filter by repo").selectOption("beta");
   assert.deepEqual(await cardIds(), ["be-mine"]);
 
-  // Opening one goes to its repo with the drawer on it.
+  // Opening one shows its drawer over the page, without leaving it (bui-ih7.17.2).
   await page.getByLabel("Filter by repo").selectOption("");
   await page.locator('[data-keyboard-bead-id="be-mine"]').getByRole("button", { name: "be-mine", exact: true }).click();
-  await page.waitForURL(/\/p\/beta\?bead=be-mine/);
+  await page.locator("[data-bead-drawer]").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/needs-you");
+  await page.keyboard.press("Escape");
+  await page.locator("[data-bead-drawer]").waitFor({ state: "detached" });
 
   // A project's own Needs You view lists the same.
   await page.goto(`${base}/p/alpha?view=needsyou`);
