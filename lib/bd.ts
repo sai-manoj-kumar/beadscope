@@ -215,6 +215,8 @@ export function createBdStore(repoPath: string): BeadsStore {
         if (patch.parent !== undefined) args.push("--parent", patch.parent);
         // `bd update --due ""` clears the due date (verified against bd 1.1.0), so the empty string passes through.
         if (patch.due !== undefined) args.push("--due", patch.due);
+        // `bd update --defer ""` clears the defer date the same way (bd help: "empty to clear").
+        if (patch.defer !== undefined) args.push("--defer", patch.defer);
         // Labels are replace-all. `bd update --set-labels ""` is silently
         // dropped (verified against bd 1.1.0) — an empty value never clears —
         // so the "remove every label" case has to go through --remove-label

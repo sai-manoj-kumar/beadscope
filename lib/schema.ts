@@ -121,6 +121,8 @@ export const beadSchema = z
     closed_at: z.string().optional().nullable(),
     /** Due date and time (`bd create --due`) as an ISO timestamp; absent when none is set. */
     due_at: z.string().optional().nullable(),
+    /** Defer date and time (`bd update --defer`) as an ISO timestamp; absent when none is set. */
+    defer_until: z.string().optional().nullable(),
     close_reason: z.string().optional().nullable(),
     labels: z.array(z.string()).optional().default([]),
     dependencies: z.array(dependencySchema).optional().default([]),
@@ -170,8 +172,8 @@ function isRealDue(v: string): boolean {
 }
 const dueIsoSchema = z
   .string()
-  .regex(DUE_ISO_PATTERN, "Due must be an ISO date and time")
-  .refine(isRealDue, "Due must be a real date and time");
+  .regex(DUE_ISO_PATTERN, "Date must be an ISO date and time")
+  .refine(isRealDue, "Date must be a real date and time");
 
 export const createInputSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
@@ -215,6 +217,11 @@ export const updateInputSchema = z.object({
    * contract as `parent`: absent leaves the due date alone, `""` clears it.
    */
   due: z.union([z.literal(""), dueIsoSchema]).optional(),
+  /**
+   * New defer date and time as an ISO timestamp with a zone (`bd update --defer`). Same absent-vs-empty
+   * contract as `due`: absent leaves it alone, `""` clears it.
+   */
+  defer: z.union([z.literal(""), dueIsoSchema]).optional(),
 });
 export type UpdateInput = z.infer<typeof updateInputSchema>;
 
