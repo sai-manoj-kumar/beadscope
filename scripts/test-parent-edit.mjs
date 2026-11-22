@@ -46,6 +46,16 @@ try {
   assert.ok(options);
   assert.equal(await page.locator(`#${options} option[value^="child ·"]`).count(), 0, "cannot parent a bead to itself");
   assert.equal(await page.locator(`#${options} option[value^="descendant ·"]`).count(), 0, "cannot parent a bead to its descendant");
+  // Editing the prefilled text must not save a half-typed value; Escape cancels.
+  await page.keyboard.press("Backspace");
+  assert.deepEqual(updates, [], "a single backspace does not save");
+  assert.equal(await input.isVisible(), true);
+  await page.keyboard.press("Escape");
+  await input.waitFor({ state: "detached" });
+  assert.deepEqual(updates, [], "Escape cancels without saving");
+  assert.equal(await drawer.isVisible(), true, "Escape closes only the editor, not the drawer");
+  await drawer.getByRole("button", { name: "Change parent" }).click();
+  await input.waitFor({ state: "visible" });
   await input.fill("epic-b · Epic B");
   await page.waitForFunction(() => document.querySelector('[role="dialog"]')?.querySelector('input[aria-label="Parent bead"]') === null);
   assert.deepEqual(updates, [{ parent: "epic-b" }]);

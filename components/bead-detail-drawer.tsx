@@ -652,20 +652,26 @@ function DrawerBody({
                 list={parentListId}
                 value={parentDraft}
                 placeholder="No parent — type to search…"
+                autoFocus
                 onChange={(event) => {
                   const value = event.target.value;
                   setParentDraft(value);
-                  const id = value.split(" · ")[0].trim();
-                  if (value === "" || parentCandidates.some((candidate) => candidate.id === id && value.startsWith(`${id} · `))) {
+                  // Save only on a cleared field or an exact pick from the list, so editing
+                  // the text of the prefilled current parent does not save a half-typed value.
+                  const picked = parentCandidates.find((candidate) => value === `${candidate.id} · ${candidate.title}`);
+                  if (value === "" ? ep : picked && picked.id !== ep?.id) {
                     update.mutate(
-                      { id: bead.id, patch: { parent: value === "" ? "" : id } },
+                      { id: bead.id, patch: { parent: picked ? picked.id : "" } },
                       { onSuccess: () => setEditingParent(false) },
                     );
                   }
                 }}
-                onBlur={() => {
-                  if (parentDraft !== "" && !parentCandidates.some((candidate) => parentDraft.startsWith(`${candidate.id} · `))) {
-                    setParentDraft(ep ? `${ep.id} · ${ep.title}` : "");
+                // Leaving the field or pressing Escape cancels the edit.
+                onBlur={() => setEditingParent(false)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.stopPropagation();
+                    setEditingParent(false);
                   }
                 }}
               />
