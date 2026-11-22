@@ -48,7 +48,7 @@ export function useAllRepoBeads() {
 export function useNeedsYouTotal(): number {
   const { projects, results } = useAllRepoBeads();
   return results.reduce(
-    (sum, q, i) => sum + (q.data && projects[i].id !== "demo" ? countNeedsYou(q.data.beads) : 0),
+    (sum, q, i) => sum + (q.data && projects[i].id !== "demo" ? countNeedsYou(q.data.beads, q.data.meta?.humanActor) : 0),
     0,
   );
 }
