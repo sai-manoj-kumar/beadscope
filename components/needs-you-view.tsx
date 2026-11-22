@@ -26,13 +26,15 @@ import type { Bead } from "@/lib/schema";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 
 /**
- * Mission Control — "Needs You" decision inbox. Surfaces two kinds of items
+ * Mission Control — "Needs You" decision inbox. Surfaces three kinds of items
  * waiting on a person:
  *   1. Beads an agent flagged for a decision (the `human` label, via `bd human`)
  *      — answered inline (comment + clear the flag) or dismissed.
  *   2. Human-approval gates (`bd gate create --type human`) whose blockers are
  *      resolved — approved (closed, which unblocks dependents) from here so they
  *      don't sit invisibly waiting on the board (bead 8qc / gh-6).
+ *   3. Beads assigned to you (the human actor), listed as compact cards below the
+ *      decisions: work to do rather than a question to answer.
  */
 export function NeedsYouView() {
   const { beads, index, loading, meta } = useApp();
@@ -58,9 +60,9 @@ export function NeedsYouView() {
         ) : total === 0 ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">
             🎉 Nothing needs you right now. Agents flag beads here with{" "}
-            <span className="font-mono">bd human</span>, and human-approval gates
+            <span className="font-mono">bd human</span>, human-approval gates
             (<span className="font-mono">bd gate create --type human</span>) show
-            up once their blockers clear.
+            up once their blockers clear, and beads assigned to you are listed too.
           </div>
         ) : (
           <div className="mx-auto flex max-w-3xl flex-col gap-3">

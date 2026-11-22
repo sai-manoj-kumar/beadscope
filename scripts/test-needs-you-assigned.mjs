@@ -103,7 +103,7 @@ try {
   assert.deepEqual((await cardIds()).sort(), ["al-flag", "al-mine", "al-wip"]);
   await page.getByText("3 waiting on you", { exact: true }).waitFor();
   await page.goto(`${base}/p/gamma?view=needsyou`);
-  await page.getByText(/Nothing needs you right now/).waitFor();
+  await page.getByText(/Nothing needs you right now.*beads assigned to you are listed too/).waitFor();
 
   // The badges agree with the pages.
   await page.goto(`${base}/`);
