@@ -1,6 +1,6 @@
-// Bead bui-4e1.28: on the all-repos pages (Needs You, Agent Queue) the phone header shows the back
-// arrow alone, as a 44px target, with no "Projects" or "Repo" text beside it. The names stay for
-// screen readers, and desktop keeps the visible text. Every request is intercepted.
+// Beads bui-4e1.28, bui-ih7.17.1: on the all-repos pages (Needs You, Agent Queue) the header shows the
+// back arrow alone, with no "Projects" text beside it on any width. On phones it is a 44px target and
+// "Repo" is hidden too. The names stay for screen readers. Every request is intercepted.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { pageAudit } from "./mobile-audit.mjs";
@@ -57,11 +57,19 @@ try {
       assert.deepEqual(a.smallTargets, [], `${where} targets under 44px: ${a.smallTargets.slice(0, 4)}`);
       await ctx.close();
     }
-    // Desktop keeps the words.
+    // Desktop shows the arrow alone too (bui-ih7.17.1); the link keeps its name for screen readers.
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
     const page = await open(ctx, path);
-    const text = page.getByRole("link", { name: "Projects" }).getByText("Projects", { exact: true });
-    assert.ok((await text.boundingBox()).width > 20, `${path} desktop shows "Projects" beside the arrow`);
+    const back = page.getByRole("link", { name: "Projects" });
+    assert.equal(await back.getAttribute("href"), "/", `${path} desktop back link goes to the project list`);
+    const shown = await page.evaluate(() => {
+      const out = [];
+      for (const el of document.querySelectorAll("span")) {
+        if (el.textContent.trim() === "Projects" && el.getBoundingClientRect().width > 2) out.push("Projects");
+      }
+      return out;
+    });
+    assert.deepEqual(shown, [], `${path} desktop shows no "Projects" text beside the arrow`);
     await ctx.close();
   }
 } finally {

@@ -76,8 +76,8 @@ export function AllNeedsYouView() {
               className="tap-target inline-flex items-center justify-center gap-1.5 text-label text-[var(--text-3)] hover:text-[var(--text)] max-md:-ml-2 max-md:px-2"
             >
               <ArrowLeft size={14} aria-hidden="true" className="max-md:size-5" />
-              {/* Phones show the arrow alone, as a 44px target; the name stays for screen readers. */}
-              <span className="max-md:sr-only">Projects</span>
+              {/* The arrow stands alone (a 44px target on phones); the name stays for screen readers. */}
+              <span className="sr-only">Projects</span>
             </Link>
             <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
               <span className="max-md:sr-only">Repo</span>
