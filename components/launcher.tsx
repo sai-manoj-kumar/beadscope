@@ -9,7 +9,7 @@ import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
 import { NeedsYouBadge } from "@/components/needs-you-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { IconButton } from "@/components/controls";
+import { IconButton, LinkButton } from "@/components/controls";
 import { useProjects } from "@/hooks/use-projects";
 import { FolderBrowserModal } from "@/components/folder-browser-modal";
 import { api, type ProjectInfo } from "@/lib/api-client";
@@ -79,6 +79,8 @@ export function Launcher() {
           </div>
         )}
 
+        {data?.demoHidden && <ShowDemoRow />}
+
         <div className="mt-[28px] flex items-center justify-between border-t border-border pt-[14px]">
           <span className="text-label text-[var(--text-3)]">Colour theme</span>
           <ThemeToggle size="lg" />
@@ -86,6 +88,27 @@ export function Launcher() {
       </div>
 
       <FolderBrowserModal open={addOpen} onOpenChange={setAddOpen} />
+    </div>
+  );
+}
+
+/** The way back once Demo is hidden: with no project left to open, Settings is out of reach. */
+function ShowDemoRow() {
+  const qc = useQueryClient();
+  const show = useMutation({
+    mutationFn: () => api.saveConfig({ hideDemo: false }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["doctor"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <div className="mt-[14px] flex items-center justify-between gap-3 text-label text-[var(--text-3)]">
+      <span>The Demo project is hidden.</span>
+      <LinkButton tone="brand" underline disabled={show.isPending} onClick={() => show.mutate()}>
+        Show Demo project
+      </LinkButton>
     </div>
   );
 }
@@ -120,7 +143,7 @@ function DemoCard() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["doctor"] });
-      toast.success("Demo project hidden. Turn it back on in Settings.");
+      toast.success("Demo project hidden. Show it again from this page or in Settings.");
     },
     onError: (e) => toast.error((e as Error).message),
   });

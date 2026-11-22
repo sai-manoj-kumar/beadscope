@@ -53,7 +53,24 @@ try {
   await page.reload(); // closes the menu
   await page.getByRole("heading", { level: 1 }).first().waitFor();
 
+  // The command palette omits Demo too.
+  await page.keyboard.press("Control+k");
+  await page.getByRole("dialog").waitFor();
+  await page.getByText("Switch project…", { exact: false }).first().click();
+  await page.getByText("Switch project", { exact: true }).last().waitFor();
+  assert.ok(!/Demo/.test(await page.getByRole("dialog").innerText()), "palette omits Demo");
+  await page.reload();
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
+
+  // With no project left to open, the launcher itself offers the way back.
+  await page.goto(base);
+  await page.getByRole("button", { name: "Show Demo project", exact: true }).click();
+  await page.getByRole("button", { name: /^Demo/ }).first().waitFor();
+  assert.ok((await projectIds()).includes("demo"), "Demo is listed again from the launcher");
+  await setHidden(true);
+
   // Bring it back from Settings.
+  await page.goto(`${base}/p/demo`);
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   const toggle = page.getByRole("switch", { name: "Show the Demo project" });
   await toggle.waitFor();

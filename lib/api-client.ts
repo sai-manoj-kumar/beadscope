@@ -86,6 +86,8 @@ export interface ProjectInfo {
 }
 export interface ProjectsResponse {
   projects: ProjectInfo[];
+  /** The built-in Demo project is left out of `projects` because the user hid it. */
+  demoHidden?: boolean;
 }
 
 export interface DoctorResponse {

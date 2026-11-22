@@ -20,8 +20,9 @@ function annotate(p: ProjectEntry | DemoProject) {
 export async function GET() {
   // The Demo project is left out once the user hides it (launcher or Settings), so every screen
   // that lists projects, and the all-repos pages built on that list, drop it together.
-  const projects = [...(getConfig().hideDemo ? [] : [DEMO_PROJECT]), ...listProjects()].map(annotate);
-  return ok({ projects });
+  const demoHidden = getConfig().hideDemo;
+  const projects = [...(demoHidden ? [] : [DEMO_PROJECT]), ...listProjects()].map(annotate);
+  return ok({ projects, demoHidden });
 }
 
 const addSchema = z.object({ path: z.string().min(1) });
