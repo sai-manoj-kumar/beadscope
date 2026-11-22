@@ -35,6 +35,8 @@ const data = {
     // Needs You: closed in the window, for you / flagged / a gate. Newest first.
     closed("al-mine", "Alpha mine done", 5, { assignee: YOU }),
     closed("al-flag", "Alpha flagged done", 30, { labels: ["human"] }),
+    // Just inside the 3-day window (72h); al-old below is just outside it.
+    closed("al-edge", "Alpha mine done almost 3 days ago", 71, { assignee: YOU }),
     closed("al-gate", "Alpha approved gate", 2, { issue_type: "gate", await_type: "human" }),
     // Closed too long ago (just outside 3 days), archived, or not for you / an agent.
     closed("al-old", "Alpha mine done long ago", 80, { assignee: YOU }),
@@ -102,9 +104,9 @@ try {
   assert.equal(await toggle().getAttribute("aria-pressed"), "true");
   assert.equal(new URL(page.url()).searchParams.get("done"), "1", "the URL carries the toggle");
   // Newest first; the old, archived, someone else's and unassigned closed beads stay out.
-  await expectDone(["al-gate", "al-mine", "al-flag"]);
-  assert.deepEqual(await cardIds(), ["al-open", "al-gate", "al-mine", "al-flag"], "waiting cards stay above the completed ones");
-  await page.getByText("1 waiting on you · 3 completed · all repos").waitFor();
+  await expectDone(["al-gate", "al-mine", "al-flag", "al-edge"]);
+  assert.deepEqual(await cardIds(), ["al-open", "al-gate", "al-mine", "al-flag", "al-edge"], "waiting cards stay above the completed ones");
+  await page.getByText("1 waiting on you · 4 completed · all repos").waitFor();
   await page.getByRole("heading", { name: "Completed in the last 3 days" }).waitFor();
   await page.locator('[data-keyboard-bead-id="al-mine"]').getByText(/^closed 5h ago$/).waitFor();
   // Counts in the repo filter stay the waiting counts.

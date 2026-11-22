@@ -189,7 +189,8 @@ export function closedAtMs(b: Pick<Bead, "closed_at" | "updated_at" | "status">)
 /** True for a closed bead that was closed in the last {@link RECENTLY_COMPLETED_DAYS} days (archived ones are put away). */
 export function completedRecently(b: Bead, now: number = Date.now()): boolean {
   const t = closedAtMs(b);
-  return t !== null && t <= now && now - t <= RECENTLY_COMPLETED_MS && !(b.labels ?? []).includes("archived");
+  // No upper bound on `t`: a bead closed after the page's cached `now` was read (it ticks once a minute) still counts.
+  return t !== null && now - t <= RECENTLY_COMPLETED_MS && !(b.labels ?? []).includes("archived");
 }
 
 /**
