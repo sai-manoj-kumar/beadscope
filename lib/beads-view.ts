@@ -175,6 +175,40 @@ export function assignedToYou(b: Bead, actor: string | undefined): boolean {
   return !isHumanGate(b) && !needsHuman(b);
 }
 
+/** How far back the queue pages look for "recently completed" beads. */
+export const RECENTLY_COMPLETED_DAYS = 3;
+const RECENTLY_COMPLETED_MS = RECENTLY_COMPLETED_DAYS * 86_400_000;
+
+/** When a closed bead was closed: its `closed_at`, else its last update. null when neither is readable. */
+export function closedAtMs(b: Pick<Bead, "closed_at" | "updated_at" | "status">): number | null {
+  if (b.status !== "closed") return null;
+  const t = Date.parse(b.closed_at ?? b.updated_at ?? "");
+  return Number.isFinite(t) ? t : null;
+}
+
+/** True for a closed bead that was closed in the last {@link RECENTLY_COMPLETED_DAYS} days (archived ones are put away). */
+export function completedRecently(b: Bead, now: number = Date.now()): boolean {
+  const t = closedAtMs(b);
+  // No upper bound on `t`: a bead closed after the page's cached `now` was read (it ticks once a minute) still counts.
+  return t !== null && now - t <= RECENTLY_COMPLETED_MS && !(b.labels ?? []).includes("archived");
+}
+
+/**
+ * A recently completed bead of the kind the Needs You pages list while it is open: an approved human
+ * gate, a bead an agent flagged with `bd human` (the label stays after it is closed), or one assigned
+ * to the current user.
+ */
+export function completedForYou(b: Bead, actor: string | undefined, now: number = Date.now()): boolean {
+  if (!completedRecently(b, now)) return false;
+  const you = actor?.trim();
+  return isHumanGate(b) || (b.labels ?? []).includes("human") || (!!you && b.assignee?.trim() === you);
+}
+
+/** Newest first. */
+export function byClosedAtDesc(a: Bead, b: Bead): number {
+  return (closedAtMs(b) ?? 0) - (closedAtMs(a) ?? 0) || a.id.localeCompare(b.id);
+}
+
 /**
  * How many beads are waiting on a human: agent-flagged beads (`bd human`), ready human gates, and,
  * when the current user is known, the other live beads assigned to them.

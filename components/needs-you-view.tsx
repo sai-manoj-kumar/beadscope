@@ -241,14 +241,17 @@ export function NeedsYouCard({ bead }: { bead: Bead }) {
  * the decisions (flags and gates) on the Needs You pages, so work that only needs doing is listed
  * without being mistaken for a question.
  */
-export function AssignedCard({ bead }: { bead: Bead }) {
+export function AssignedCard({ bead, completed = false }: { bead: Bead; completed?: boolean }) {
   const { openDetail, selectedBeadId, selectBead } = useApp();
+  // A completed card says when it was closed rather than when it was last touched.
+  const when = completed ? (bead.closed_at ?? bead.updated_at) : bead.updated_at;
   return (
     <div
       role="button"
       tabIndex={0}
       data-keyboard-bead-id={bead.id}
       data-assigned-card
+      data-completed-card={completed ? "" : undefined}
       aria-current={selectedBeadId === bead.id ? "true" : undefined}
       onFocus={() => selectBead(bead.id)}
       className={`rounded-[12px] border bg-[var(--surface)] p-4 focus-visible:outline-none ${
@@ -265,8 +268,9 @@ export function AssignedCard({ bead }: { bead: Bead }) {
         <StatusChip status={bead.status} />
         <PriorityChip p={bead.priority} />
         <span className="flex-1" />
-        <span title={fmtDateTime(bead.updated_at)} className="text-meta text-[var(--text-3)]">
-          {relTime(bead.updated_at)}
+        <span title={fmtDateTime(when)} className="text-meta text-[var(--text-3)]">
+          {completed ? "closed " : ""}
+          {relTime(when)}
         </span>
       </div>
       <LinkButton tone="text" className="block text-section font-semibold leading-snug" onClick={() => openDetail(bead.id)}>
