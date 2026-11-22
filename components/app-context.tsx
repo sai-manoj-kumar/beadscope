@@ -24,8 +24,8 @@ interface AppContextValue {
   openDetail: (id: string, action?: DetailAction) => void;
   /** Open a bead, PUSHING onto the trail so back returns here. Drawer-internal only. */
   pushDetail: (id: string) => void;
-  /** Open the create dialog, optionally presetting the parent and/or the type. */
-  openCreate: (opts?: { parent?: string; type?: BeadType }) => void;
+  /** Open the create dialog, optionally presetting the parent and/or the type, or starting from a copy of bead `cloneOf`. */
+  openCreate: (opts?: { parent?: string; type?: BeadType; cloneOf?: string }) => void;
   /** Jump to the Epics screen and focus a specific epic (bead 55b). */
   openEpic: (epicId: string) => void;
 }

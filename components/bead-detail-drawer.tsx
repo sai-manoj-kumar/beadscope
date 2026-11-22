@@ -450,6 +450,11 @@ function DrawerBody({
           </IconBtn>
         )}
         {!readOnly && (
+          <IconBtn title="Clone bead" onClick={() => openCreate({ cloneOf: bead.id })}>
+            <Icon name="copy" size={15} />
+          </IconBtn>
+        )}
+        {!readOnly && (
           <IconBtn title="Archive (close + label)" onClick={() => archive.mutate(bead.id)}>
             <Icon name="archive" size={15} />
           </IconBtn>

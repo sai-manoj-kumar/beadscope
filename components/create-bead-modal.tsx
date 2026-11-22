@@ -19,6 +19,7 @@ import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { DescriptionContent, hasImageRef } from "@/components/description-content";
 import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
+import { cloneDraft } from "@/lib/clone-bead";
 import { inputValueToDue } from "@/lib/due-input";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
 import { BEAD_TYPES, type BeadType } from "@/lib/schema";
@@ -43,12 +44,15 @@ export function CreateBeadModal({
   open,
   parent,
   type,
+  cloneOf,
   onOpenChange,
 }: {
   open: boolean;
   parent: string;
   /** Preselected issue type, e.g. "epic" from the Epics screen. A default, not a lock. */
   type?: BeadType;
+  /** Id of a bead to start from a copy of (the form is prefilled and every field stays editable). */
+  cloneOf?: string;
   onOpenChange: (o: boolean) => void;
 }) {
   // ~50% wider than the old 540px default; drag the right edge to resize (persisted).
@@ -92,7 +96,7 @@ export function CreateBeadModal({
         {/* Conditionally mounted, so the form remounts on every open and the
             preset below is picked up fresh — no useEffect sync needed. */}
         {open && (
-          <CreateForm parent={parent} type={type} dirtyRef={dirtyRef} onClose={() => onOpenChange(false)} />
+          <CreateForm parent={parent} type={type} cloneOf={cloneOf} dirtyRef={dirtyRef} onClose={() => onOpenChange(false)} />
         )}
       </DialogContent>
     </Dialog>
@@ -102,11 +106,13 @@ export function CreateBeadModal({
 function CreateForm({
   parent,
   type: presetType,
+  cloneOf,
   dirtyRef,
   onClose,
 }: {
   parent: string;
   type?: BeadType;
+  cloneOf?: string;
   dirtyRef: React.RefObject<boolean>;
   onClose: () => void;
 }) {
@@ -116,34 +122,43 @@ function CreateForm({
   const actor = meta?.humanActor ?? "you";
   const isDemo = meta?.kind === "demo";
 
-  const [form, setForm] = React.useState<FormState>({
-    type: presetType ?? "task",
-    priority: 2,
-    title: "",
-    description: "",
-    assignee: "",
-    parent,
-    labels: "",
-    due: "",
-    backlog: false,
+  // A clone starts from the source bead's copyable fields (lib/clone-bead.ts); the form is
+  // remounted on every open, so this is read once. If the source has vanished, it is a plain create.
+  const source = cloneOf ? beads.find((b) => b.id === cloneOf) : undefined;
+  const [form, setForm] = React.useState<FormState>(() => {
+    if (source) return cloneDraft(source);
+    return {
+      type: presetType ?? "task",
+      priority: 2,
+      title: "",
+      description: "",
+      assignee: "",
+      parent,
+      labels: "",
+      due: "",
+      backlog: false,
+    };
   });
 
   // Display text for the parent picker. Seeded from an incoming preset (e.g.
   // "Add subtask" / "Add child to this epic") so the field shows what it holds.
   const parentListId = `parents-${React.useId()}`;
   const [parentDraft, setParentDraft] = React.useState(() => {
-    if (!parent) return "";
-    const b = beads.find((x) => x.id === parent);
-    return b ? `${b.id} · ${b.title}` : parent;
+    const initial = form.parent;
+    if (!initial) return "";
+    const b = beads.find((x) => x.id === initial);
+    return b ? `${b.id} · ${b.title}` : initial;
   });
 
   // Resolve type-preset (gh-16) and parent into ONE title rather than nested
   // ternaries, so the two features compose: "New epic", "New child bug", etc.
-  const dialogTitle = presetType
-    ? `New ${form.parent ? "child " : ""}${typeLabel(presetType).toLowerCase()}`
-    : form.parent
-      ? "New child bead"
-      : "New bead";
+  const dialogTitle = source
+    ? `Clone ${source.id}`
+    : presetType
+      ? `New ${form.parent ? "child " : ""}${typeLabel(presetType).toLowerCase()}`
+      : form.parent
+        ? "New child bead"
+        : "New bead";
 
   // A datetime-local input reads "" until every part is filled, so a half-filled date looks empty in
   // `form.due`. `validity.badInput` is the browser saying there is something in it. A complete value
@@ -276,6 +291,12 @@ function CreateForm({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto p-5">
+        {source && (
+          <p className="text-label text-[var(--text-2)]">
+            Starts as a copy of <span className="font-mono">{source.id}</span>. Change anything below. Comments,
+            activity and dependencies are not copied.
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-[6px]">
             <span className={labelClass}>Type</span>

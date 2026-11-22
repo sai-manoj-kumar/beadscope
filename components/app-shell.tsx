@@ -86,6 +86,7 @@ export function AppShell({ projectId }: { projectId: string }) {
     open: boolean;
     parent: string;
     type?: BeadType;
+    cloneOf?: string;
   }>({ open: false, parent: "" });
 
   const { data, isLoading, error } = useBeads(projectId);
@@ -178,9 +179,9 @@ export function AppShell({ projectId }: { projectId: string }) {
   // Options object rather than positional args so future presets (assignee,
   // priority) can be added without churning every call site again.
   const openCreate = React.useCallback(
-    (opts: { parent?: string; type?: BeadType } = {}) => {
+    (opts: { parent?: string; type?: BeadType; cloneOf?: string } = {}) => {
       if (readOnly) return;
-      setCreate({ open: true, parent: opts.parent ?? "", type: opts.type });
+      setCreate({ open: true, parent: opts.parent ?? "", type: opts.type, cloneOf: opts.cloneOf });
     },
     [readOnly],
   );
@@ -348,6 +349,7 @@ export function AppShell({ projectId }: { projectId: string }) {
         open={create.open && !readOnly}
         parent={create.parent}
         type={create.type}
+        cloneOf={create.cloneOf}
         onOpenChange={(o) => setCreate((c) => ({ ...c, open: o }))}
       />
 
