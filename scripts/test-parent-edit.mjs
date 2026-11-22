@@ -39,7 +39,8 @@ try {
   const drawer = page.getByRole("dialog");
   await drawer.getByText("Epic A", { exact: true }).waitFor();
   await drawer.getByRole("button", { name: "Change parent" }).click();
-  const input = drawer.getByRole("textbox", { name: "Parent bead" });
+  // A text input with a `list` attribute has the combobox role, not textbox.
+  const input = drawer.getByRole("combobox", { name: "Parent bead" });
   await input.waitFor({ state: "visible", timeout: 7000 });
   const options = await input.getAttribute("list");
   assert.ok(options);
@@ -50,7 +51,7 @@ try {
   assert.deepEqual(updates, [{ parent: "epic-b" }]);
   await drawer.getByText("Epic B", { exact: true }).waitFor();
   await drawer.getByRole("button", { name: "Change parent" }).click();
-  await drawer.getByRole("textbox", { name: "Parent bead" }).fill("");
+  await drawer.getByRole("combobox", { name: "Parent bead" }).fill("");
   await page.waitForFunction(() => document.querySelector('[role="dialog"]')?.querySelector('input[aria-label="Parent bead"]') === null);
   assert.deepEqual(updates, [{ parent: "epic-b" }, { parent: "" }], "clearing the field detaches the bead");
   assert.deepEqual(errors, []);
