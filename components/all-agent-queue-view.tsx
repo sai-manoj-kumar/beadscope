@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { AgentIcon } from "@/components/agent-icon";
 import { PriorityChip } from "@/components/board/bead-card";
 import { StatusChip } from "@/components/chip";
+import { CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
 import { SelectField } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
@@ -14,12 +15,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { beadsKey } from "@/hooks/use-beads";
 import { useDefaultPage } from "@/hooks/use-default-view";
 import { projectHref } from "@/lib/default-page";
+import { useNow } from "@/hooks/use-now";
 import { useProjects } from "@/hooks/use-projects";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { api, type BeadsResponse, type ProjectInfo } from "@/lib/api-client";
 import { agentByName, type AgentIdentity } from "@/lib/agents";
-import { blockingDeps, isBlocked, makeIndex, relTime } from "@/lib/beads-view";
+import { blockingDeps, byClosedAtDesc, completedRecently, isBlocked, makeIndex, RECENTLY_COMPLETED_DAYS, relTime } from "@/lib/beads-view";
 import type { Bead } from "@/lib/schema";
 
 /** `?repo=` / `?agent=` value meaning "everything" (the param is simply absent). */
@@ -79,6 +81,15 @@ export function AllAgentQueueView() {
       else params.set(key, next);
     });
 
+  // The toggle at the top: also list what agents completed in the last few days (off by default).
+  const showDone = searchParams.get(DONE_PARAM) === "1";
+  const setShowDone = (next: boolean) =>
+    updateUrl((params) => {
+      if (next) params.set(DONE_PARAM, "1");
+      else params.delete(DONE_PARAM);
+    });
+  const now = useNow();
+
   const sections = projects.map((project, i) => {
     const query = results[i];
     const beads = query.data?.beads ?? [];
@@ -95,13 +106,25 @@ export function AllAgentQueueView() {
           a.bead.priority - b.bead.priority ||
           a.bead.id.localeCompare(b.bead.id),
       );
-    return { project, query, queued, items };
+    // Closed in the last few days by (assigned to) an agent, newest first; empty while the toggle is off.
+    const done: Bead[] = showDone
+      ? beads
+          .filter(
+            (b) =>
+              completedRecently(b, now) &&
+              agentByName(identities, b.assignee) &&
+              (!agent || agentByName([agent], b.assignee)?.id === agent.id),
+          )
+          .sort(byClosedAtDesc)
+      : [];
+    return { project, query, queued, items, done };
   });
   const shown = sections.filter(({ project }) => repo === ALL || project.id === repo);
   const settled = !loadingProjects && shown.every(({ query }) => !query.isLoading);
   const failed = shown.filter(({ query }) => query.isError);
   const total = shown.reduce((sum, s) => sum + s.items.length, 0);
-  const withItems = shown.filter((s) => s.items.length > 0);
+  const doneTotal = shown.reduce((sum, s) => sum + s.done.length, 0);
+  const withItems = shown.filter((s) => s.items.length + s.done.length > 0);
   // Counts in the filter labels: per repo for the chosen agent, per agent for the chosen repo.
   const repoCount = (id: string) => sections.find((s) => s.project.id === id)?.items.length ?? 0;
   const agentCount = (a: AgentIdentity) =>
@@ -116,9 +139,9 @@ export function AllAgentQueueView() {
         subtitle={
           !settled
             ? "Loading…"
-            : total === 0
-              ? "nothing queued"
-              : `${total} queued for agents · ${repo === ALL ? "all repos" : "1 repo"}`
+            : (total === 0 ? "nothing queued" : `${total} queued for agents`) +
+              (showDone ? ` · ${doneTotal} completed` : "") +
+              (total === 0 ? "" : ` · ${repo === ALL ? "all repos" : "1 repo"}`)
         }
         controls={
           <>
@@ -166,6 +189,7 @@ export function AllAgentQueueView() {
                 ))}
               </SelectField>
             </label>
+            <CompletedToggle on={showDone} onChange={setShowDone} />
           </>
         }
         actions={<ThemeToggle />}
@@ -184,7 +208,7 @@ export function AllAgentQueueView() {
                 Couldn’t read {project.name}, so anything queued there is not listed.
               </p>
             ))}
-            {total === 0 ? (
+            {total === 0 && doneTotal === 0 ? (
               <div className="p-10 text-center text-body text-[var(--text-3)]">
                 {failed.length > 0 ? "Nothing queued in the repos that could be read" : "Nothing is queued for an agent"}
                 {failed.length > 0 ? "" : repo === ALL ? " in any repo" : " in this repo"}
@@ -192,11 +216,12 @@ export function AllAgentQueueView() {
                 shows up here.
               </div>
             ) : (
-              withItems.map(({ project, items }) => (
+              withItems.map(({ project, items, done }) => (
                 <RepoSection
                   key={project.id}
                   project={project}
                   items={items}
+                  done={done}
                   agents={identities}
                   showHeading={repo === ALL}
                   onOpen={drawer.openBead}
@@ -215,12 +240,15 @@ export function AllAgentQueueView() {
 function RepoSection({
   project,
   items,
+  done,
   agents,
   showHeading,
   onOpen,
 }: {
   project: ProjectInfo;
   items: Item[];
+  /** Beads completed in the last few days; empty unless the page's toggle is on. */
+  done: Bead[];
   agents: AgentIdentity[];
   showHeading: boolean;
   onOpen: (projectId: string, id: string) => void;
@@ -233,12 +261,30 @@ function RepoSection({
           <Link href={projectHref(project.id, page)} className="hover:underline">
             {project.name}
           </Link>
-          <span className="text-meta font-normal text-[var(--text-3)]">{items.length} queued</span>
+          <span className="text-meta font-normal text-[var(--text-3)]">
+            {items.length} queued
+            {done.length > 0 ? ` · ${done.length} completed` : ""}
+          </span>
         </h2>
       )}
       {items.map((item) => (
         <QueueCard key={item.bead.id} projectId={project.id} item={item} agents={agents} onOpen={onOpen} />
       ))}
+      {done.length > 0 && (
+        <>
+          <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+          {done.map((bead) => (
+            <QueueCard
+              key={bead.id}
+              projectId={project.id}
+              item={{ bead, blocked: false, blockers: [] }}
+              agents={agents}
+              onOpen={onOpen}
+              completed
+            />
+          ))}
+        </>
+      )}
     </section>
   );
 }
@@ -248,11 +294,14 @@ function QueueCard({
   item,
   agents,
   onOpen,
+  completed = false,
 }: {
   projectId: string;
   item: Item;
   agents: AgentIdentity[];
   onOpen: (projectId: string, id: string) => void;
+  /** A bead closed in the last few days: says when it was closed rather than when it was last touched. */
+  completed?: boolean;
 }) {
   const { bead, blocked, blockers } = item;
   const agent = agentByName(agents, bead.assignee);
@@ -264,6 +313,7 @@ function QueueCard({
       aria-label={bead.title}
       data-keyboard-bead-id={bead.id}
       data-agent={agent?.id}
+      data-completed-card={completed ? "" : undefined}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter" || event.key === " ") {
@@ -288,7 +338,10 @@ function QueueCard({
             {agent.name}
           </span>
         )}
-        <span>{relTime(bead.updated_at)}</span>
+        <span>
+          {completed ? "closed " : ""}
+          {relTime(completed ? (bead.closed_at ?? bead.updated_at) : bead.updated_at)}
+        </span>
         {blockers.length > 0 && (
           <span className="truncate font-mono" title={`blocked by ${blockers.join(", ")}`}>
             ⛔ {blockers.join(", ")}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AppProvider } from "@/components/app-context";
 import { RepoBeadDrawer, useRepoDrawer } from "@/components/repo-bead-drawer";
+import { CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
 import { SelectField } from "@/components/controls";
 import { AssignedCard, GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
@@ -14,9 +15,20 @@ import { useBeadsStreams } from "@/hooks/use-beads-stream";
 import { useDefaultPage } from "@/hooks/use-default-view";
 import { projectHref } from "@/lib/default-page";
 import { useUrlState } from "@/hooks/use-url-state";
+import { useNow } from "@/hooks/use-now";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import type { BeadsResponse, ProjectInfo } from "@/lib/api-client";
-import { assignedToYou, countNeedsYou, makeIndex, needsHuman, readyHumanGate } from "@/lib/beads-view";
+import type { Bead } from "@/lib/schema";
+import {
+  assignedToYou,
+  byClosedAtDesc,
+  completedForYou,
+  countNeedsYou,
+  makeIndex,
+  needsHuman,
+  readyHumanGate,
+  RECENTLY_COMPLETED_DAYS,
+} from "@/lib/beads-view";
 
 /** `?repo=` value meaning "every repo" (the param is simply absent). */
 const ALL = "";
@@ -43,6 +55,14 @@ export function AllNeedsYouView() {
     updateUrl((params) => {
       if (next === ALL) params.delete("repo");
       else params.set("repo", next);
+    });
+
+  // The toggle at the top: also list what was completed in the last few days (off by default).
+  const showDone = searchParams.get(DONE_PARAM) === "1";
+  const setShowDone = (next: boolean) =>
+    updateUrl((params) => {
+      if (next) params.set(DONE_PARAM, "1");
+      else params.delete(DONE_PARAM);
     });
 
   const sections = projects.map((project, i) => ({ project, query: results[i] }));
@@ -78,7 +98,18 @@ export function AllNeedsYouView() {
     counts.set(project.id, countNeedsYou(query.data?.beads ?? [], query.data?.meta?.humanActor));
   }
   const total = shown.reduce((sum, { project }) => sum + (counts.get(project.id) ?? 0), 0);
-  const withItems = shown.filter(({ project }) => (counts.get(project.id) ?? 0) > 0);
+  // Recently completed beads, per repo, newest first; empty while the toggle is off.
+  const now = useNow();
+  const completed = new Map<string, Bead[]>();
+  if (showDone) {
+    for (const { project, query } of sections) {
+      const actor = query.data?.meta?.humanActor;
+      completed.set(project.id, (query.data?.beads ?? []).filter((b) => completedForYou(b, actor, now)).sort(byClosedAtDesc));
+    }
+  }
+  const doneCount = (id: string) => completed.get(id)?.length ?? 0;
+  const doneTotal = shown.reduce((sum, { project }) => sum + doneCount(project.id), 0);
+  const withItems = shown.filter(({ project }) => (counts.get(project.id) ?? 0) + doneCount(project.id) > 0);
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background text-foreground text-body">
@@ -87,7 +118,11 @@ export function AllNeedsYouView() {
         title="Needs You"
         standalone
         subtitle={
-          !settled ? "Loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you · ${repo === ALL ? "all repos" : "1 repo"}`
+          !settled
+            ? "Loading…"
+            : (total === 0 ? "nothing waiting" : `${total} waiting on you`) +
+              (showDone ? ` · ${doneTotal} completed` : "") +
+              (total === 0 ? "" : ` · ${repo === ALL ? "all repos" : "1 repo"}`)
         }
         controls={
           <>
@@ -117,6 +152,7 @@ export function AllNeedsYouView() {
                 ))}
               </SelectField>
             </label>
+            <CompletedToggle on={showDone} onChange={setShowDone} />
           </>
         }
         actions={<ThemeToggle />}
@@ -135,7 +171,7 @@ export function AllNeedsYouView() {
                 Couldn’t read {project.name}, so anything waiting there is not listed.
               </p>
             ))}
-            {total === 0 ? (
+            {total === 0 && doneTotal === 0 ? (
               <div className="p-10 text-center text-body text-[var(--text-3)]">
                 {failed.length > 0 ? "Nothing waiting in the repos that could be read" : "🎉 Nothing needs you right now"}
                 {failed.length > 0 ? "" : repo === ALL ? " in any repo" : " in this repo"}. Agents flag beads here with{" "}
@@ -149,6 +185,7 @@ export function AllNeedsYouView() {
                   key={project.id}
                   project={project}
                   data={query.data}
+                  completed={completed.get(project.id) ?? []}
                   readOnly={readOnly}
                   showHeading={repo === ALL}
                   selectedBeadId={selected?.projectId === project.id ? selected.beadId : null}
@@ -169,6 +206,7 @@ export function AllNeedsYouView() {
 function RepoSection({
   project,
   data,
+  completed,
   readOnly,
   showHeading,
   selectedBeadId,
@@ -177,6 +215,8 @@ function RepoSection({
 }: {
   project: ProjectInfo;
   data: BeadsResponse | undefined;
+  /** Beads completed in the last few days; empty unless the page's toggle is on. */
+  completed: Bead[];
   readOnly: boolean;
   showHeading: boolean;
   selectedBeadId: string | null;
@@ -222,7 +262,10 @@ function RepoSection({
             <Link href={projectHref(projectId, page)} className="hover:underline">
               {project.name}
             </Link>
-            <span className="text-meta font-normal text-[var(--text-3)]">{gates.length + inbox.length + mine.length} waiting</span>
+            <span className="text-meta font-normal text-[var(--text-3)]">
+              {gates.length + inbox.length + mine.length} waiting
+              {completed.length > 0 ? ` · ${completed.length} completed` : ""}
+            </span>
           </h2>
         )}
         {gates.map((g) => (
@@ -234,6 +277,14 @@ function RepoSection({
         {mine.map((b) => (
           <AssignedCard key={b.id} bead={b} />
         ))}
+        {completed.length > 0 && (
+          <>
+            <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+            {completed.map((b) => (
+              <AssignedCard key={b.id} bead={b} completed />
+            ))}
+          </>
+        )}
       </section>
     </AppProvider>
   );
