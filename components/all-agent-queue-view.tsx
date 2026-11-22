@@ -153,28 +153,30 @@ export function AllAgentQueueView() {
               {/* The arrow stands alone (a 44px target on phones); the name stays for screen readers. */}
               <span className="sr-only">Projects</span>
             </Link>
-            <label className="flex min-w-0 items-center gap-2 text-label text-[var(--text-3)]">
-              <span className="max-md:sr-only">Repo</span>
-              <SelectField
-                size="sm"
-                className="min-w-0 max-w-full"
-                aria-label="Filter by repo"
-                value={repo}
-                onChange={(e) => setParam("repo", e.target.value)}
-              >
-                <option value={ALL}>All repos</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                    {repoCount(p.id) > 0 ? ` (${repoCount(p.id)})` : ""}
-                  </option>
-                ))}
-              </SelectField>
-            </label>
-            {/* No visible label: the first option ("All agents") says what the dropdown is. */}
+          </>
+        }
+        center={
+          // Both dropdowns sit together, the pair centred in the bar. On phones they share the row, each taking half; on desktop their width is capped so a long repo name cannot squeeze the Completed and theme buttons at the right.
+          <div className="flex min-w-0 items-center justify-center gap-2 max-md:w-full md:gap-3">
+            {/* No visible labels: the first options ("All repos", "All agents") say what the dropdowns are, and a label would push the pair off the centre. */}
             <SelectField
               size="sm"
-              className="min-w-0 max-w-full"
+              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0 md:max-w-[10.5rem] lg:max-w-[16rem]"
+              aria-label="Filter by repo"
+              value={repo}
+              onChange={(e) => setParam("repo", e.target.value)}
+            >
+              <option value={ALL}>All repos</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {repoCount(p.id) > 0 ? ` (${repoCount(p.id)})` : ""}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              size="sm"
+              className="min-w-0 max-w-full max-md:flex-1 max-md:basis-0 md:max-w-[10.5rem] lg:max-w-[16rem]"
               aria-label="Filter by agent"
               value={agent?.id ?? ALL}
               onChange={(e) => setParam("agent", e.target.value)}
@@ -187,9 +189,9 @@ export function AllAgentQueueView() {
                 </option>
               ))}
             </SelectField>
-            <CompletedToggle on={showDone} onChange={setShowDone} />
-          </>
+          </div>
         }
+        extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
         actions={<ThemeToggle />}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">

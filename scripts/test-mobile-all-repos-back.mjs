@@ -41,7 +41,8 @@ try {
       assert.ok(box.width >= 44 && box.height >= 44, `${where} back link is 44px, got ${box.width}x${box.height}`);
       // No visible text beside the arrow: the link is only as wide as a tap target.
       assert.ok(box.width < 60, `${where} back link shows the arrow alone, got width ${box.width}`);
-      // Nothing visible reads "Projects" or "Repo" (screen-reader-only text is clipped to 1px).
+      // Nothing visible reads "Projects" or "Repo" (screen-reader-only text is clipped to 1px). The Repo
+      // label is gone on every width since bui-ih7.17.6; this guards it from coming back.
       const visible = await page.locator("main, body").first().evaluate(() => {
         const out = [];
         for (const el of document.querySelectorAll("span")) {
