@@ -24,7 +24,10 @@ import { FilterBar } from "@/components/filter-bar";
 import { PageHeader } from "@/components/page-header";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { BrandButton } from "@/components/brand-button";
+import { BulkEditDialog } from "@/components/bulk-edit-dialog";
+import { Button, CheckInput } from "@/components/controls";
 import { Chip } from "@/components/chip";
+import { useBulkSelect } from "@/hooks/use-bulk-select";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
 import { useSetStatus } from "@/hooks/use-beads";
 import { useUrlFilters } from "@/hooks/use-url-filters";
@@ -115,6 +118,12 @@ export function ListView() {
       });
   }, [beads, filters, showArchived, humanAllowlist, colById, orders, index]);
 
+  // Bulk edit: Cmd/Ctrl-click a row (or Select, on phones) to tick beads, then change them together.
+  const rowIds = React.useMemo(() => rows.map((b) => b.id), [rows]);
+  const bulk = useBulkSelect(rowIds);
+  const [bulkOpen, setBulkOpen] = React.useState(false);
+  const selectedIds = rowIds.filter((id) => bulk.selected.has(id));
+
   // Per-column counts for the group headers. Derived from `rows` (not `beads`)
   // so the count always matches what is rendered beneath the header once the
   // filters and the archived toggle have been applied.
@@ -158,7 +167,22 @@ export function ListView() {
       <PageHeader
         title="List"
         subtitle={loading && beads.length === 0 ? "Loading…" : <>{rows.length} beads<span className="max-md:hidden"> · drag to set run-order</span></>}
-        actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
+        actions={
+          !readOnly && (
+            <>
+              {/* Phones only: on desktop a Cmd/Ctrl-click starts a selection, and the header row is full. */}
+              <Button
+                icon="check"
+                pressed={bulk.active}
+                className="md:hidden"
+                onClick={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))}
+              >
+                Select
+              </Button>
+              <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>
+            </>
+          )
+        }
         controls={
           <FilterBar
             filters={filters}
@@ -170,6 +194,36 @@ export function ListView() {
             onClearAllAction={clearFilters}
           />
         }
+      />
+
+      {!readOnly && bulk.active && (
+        <div
+          data-testid="bulk-bar"
+          className="flex flex-shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-[var(--surface-2)] p-[8px_22px] max-md:p-[8px_16px]"
+        >
+          <span aria-live="polite" className="text-label font-medium text-[var(--text)]">
+            {selectedIds.length === 0 ? "Tick beads to edit them together" : `${selectedIds.length} selected`}
+          </span>
+          <div className="flex flex-wrap items-center gap-2 md:ml-auto">
+            {selectedIds.length < rowIds.length && (
+              <Button variant="outline" size="sm" onClick={bulk.selectAll}>
+                Select all {rowIds.length}
+              </Button>
+            )}
+            <BrandButton size="sm" icon="pencil" disabled={selectedIds.length === 0} onClick={() => setBulkOpen(true)}>
+              Bulk edit
+            </BrandButton>
+            <Button variant="outline" size="sm" onClick={bulk.clear}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
+      <BulkEditDialog
+        open={bulkOpen && selectedIds.length > 0}
+        ids={selectedIds}
+        onOpenChange={setBulkOpen}
+        onDone={bulk.deselect}
       />
 
       <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[12px_22px]">
@@ -211,6 +265,9 @@ export function ListView() {
                         onOpenDetail={openDetail}
                         childCount={childCounts.get(b.id) ?? 0}
                         humanAllowlist={humanAllowlist}
+                        selectMode={!readOnly && bulk.active}
+                        checked={bulk.selected.has(b.id)}
+                        onToggle={() => bulk.toggle(b.id)}
                       />
                     </React.Fragment>
                   );
@@ -233,7 +290,14 @@ function Row({
   onOpenDetail,
   childCount,
   humanAllowlist,
+  selectMode,
+  checked,
+  onToggle,
 }: {
+  /** Bulk edit is on: checkboxes show and a click ticks the row instead of opening it. */
+  selectMode: boolean;
+  checked: boolean;
+  onToggle: () => void;
   bead: Bead;
   blocked: boolean;
   onOpen: () => void;
@@ -258,7 +322,8 @@ function Row({
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onOpen();
+      if (selectMode) onToggle();
+      else onOpen();
     }
   };
   return (
@@ -270,10 +335,13 @@ function Row({
       tabIndex={0}
       data-keyboard-bead-id={bead.id}
       aria-current={selectedBeadId === bead.id ? "true" : undefined}
+      aria-pressed={selectMode ? checked : undefined}
       onFocus={() => selectBead(bead.id)}
-      onClick={() => {
+      onClick={(e) => {
         selectBead(bead.id);
-        onOpen();
+        // Cmd (Mac) or Ctrl (Windows) starts a selection; once one is going, a plain click ticks too.
+        if (!readOnly && (selectMode || e.metaKey || e.ctrlKey)) onToggle();
+        else onOpen();
       }}
       onKeyDown={openFromKeyboard}
       style={{
@@ -288,6 +356,15 @@ function Row({
           : "border-border"
       }`}
     >
+      {selectMode && (
+        // The whole 44px square is the target on phones; the row's own click is not triggered by it.
+        <label
+          className="tap-target -my-[10px] -ml-2 flex flex-shrink-0 cursor-pointer items-center justify-center max-md:-order-3 md:min-h-[32px] md:min-w-[32px]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <CheckInput aria-label={`Select ${bead.id}`} checked={checked} onChange={onToggle} />
+        </label>
+      )}
       <span
         className="h-[9px] w-[9px] flex-shrink-0 rounded-full max-md:-order-2"
         style={{ background: blocked ? "#ef4444" : catColor(bead.status) }}
@@ -302,14 +379,14 @@ function Row({
       {/* Phones: the title takes the first line (two at most) and the id, priority and
           assignee sit on a second line, so the title is never squeezed by them. */}
       {mobile ? (
-        <span className="ml-[41px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
+        <span className={`${selectMode ? "ml-[93px]" : "ml-[41px]"} flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]`}>{bead.id}</span>
       ) : (
         <CopyableId
           id={bead.id}
           className="w-[150px] flex-shrink-0 truncate font-mono text-meta text-[var(--text-3)]"
         />
       )}
-      <span className="min-w-0 flex-1 truncate text-body font-medium text-[var(--text)] max-md:-order-1 max-md:flex-[1_1_calc(100%-48px)] max-md:whitespace-normal max-md:line-clamp-2">
+      <span className={`min-w-0 flex-1 truncate text-body font-medium text-[var(--text)] max-md:-order-1 ${selectMode ? "max-md:flex-[1_1_calc(100%-100px)]" : "max-md:flex-[1_1_calc(100%-48px)]"} max-md:whitespace-normal max-md:line-clamp-2`}>
         {bead.title}
       </span>
       {labels.map((l) => (
