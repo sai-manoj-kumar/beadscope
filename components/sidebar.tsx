@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { AssigneeAvatar } from "@/components/assignee-picker";
-import { needsHuman, readyHumanGate } from "@/lib/beads-view";
+import { countNeedsYou } from "@/lib/beads-view";
 import { useGamification } from "@/hooks/use-beads";
 // GITHUB_REPO is shared with the build badge (where bug/feature issues are filed).
 import { GITHUB_REPO } from "@/lib/build-info";
@@ -60,12 +60,11 @@ export function Sidebar({
   /** Close an owning mobile Sheet after project routing. */
   onProjectNavigate?: () => void;
 }) {
-  const { meta, beads, index } = useApp();
+  const { meta, beads } = useApp();
   const actor = meta?.humanActor ?? "you";
   const epicCount = beads.filter((b) => b.issue_type === "epic").length;
-  // "Needs You" = agent-flagged beads (bd human) + ready human-approval gates.
-  const needsYouCount =
-    beads.filter(needsHuman).length + beads.filter((b) => readyHumanGate(b, index)).length;
+  // "Needs You" = agent-flagged beads (bd human) + ready human-approval gates + beads assigned to you.
+  const needsYouCount = countNeedsYou(beads, meta?.humanActor);
   const game = useGamification(projectId, !!meta?.gamification);
   const { width, startResize } = useSidebarWidth();
 

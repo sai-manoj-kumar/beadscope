@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AppProvider } from "@/components/app-context";
 import { SelectField } from "@/components/controls";
-import { GateCard, NeedsYouCard } from "@/components/needs-you-view";
+import { AssignedCard, GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,7 +16,7 @@ import { projectHref } from "@/lib/default-page";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import type { BeadsResponse, ProjectInfo } from "@/lib/api-client";
-import { countNeedsYou, makeIndex, needsHuman, readyHumanGate } from "@/lib/beads-view";
+import { assignedToYou, countNeedsYou, makeIndex, needsHuman, readyHumanGate } from "@/lib/beads-view";
 
 /** `?repo=` value meaning "every repo" (the param is simply absent). */
 const ALL = "";
@@ -57,7 +57,7 @@ export function AllNeedsYouView() {
   // Counts per repo are always the whole picture, so the filter labels stay honest.
   const counts = new Map<string, number>();
   for (const { project, query } of sections) {
-    counts.set(project.id, countNeedsYou(query.data?.beads ?? []));
+    counts.set(project.id, countNeedsYou(query.data?.beads ?? [], query.data?.meta?.humanActor));
   }
   const total = shown.reduce((sum, { project }) => sum + (counts.get(project.id) ?? 0), 0);
   const withItems = shown.filter(({ project }) => (counts.get(project.id) ?? 0) > 0);
@@ -167,6 +167,8 @@ function RepoSection({
   const index = React.useMemo(() => makeIndex(beads), [beads]);
   const gates = React.useMemo(() => beads.filter((b) => readyHumanGate(b, index)), [beads, index]);
   const inbox = React.useMemo(() => beads.filter(needsHuman), [beads]);
+  const actor = data?.meta?.humanActor;
+  const mine = React.useMemo(() => beads.filter((b) => assignedToYou(b, actor)), [beads, actor]);
   const projectId = project.id;
   const selectBead = React.useCallback(
     (id: string | null) => onSelect(id ? { projectId, beadId: id } : null),
@@ -203,7 +205,7 @@ function RepoSection({
             <Link href={projectHref(projectId, page)} className="hover:underline">
               {project.name}
             </Link>
-            <span className="text-meta font-normal text-[var(--text-3)]">{gates.length + inbox.length} waiting</span>
+            <span className="text-meta font-normal text-[var(--text-3)]">{gates.length + inbox.length + mine.length} waiting</span>
           </h2>
         )}
         {gates.map((g) => (
@@ -211,6 +213,9 @@ function RepoSection({
         ))}
         {inbox.map((b) => (
           <NeedsYouCard key={b.id} bead={b} />
+        ))}
+        {mine.map((b) => (
+          <AssignedCard key={b.id} bead={b} />
         ))}
       </section>
     </AppProvider>

@@ -1,16 +1,17 @@
 "use client";
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
-import { Chip } from "@/components/chip";
+import { Chip, StatusChip } from "@/components/chip";
 import { Button, LinkButton, TextArea } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
 import { useApp } from "@/components/app-context";
 import { useRespondHuman, useDismissHuman } from "@/hooks/use-beads";
 import { Icon, typeIconName } from "@/components/icons";
-import { OriginBadge } from "@/components/board/bead-card";
+import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { beadOrigin } from "@/lib/attribution";
 import {
+  assignedToYou,
   needsHuman,
   readyHumanGate,
   gateBlocks,
@@ -34,14 +35,16 @@ import { isSubmitKey } from "@/lib/keyboard-shortcuts";
  *      don't sit invisibly waiting on the board (bead 8qc / gh-6).
  */
 export function NeedsYouView() {
-  const { beads, index, loading } = useApp();
+  const { beads, index, loading, meta } = useApp();
   const waiting = loading && beads.length === 0;
   const inbox = React.useMemo(() => beads.filter(needsHuman), [beads]);
   const gates = React.useMemo(
     () => beads.filter((b) => readyHumanGate(b, index)),
     [beads, index],
   );
-  const total = inbox.length + gates.length;
+  const actor = meta?.humanActor;
+  const mine = React.useMemo(() => beads.filter((b) => assignedToYou(b, actor)), [beads, actor]);
+  const total = inbox.length + gates.length + mine.length;
 
   return (
     <div className="flex h-full flex-col">
@@ -66,6 +69,9 @@ export function NeedsYouView() {
             ))}
             {inbox.map((b) => (
               <NeedsYouCard key={b.id} bead={b} />
+            ))}
+            {mine.map((b) => (
+              <AssignedCard key={b.id} bead={b} />
             ))}
           </div>
         )}
@@ -226,6 +232,46 @@ export function NeedsYouCard({ bead }: { bead: Bead }) {
           Respond
         </BrandButton>
       </div>
+    </div>
+  );
+}
+
+/**
+ * A bead assigned to you with nothing to answer: a compact card that opens the bead. It sits below
+ * the decisions (flags and gates) on the Needs You pages, so work that only needs doing is listed
+ * without being mistaken for a question.
+ */
+export function AssignedCard({ bead }: { bead: Bead }) {
+  const { openDetail, selectedBeadId, selectBead } = useApp();
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      data-keyboard-bead-id={bead.id}
+      data-assigned-card
+      aria-current={selectedBeadId === bead.id ? "true" : undefined}
+      onFocus={() => selectBead(bead.id)}
+      className={`rounded-[12px] border bg-[var(--surface)] p-4 focus-visible:outline-none ${
+        selectedBeadId === bead.id
+          ? "border-[var(--brand)] ring-2 ring-[var(--brand)]/30"
+          : "border-border"
+      }`}
+    >
+      <div className="mb-1 flex flex-wrap items-center gap-2">
+        <Icon name={typeIconName(bead.issue_type)} size={14} style={{ color: typeColor(bead.issue_type) }} />
+        <LinkButton mono className="text-meta" onClick={() => openDetail(bead.id)}>
+          {bead.id}
+        </LinkButton>
+        <StatusChip status={bead.status} />
+        <PriorityChip p={bead.priority} />
+        <span className="flex-1" />
+        <span title={fmtDateTime(bead.updated_at)} className="text-meta text-[var(--text-3)]">
+          {relTime(bead.updated_at)}
+        </span>
+      </div>
+      <LinkButton tone="text" className="block text-section font-semibold leading-snug" onClick={() => openDetail(bead.id)}>
+        {bead.title}
+      </LinkButton>
     </div>
   );
 }

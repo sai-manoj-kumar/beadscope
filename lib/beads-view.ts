@@ -163,10 +163,29 @@ export function makeIndex(beads: Bead[]): Map<string, Bead> {
   return m;
 }
 
-/** How many beads are waiting on a human: agent-flagged beads (`bd human`) plus ready human gates. */
-export function countNeedsYou(beads: Bead[]): number {
+/**
+ * A bead assigned to the current user (the configured human actor) that is still live: not closed
+ * or deferred. Human gates and `bd human` beads are left out because the Needs You pages already
+ * show them as their own kind of card; this is the plain "your work" part of the list.
+ */
+export function assignedToYou(b: Bead, actor: string | undefined): boolean {
+  const you = actor?.trim();
+  if (!you || b.assignee?.trim() !== you) return false;
+  if (b.status === "closed" || b.status === "deferred") return false;
+  return !isHumanGate(b) && !needsHuman(b);
+}
+
+/**
+ * How many beads are waiting on a human: agent-flagged beads (`bd human`), ready human gates, and,
+ * when the current user is known, the other live beads assigned to them.
+ */
+export function countNeedsYou(beads: Bead[], actor?: string): number {
   const index = makeIndex(beads);
-  return beads.filter(needsHuman).length + beads.filter((b) => readyHumanGate(b, index)).length;
+  return (
+    beads.filter(needsHuman).length +
+    beads.filter((b) => readyHumanGate(b, index)).length +
+    beads.filter((b) => assignedToYou(b, actor)).length
+  );
 }
 
 export function isBlocked(b: Bead, index: Map<string, Bead>): boolean {
