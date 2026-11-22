@@ -91,6 +91,9 @@ try {
     }
     assert.deepEqual(await doneIds(), expected);
   };
+  // The URL and the button follow a click a moment later, so wait for them too.
+  const pressed = (on) => page.locator(`[data-completed-toggle][aria-pressed="${on}"]`).waitFor();
+  const urlDone = (value) => page.waitForURL((u) => u.searchParams.get("done") === value);
   const toggle = () => page.locator("[data-completed-toggle]");
 
   // ---- Needs You ----
@@ -101,8 +104,8 @@ try {
   await page.getByText("1 waiting on you · all repos").waitFor();
 
   await toggle().click();
-  assert.equal(await toggle().getAttribute("aria-pressed"), "true");
-  assert.equal(new URL(page.url()).searchParams.get("done"), "1", "the URL carries the toggle");
+  await pressed(true);
+  await urlDone("1"); // the URL carries the toggle
   // Newest first; the old, archived, someone else's and unassigned closed beads stay out.
   await expectDone(["al-gate", "al-mine", "al-flag", "al-edge"]);
   assert.deepEqual(await cardIds(), ["al-open", "al-gate", "al-mine", "al-flag", "al-edge"], "waiting cards stay above the completed ones");
@@ -124,7 +127,7 @@ try {
   await page.locator("[data-completed-card]").first().waitFor();
   assert.equal(await toggle().getAttribute("aria-pressed"), "true");
   await toggle().click();
-  assert.equal(new URL(page.url()).searchParams.has("done"), false);
+  await urlDone(null);
   await expectDone([]);
 
   // Beta has nothing waiting and nothing completed for you: no section, even with the toggle on.
@@ -139,7 +142,7 @@ try {
   await page.getByText("1 queued for agents · all repos").waitFor();
 
   await toggle().click();
-  assert.equal(new URL(page.url()).searchParams.get("done"), "1");
+  await urlDone("1");
   // Newest first within a repo, from every agent identity; no closed_at falls back to updated_at.
   await expectDone(["al-noclosedat", "al-claude", "al-codex", "be-claude"]);
   assert.deepEqual((await cardIds()).slice(0, 1), ["al-agent-open"], "queued cards stay above the completed ones");
@@ -153,7 +156,7 @@ try {
   await page.getByLabel("Filter by agent").selectOption("");
   await page.getByLabel("Filter by repo").selectOption("beta");
   await expectDone(["be-claude"]);
-  assert.equal(new URL(page.url()).searchParams.get("done"), "1", "changing a filter keeps the toggle");
+  await urlDone("1"); // changing a filter keeps the toggle
 
   // Nothing queued but something completed: the completed list is shown, not the empty state.
   await page.goto(`${base}/agent-queue?done=1&repo=beta`);
