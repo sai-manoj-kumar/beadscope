@@ -122,6 +122,49 @@ try {
   assert.equal(show(b).priority, 0, "priority was left alone");
   assert.equal(show(a).assignee, "alice", "a bead outside the selection is untouched");
 
+  // Keyboard: Cmd/Ctrl+Enter on a focused row ticks it; plain Enter would open the drawer.
+  await row(page, c).focus();
+  await page.keyboard.press("Meta+Enter");
+  await bar(page).getByText("1 selected").waitFor();
+  assert.equal(await page.getByRole("checkbox", { name: `Select ${c}` }).isChecked(), true);
+  await row(page, d).click();
+
+  // One bead fails: the dialog says which, keeps it ticked, and a second try only redoes that one.
+  let failD = true;
+  await page.route(`**/api/p/${projectId}/beads/${d}`, (route) =>
+    failD && route.request().method() === "PATCH"
+      ? route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "boom" }) })
+      : route.continue(),
+  );
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  await dialog.getByLabel("Priority").selectOption("3");
+  await dialog.getByRole("button", { name: /^Update 2 beads/ }).click();
+  await dialog.getByRole("alert").waitFor();
+  assert.match(await dialog.getByRole("alert").innerText(), new RegExp(`1 of 2 could not be updated \\(${d}\\)`));
+  await waitFor("the bead that worked is P3", () => show(c).priority === 3);
+  assert.notEqual(show(d).priority, 3, "the failed bead was not changed");
+  await dialog.getByRole("button", { name: /^Update 1 bead$/ }).waitFor();
+  failD = false;
+  await bar(page).getByText("1 selected").waitFor(); // c is unticked, d is still ticked
+  // (By attribute: with the dialog open the page behind it is hidden from role queries.)
+  assert.equal(await page.locator(`input[aria-label="Select ${d}"]`).isChecked(), true);
+
+  // While writes are in flight the dialog refuses to close; it closes by itself when they finish.
+  await page.route(`**/api/p/${projectId}/beads/${d}`, async (route) => {
+    if (route.request().method() === "PATCH") await new Promise((r) => setTimeout(r, 1500));
+    await route.fallback();
+  });
+  await dialog.getByRole("button", { name: /^Update 1 bead$/ }).click();
+  await dialog.getByRole("button", { name: /^Updating 1 of 1/ }).waitFor();
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(300);
+  assert.equal(await dialog.isVisible(), true, "Esc does not close the dialog while it is updating");
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("the retried bead is P3", () => show(d).priority === 3);
+  await page.unroute(`**/api/p/${projectId}/beads/${d}`);
+  assert.equal(await bar(page).count(), 0, "nothing is left ticked");
+
   // Select all, then Clear.
   assert.equal(await page.getByRole("button", { name: "Select", exact: true }).isVisible(), false, "the Select button is for phones; desktop uses Cmd/Ctrl-click");
   await row(page, a).click({ modifiers: ["Meta"] });

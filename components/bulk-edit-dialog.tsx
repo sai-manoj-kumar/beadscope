@@ -22,21 +22,30 @@ const labelClass = "text-label font-medium text-[var(--text-2)]";
  * (bd serialises writes anyway), and reports how many landed; beads that failed stay selected.
  */
 export function BulkEditDialog({
-  open,
   ids,
-  onOpenChange,
+  onClose,
   onDone,
 }: {
-  open: boolean;
-  ids: string[];
-  onOpenChange: (open: boolean) => void;
+  /** The beads to edit, fixed by the caller when the dialog opens; the dialog is open while this is set. */
+  ids: string[] | null;
+  onClose: () => void;
   /** Called with the ids that were updated, so the caller can drop them from the selection. */
   onDone: (updated: string[]) => void;
 }) {
+  // Lifted here so Esc, an outside click and the close button can all be refused while writes are in flight.
+  const [busy, setBusy] = React.useState(false);
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[440px] max-w-[100%] gap-0 rounded-2xl border border-border bg-[var(--surface)] p-0 shadow-[var(--shadow-lg)]">
-        {open && <BulkEditForm ids={ids} onClose={() => onOpenChange(false)} onDone={onDone} />}
+    <Dialog
+      open={ids !== null}
+      onOpenChange={(open) => {
+        if (!open && !busy) onClose();
+      }}
+    >
+      <DialogContent
+        showCloseButton={!busy}
+        className="w-[440px] max-w-[100%] gap-0 rounded-2xl border border-border bg-[var(--surface)] p-0 shadow-[var(--shadow-lg)]"
+      >
+        {ids && <BulkEditForm ids={ids} busy={busy} onBusy={setBusy} onClose={onClose} onDone={onDone} />}
       </DialogContent>
     </Dialog>
   );
@@ -44,10 +53,14 @@ export function BulkEditDialog({
 
 function BulkEditForm({
   ids,
+  busy,
+  onBusy,
   onClose,
   onDone,
 }: {
   ids: string[];
+  busy: boolean;
+  onBusy: (busy: boolean) => void;
   onClose: () => void;
   onDone: (updated: string[]) => void;
 }) {
@@ -57,7 +70,9 @@ function BulkEditForm({
   const [priority, setPriority] = React.useState(NO_CHANGE);
   const [assignee, setAssignee] = React.useState(NO_CHANGE);
   const [status, setStatus] = React.useState(NO_CHANGE);
-  const [progress, setProgress] = React.useState<number | null>(null);
+  // Beads still to do: all of them, then only the ones that failed, so a retry does not redo the rest.
+  const [todo, setTodo] = React.useState(ids);
+  const [progress, setProgress] = React.useState(0);
   const [error, setError] = React.useState<string | null>(null);
 
   const changes: BulkChanges = {
@@ -65,8 +80,7 @@ function BulkEditForm({
     assignee: assignee === NO_CHANGE ? undefined : assignee === UNASSIGNED ? "" : assignee,
     status: status === NO_CHANGE ? undefined : (status as BulkChanges["status"]),
   };
-  const busy = progress !== null;
-  const count = `${ids.length} bead${ids.length === 1 ? "" : "s"}`;
+  const count = `${todo.length} bead${todo.length === 1 ? "" : "s"}`;
 
   const apply = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -75,7 +89,8 @@ function BulkEditForm({
     const updated: string[] = [];
     const failed: { id: string; message: string }[] = [];
     setError(null);
-    for (const id of ids) {
+    onBusy(true);
+    for (const id of todo) {
       setProgress(updated.length + failed.length);
       try {
         await api.update(projectId, id, patch);
@@ -84,15 +99,18 @@ function BulkEditForm({
         failed.push({ id, message: (err as Error).message });
       }
     }
-    setProgress(null);
+    onBusy(false);
     qc.invalidateQueries({ queryKey: beadsKey(projectId) });
     if (updated.length) onDone(updated);
     if (failed.length === 0) {
       toast.success(`Updated ${updated.length} bead${updated.length === 1 ? "" : "s"} · bd update`);
       onClose();
     } else {
+      setTodo(failed.map((f) => f.id));
       setError(
-        `${failed.length} of ${ids.length} could not be updated (${failed.map((f) => f.id).join(", ")}): ${failed[0].message}`,
+        `${failed.length} of ${todo.length} could not be updated (${failed.map((f) => f.id).join(", ")}): ${failed[0].message}. ` +
+          (updated.length ? `${updated.length} were updated. ` : "") +
+          "Update again to retry the rest.",
       );
     }
   };
@@ -151,7 +169,7 @@ function BulkEditForm({
           Cancel
         </Button>
         <BrandButton type="submit" disabled={busy || !hasBulkChanges(changes)}>
-          {busy ? `Updating ${progress! + 1} of ${ids.length}…` : `Update ${count}`}
+          {busy ? `Updating ${progress + 1} of ${todo.length}…` : `Update ${count}`}
         </BrandButton>
       </div>
     </form>

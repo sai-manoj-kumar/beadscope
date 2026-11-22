@@ -2,9 +2,9 @@
 import * as React from "react";
 
 /**
- * Which beads are ticked for a bulk edit. `visibleIds` is what the view shows right now: a bead
- * that is filtered out, closed or deleted drops out of the selection, so the Bulk edit button never
- * acts on a bead the user cannot see.
+ * Which beads are ticked for a bulk edit. `visibleIds` is what the view shows right now: `selected`
+ * only ever holds beads that are visible, so the Bulk edit button never acts on one the user cannot
+ * see (a bead filtered out and then shown again is still ticked).
  *
  * `selecting` is the phone's Select mode (checkboxes on every row). On desktop the checkboxes appear
  * as soon as one bead is ticked with Cmd or Ctrl held, so `active` covers both.

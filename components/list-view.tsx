@@ -121,7 +121,9 @@ export function ListView() {
   // Bulk edit: Cmd/Ctrl-click a row (or Select, on phones) to tick beads, then change them together.
   const rowIds = React.useMemo(() => rows.map((b) => b.id), [rows]);
   const bulk = useBulkSelect(rowIds);
-  const [bulkOpen, setBulkOpen] = React.useState(false);
+  // The beads the dialog works on, fixed when Bulk edit is clicked: the view may refresh (or a filter
+  // may drop a bead that was just edited) while the edit runs, and the dialog must not follow that.
+  const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
   const selectedIds = rowIds.filter((id) => bulk.selected.has(id));
 
   // Per-column counts for the group headers. Derived from `rows` (not `beads`)
@@ -170,11 +172,11 @@ export function ListView() {
         actions={
           !readOnly && (
             <>
-              {/* Phones only: on desktop a Cmd/Ctrl-click starts a selection, and the header row is full. */}
+              {/* Phones and touch screens (a tablet has no Cmd key). With a mouse, Cmd/Ctrl-click starts a selection, and the header row is full. */}
               <Button
                 icon="check"
                 pressed={bulk.active}
-                className="md:hidden"
+                className="hidden max-md:inline-flex pointer-coarse:inline-flex"
                 onClick={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))}
               >
                 Select
@@ -210,7 +212,7 @@ export function ListView() {
                 Select all {rowIds.length}
               </Button>
             )}
-            <BrandButton size="sm" icon="pencil" disabled={selectedIds.length === 0} onClick={() => setBulkOpen(true)}>
+            <BrandButton size="sm" icon="pencil" disabled={selectedIds.length === 0} onClick={() => setBulkIds(selectedIds)}>
               Bulk edit
             </BrandButton>
             <Button variant="outline" size="sm" onClick={bulk.clear}>
@@ -219,12 +221,7 @@ export function ListView() {
           </div>
         </div>
       )}
-      <BulkEditDialog
-        open={bulkOpen && selectedIds.length > 0}
-        ids={selectedIds}
-        onOpenChange={setBulkOpen}
-        onDone={bulk.deselect}
-      />
+      <BulkEditDialog ids={bulkIds} onClose={() => setBulkIds(null)} onDone={bulk.deselect} />
 
       <div className="bd-scroll min-h-0 flex-1 overflow-y-auto p-[12px_22px]">
         {loading && beads.length === 0 ? (
@@ -322,7 +319,8 @@ function Row({
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      if (selectMode) onToggle();
+      // Cmd/Ctrl+Enter or Space ticks, the keyboard twin of Cmd/Ctrl-click.
+      if (!readOnly && (selectMode || e.metaKey || e.ctrlKey)) onToggle();
       else onOpen();
     }
   };
