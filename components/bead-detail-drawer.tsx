@@ -633,13 +633,14 @@ function DrawerBody({
                 <Icon name="target" size={14} />
                 <span className="text-label">—</span>
                 {!readOnly && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="ml-auto text-label text-[var(--brand)] hover:underline"
                     onClick={() => { setParentDraft(""); setEditingParent(true); }}
                   >
                     Set parent
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
