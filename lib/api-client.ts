@@ -86,6 +86,8 @@ export interface ProjectInfo {
 }
 export interface ProjectsResponse {
   projects: ProjectInfo[];
+  /** The built-in Demo project is left out of `projects` because the user hid it. */
+  demoHidden?: boolean;
 }
 
 export interface DoctorResponse {
@@ -100,6 +102,8 @@ export interface DoctorResponse {
     humanAllowlist: string[];
     agents: AgentIdentity[];
     pollIntervalMs: number;
+    /** The built-in Demo project is hidden from the project lists. */
+    hideDemo?: boolean;
   };
 }
 

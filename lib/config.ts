@@ -37,6 +37,8 @@ export interface AppConfig {
   orders: Record<string, Record<string, string[]>>;
   /** Opt-in: show the gamification XP/level layer (off by default). */
   gamification: boolean;
+  /** Hide the built-in Demo project from every project list and the all-repos pages. Off by default. */
+  hideDemo: boolean;
   /**
    * True once the human actor was saved from Settings. Until then the actor
    * follows the computed default, even if an older version wrote it to disk.
@@ -140,6 +142,7 @@ function defaults(): AppConfig {
     projects: [],
     orders: {},
     gamification: false,
+    hideDemo: false,
   };
 }
 
@@ -296,6 +299,7 @@ export function getConfig(): AppConfig {
         ? (onDisk.orders as Record<string, Record<string, string[]>>)
         : {},
     gamification: typeof onDisk?.gamification === "boolean" ? onDisk.gamification : d.gamification,
+    hideDemo: typeof onDisk?.hideDemo === "boolean" ? onDisk.hideDemo : d.hideDemo,
     humanActorChosen: onDisk?.humanActorChosen === true,
   };
 
@@ -334,7 +338,7 @@ export function closeActor(assignee: string | null | undefined): string {
 
 /** Update global settings (actor / allowlist / poll). Project registry has its own mutators. */
 export function saveConfig(
-  patch: Partial<Pick<AppConfig, "humanActor" | "humanAllowlist" | "agents" | "pollIntervalMs" | "gamification">>,
+  patch: Partial<Pick<AppConfig, "humanActor" | "humanAllowlist" | "agents" | "pollIntervalMs" | "gamification" | "hideDemo">>,
 ): AppConfig {
   const current = getConfig();
   const next = { ...current, ...patch };

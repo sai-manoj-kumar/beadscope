@@ -1,4 +1,4 @@
-import { listProjects, addProject, hasBeads as configHasBeads, DEMO_PROJECT } from "@/lib/config";
+import { getConfig, listProjects, addProject, hasBeads as configHasBeads, DEMO_PROJECT } from "@/lib/config";
 import type { ProjectEntry, DemoProject } from "@/lib/config";
 import { ok, fail } from "@/lib/api";
 import { z } from "zod";
@@ -18,8 +18,11 @@ function annotate(p: ProjectEntry | DemoProject) {
 }
 
 export async function GET() {
-  const projects = [DEMO_PROJECT, ...listProjects()].map(annotate);
-  return ok({ projects });
+  // The Demo project is left out once the user hides it (launcher or Settings), so every screen
+  // that lists projects, and the all-repos pages built on that list, drop it together.
+  const demoHidden = getConfig().hideDemo;
+  const projects = [...(demoHidden ? [] : [DEMO_PROJECT]), ...listProjects()].map(annotate);
+  return ok({ projects, demoHidden });
 }
 
 const addSchema = z.object({ path: z.string().min(1) });
