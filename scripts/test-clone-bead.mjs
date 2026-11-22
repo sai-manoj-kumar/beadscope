@@ -32,7 +32,7 @@ const commentCount = (id) => {
   const c = JSON.parse(bd(["comments", id, "--json"]));
   return (Array.isArray(c) ? c : (c.data ?? c.comments ?? [])).length;
 };
-const idByTitle =(title) => {
+const idByTitle = (title) => {
   const all = JSON.parse(bd(["list", "--all", "--json", "--limit", "0"]));
   const list = Array.isArray(all) ? all : (all.data ?? all.issues ?? []);
   return list.find((b) => b.title === title)?.id;
