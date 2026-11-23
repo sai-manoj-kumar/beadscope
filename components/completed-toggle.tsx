@@ -27,3 +27,12 @@ export function CompletedToggle({ on, onChange }: { on: boolean; onChange: (next
     </Button>
   );
 }
+
+/**
+ * Sub-heading above the completed cards. `level` follows what precedes it: 3 under a repo's own h2, 2 where
+ * the page h1 is the only heading above it (a single repo, or a project's own view), so no level is skipped.
+ */
+export function CompletedHeading({ level }: { level: 2 | 3 }) {
+  const Tag = level === 2 ? "h2" : "h3";
+  return <Tag className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</Tag>;
+}

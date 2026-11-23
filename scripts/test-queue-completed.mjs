@@ -110,7 +110,8 @@ try {
   await expectDone(["al-gate", "al-mine", "al-flag", "al-edge"]);
   assert.deepEqual(await cardIds(), ["al-open", "al-gate", "al-mine", "al-flag", "al-edge"], "waiting cards stay above the completed ones");
   await page.getByText("1 waiting on you · 4 completed · all repos").waitFor();
-  await page.getByRole("heading", { name: "Completed in the last 3 days" }).waitFor();
+  // All repos: each repo has its own h2, so the completed heading is an h3 under it.
+  await page.getByRole("heading", { name: "Completed in the last 3 days", level: 3 }).waitFor();
   await page.locator('[data-keyboard-bead-id="al-mine"]').getByText(/^closed 5h ago$/).waitFor();
   // Counts in the repo filter stay the waiting counts.
   assert.deepEqual(await page.getByLabel("Filter by repo").locator("option").allTextContents(), ["All repos", "Alpha Repo (1)", "Beta Repo"]);
@@ -129,6 +130,12 @@ try {
   await toggle().click();
   await urlDone(null);
   await expectDone([]);
+
+  // One repo: no repo h2, so the completed heading follows the page h1 as an h2 (bui-ih7.17.8).
+  await page.goto(`${base}/needs-you?done=1&repo=alpha`);
+  await page.locator("[data-completed-card]").first().waitFor();
+  await page.getByRole("heading", { name: "Completed in the last 3 days", level: 2 }).waitFor();
+  assert.equal(await page.getByRole("heading", { level: 3 }).count(), 0, "no h3 without an h2 above it");
 
   // Beta has nothing waiting and nothing completed for you: no section, even with the toggle on.
   await page.goto(`${base}/needs-you?done=1&repo=beta`);
@@ -157,6 +164,9 @@ try {
   await page.getByLabel("Filter by repo").selectOption("beta");
   await expectDone(["be-claude"]);
   await urlDone("1"); // changing a filter keeps the toggle
+
+  await page.getByRole("heading", { name: "Completed in the last 3 days", level: 2 }).waitFor();
+  assert.equal(await page.getByRole("heading", { level: 3 }).count(), 0, "no h3 without an h2 above it");
 
   // Nothing queued but something completed: the completed list is shown, not the empty state.
   await page.goto(`${base}/agent-queue?done=1&repo=beta`);

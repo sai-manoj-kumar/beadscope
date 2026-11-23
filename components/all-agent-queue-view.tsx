@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { AgentIcon } from "@/components/agent-icon";
 import { PriorityChip } from "@/components/board/bead-card";
 import { StatusChip } from "@/components/chip";
-import { CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
+import { CompletedHeading, CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
 import { SelectField } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { ReadOnlyBanner } from "@/components/read-only-banner";
@@ -21,7 +21,7 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useViewerMode } from "@/hooks/use-viewer-mode";
 import { api, type BeadsResponse, type ProjectInfo } from "@/lib/api-client";
 import { agentByName, type AgentIdentity } from "@/lib/agents";
-import { blockingDeps, byClosedAtDesc, completedRecently, isBlocked, makeIndex, RECENTLY_COMPLETED_DAYS, relTime } from "@/lib/beads-view";
+import { blockingDeps, byClosedAtDesc, completedRecently, isBlocked, makeIndex, relTime } from "@/lib/beads-view";
 import type { Bead } from "@/lib/schema";
 
 /** `?repo=` / `?agent=` value meaning "everything" (the param is simply absent). */
@@ -272,7 +272,7 @@ function RepoSection({
       ))}
       {done.length > 0 && (
         <>
-          <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+          <CompletedHeading level={showHeading ? 3 : 2} />
           {done.map((bead) => (
             <QueueCard
               key={bead.id}

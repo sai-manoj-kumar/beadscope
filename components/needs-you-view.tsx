@@ -2,7 +2,7 @@
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
 import { Chip, StatusChip } from "@/components/chip";
-import { CompletedToggle, PROJECT_DONE_PARAM } from "@/components/completed-toggle";
+import { CompletedHeading, CompletedToggle, PROJECT_DONE_PARAM } from "@/components/completed-toggle";
 import { Button, LinkButton, TextArea } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
@@ -23,7 +23,6 @@ import {
   typeColor,
   relTime,
   fmtDateTime,
-  RECENTLY_COMPLETED_DAYS,
 } from "@/lib/beads-view";
 import { reviewLinks } from "@/lib/review-links";
 import { DescriptionContent } from "@/components/description-content";
@@ -106,7 +105,7 @@ export function NeedsYouView() {
             ))}
             {completed.length > 0 && (
               <>
-                <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+                <CompletedHeading level={2} />
                 {completed.map((b) => (
                   <AssignedCard key={b.id} bead={b} completed />
                 ))}

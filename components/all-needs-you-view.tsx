@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AppProvider } from "@/components/app-context";
 import { RepoBeadDrawer, useRepoDrawer } from "@/components/repo-bead-drawer";
-import { CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
+import { CompletedHeading, CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
 import { SelectField } from "@/components/controls";
 import { AssignedCard, GateCard, NeedsYouCard } from "@/components/needs-you-view";
 import { PageHeader } from "@/components/page-header";
@@ -27,7 +27,6 @@ import {
   makeIndex,
   needsHuman,
   readyHumanGate,
-  RECENTLY_COMPLETED_DAYS,
 } from "@/lib/beads-view";
 
 /** `?repo=` value meaning "every repo" (the param is simply absent). */
@@ -279,7 +278,7 @@ function RepoSection({
         ))}
         {completed.length > 0 && (
           <>
-            <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+            <CompletedHeading level={showHeading ? 3 : 2} />
             {completed.map((b) => (
               <AssignedCard key={b.id} bead={b} completed />
             ))}
