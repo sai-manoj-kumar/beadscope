@@ -1,6 +1,6 @@
 // "Completed · 3d" toggle on a project's own Needs You view (bead bui-ih7.17.7), the per-project
 // twin of the all-repos toggle tested in test-queue-completed.mjs. Off by default, carried by
-// ?done=1. Isolated demo server only; all project requests are intercepted, nothing is written.
+// ?completed=1 (not ?done=, which is the Board's). Isolated demo server only; all project requests are intercepted, nothing is written.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
@@ -79,7 +79,7 @@ try {
     assert.deepEqual(await doneIds(), expected);
   };
   const pressed = (on) => page.locator(`[data-completed-toggle][aria-pressed="${on}"]`).waitFor();
-  const urlDone = (value) => page.waitForURL((u) => u.searchParams.get("done") === value);
+  const urlDone = (value) => page.waitForURL((u) => u.searchParams.get("completed") === value);
   const toggle = () => page.locator("[data-completed-toggle]");
 
   await page.goto(`${base}/p/alpha?view=needsyou`);
@@ -113,7 +113,7 @@ try {
   await expectDone([]);
 
   // Nothing waiting but something completed: the completed list is shown, not the empty state.
-  await page.goto(`${base}/p/beta?view=needsyou&done=1`);
+  await page.goto(`${base}/p/beta?view=needsyou&completed=1`);
   await page.locator("[data-completed-card]").first().waitFor();
   assert.equal(await page.getByText(/Nothing needs you right now/).count(), 0);
   await page.getByText("nothing waiting · 1 completed").waitFor();
@@ -121,9 +121,18 @@ try {
   await page.getByText(/Nothing needs you right now/).waitFor();
 
   // Nothing waiting and nothing completed for you: the empty state, even with the toggle on.
-  await page.goto(`${base}/p/gamma?view=needsyou&done=1`);
+  await page.goto(`${base}/p/gamma?view=needsyou&completed=1`);
   await page.getByText(/Nothing needs you right now/).waitFor();
   assert.equal(await doneIds().then((a) => a.length), 0);
+
+  // The Board's own ?done=<days> window is a different param: toggling Completed leaves it alone.
+  await page.goto(`${base}/p/alpha?view=needsyou&done=28`);
+  await toggle().click();
+  await page.waitForURL((u) => u.searchParams.get("completed") === "1");
+  assert.equal(new URL(page.url()).searchParams.get("done"), "28", "the toggle does not touch ?done=");
+  await toggle().click();
+  await page.waitForURL((u) => u.searchParams.get("completed") === null);
+  assert.equal(new URL(page.url()).searchParams.get("done"), "28", "switching it off keeps ?done= too");
 
   assert.deepEqual(errors, []);
   console.log("PASS: a project's Needs You view lists recently completed beads behind a toggle");

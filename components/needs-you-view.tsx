@@ -2,7 +2,7 @@
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
 import { Chip, StatusChip } from "@/components/chip";
-import { CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
+import { CompletedToggle, PROJECT_DONE_PARAM } from "@/components/completed-toggle";
 import { Button, LinkButton, TextArea } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
@@ -55,11 +55,11 @@ export function NeedsYouView() {
   const total = inbox.length + gates.length + mine.length;
   // The toggle at the top: also list what was completed in the last few days (off by default), as on the all-repos page.
   const { searchParams, updateUrl } = useUrlState();
-  const showDone = searchParams.get(DONE_PARAM) === "1";
+  const showDone = searchParams.get(PROJECT_DONE_PARAM) === "1";
   const setShowDone = (next: boolean) =>
     updateUrl((params) => {
-      if (next) params.set(DONE_PARAM, "1");
-      else params.delete(DONE_PARAM);
+      if (next) params.set(PROJECT_DONE_PARAM, "1");
+      else params.delete(PROJECT_DONE_PARAM);
     });
   const now = useNow();
   const completed = React.useMemo(
