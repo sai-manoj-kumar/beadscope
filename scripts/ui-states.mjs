@@ -16,6 +16,7 @@ export const DEVICES = {
   desktop: { viewport: { width: 1280, height: 860 } },
 };
 
+const RECENT_MS = 3 * 86_400_000; // RECENTLY_COMPLETED_DAYS in lib/beads-view.ts
 const SHEET = '[data-slot="sheet-content"]';
 const DIALOG = '[data-slot="dialog-content"]';
 const MENU = '[data-slot="dropdown-menu-content"]';
@@ -167,4 +168,68 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await settle(1200);
     await onState("agent-queue-all", "");
   });
+
+  // The Completed toggle on the Needs You views (all-repos `?done=1`, a project's own `?completed=1`): the
+  // heading and the completed cards only exist while it is on, so the gate has to visit it switched on.
+  // The Demo data has nothing closed in the last few days, so a project that has none gets one sample
+  // closed bead (flagged `human`, so it counts as "for you" without a known actor) added to its list in the
+  // browser only; nothing is written.
+  const completedStates = [
+    ["needs-you-all-completed", `${origin}/needs-you?done=1`],
+    ["needs-you-completed", `${projectUrl}?view=needsyou&completed=1`],
+  ];
+  const sampleCompleted = async (route) => {
+    try {
+      const response = await route.fetch();
+      let body;
+      try {
+        body = await response.json();
+      } catch {
+        return await route.fulfill({ response });
+      }
+      if (!Array.isArray(body.beads)) return await route.fulfill({ response, json: body });
+      // Mirrors `completedForYou` in lib/beads-view.ts minus the assignee: closed lately, not archived, and
+      // a human gate or flagged `human`. Only then does a real completed card show up without a sample.
+      const since = Date.now() - RECENT_MS;
+      const hasRecent = body.beads.some(
+        (b) =>
+          b.status === "closed" &&
+          Date.parse(b.closed_at ?? b.updated_at ?? "") > since &&
+          !(b.labels ?? []).includes("archived") &&
+          (b.issue_type === "gate" || (b.labels ?? []).includes("human")),
+      );
+      if (hasRecent) return await route.fulfill({ response, json: body });
+      const closedAt = new Date(Date.now() - 2 * 3_600_000).toISOString();
+      const projectId = new URL(route.request().url()).pathname.split("/")[3] ?? "x";
+      const sample = {
+        id: `qa-completed-${projectId}`,
+        title: "Sample completed bead with a title long enough to wrap onto a second line on a phone",
+        status: "closed",
+        issue_type: "task",
+        priority: 2,
+        labels: ["human"],
+        dependencies: [],
+        created_at: closedAt,
+        updated_at: closedAt,
+        closed_at: closedAt,
+      };
+      return await route.fulfill({ response, json: { ...body, beads: [...body.beads, sample] } });
+    } catch {
+      // The page moved on while the request was in flight; there is nothing left to answer.
+    }
+  };
+  await page.route(/\/api\/p\/[^/]+\/beads(\?.*)?$/, sampleCompleted);
+  try {
+    for (const [name, url] of completedStates) {
+      await attempt(name, async () => {
+        await page.goto(url, { waitUntil: "domcontentloaded" });
+        await page.locator("h1").first().waitFor({ timeout: 15000 });
+        await page.locator("[data-completed-card]").first().waitFor({ timeout: 15000 });
+        await settle(700);
+        await onState(name, "");
+      });
+    }
+  } finally {
+    await page.unroute(/\/api\/p\/[^/]+\/beads(\?.*)?$/, sampleCompleted);
+  }
 }
