@@ -2,22 +2,28 @@
 import * as React from "react";
 import { BrandButton } from "@/components/brand-button";
 import { Chip, StatusChip } from "@/components/chip";
+import { CompletedToggle, PROJECT_DONE_PARAM } from "@/components/completed-toggle";
 import { Button, LinkButton, TextArea } from "@/components/controls";
 import { PageHeader } from "@/components/page-header";
 import { GateApproval } from "@/components/gate-approval";
 import { useApp } from "@/components/app-context";
 import { useRespondHuman, useDismissHuman } from "@/hooks/use-beads";
+import { useNow } from "@/hooks/use-now";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Icon, typeIconName } from "@/components/icons";
 import { OriginBadge, PriorityChip } from "@/components/board/bead-card";
 import { beadOrigin } from "@/lib/attribution";
 import {
   assignedToYou,
+  byClosedAtDesc,
+  completedForYou,
   needsHuman,
   readyHumanGate,
   gateBlocks,
   typeColor,
   relTime,
   fmtDateTime,
+  RECENTLY_COMPLETED_DAYS,
 } from "@/lib/beads-view";
 import { reviewLinks } from "@/lib/review-links";
 import { DescriptionContent } from "@/components/description-content";
@@ -47,17 +53,40 @@ export function NeedsYouView() {
   const actor = meta?.humanActor;
   const mine = React.useMemo(() => beads.filter((b) => assignedToYou(b, actor)), [beads, actor]);
   const total = inbox.length + gates.length + mine.length;
+  // The toggle at the top: also list what was completed in the last few days (off by default), as on the all-repos page.
+  const { searchParams, updateUrl } = useUrlState();
+  const showDone = searchParams.get(PROJECT_DONE_PARAM) === "1";
+  const setShowDone = (next: boolean) =>
+    updateUrl((params) => {
+      if (next) params.set(PROJECT_DONE_PARAM, "1");
+      else params.delete(PROJECT_DONE_PARAM);
+    });
+  const now = useNow();
+  const completed = React.useMemo(
+    () => (showDone ? beads.filter((b) => completedForYou(b, actor, now)).sort(byClosedAtDesc) : []),
+    [showDone, beads, actor, now],
+  );
 
   return (
     <div className="flex h-full flex-col">
       <PageHeader
         title="Needs You"
-        subtitle={waiting ? "Loading…" : total === 0 ? "nothing waiting" : `${total} waiting on you`}
+        subtitle={
+          waiting
+            ? "Loading…"
+            : (total === 0 ? "nothing waiting" : `${total} waiting on you`) + (showDone ? ` · ${completed.length} completed` : "")
+        }
+        controls={
+          <>
+            <span className="flex-1 max-md:hidden" />
+            <CompletedToggle on={showDone} onChange={setShowDone} />
+          </>
+        }
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {waiting ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">Loading…</div>
-        ) : total === 0 ? (
+        ) : total === 0 && completed.length === 0 ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">
             🎉 Nothing needs you right now. Agents flag beads here with{" "}
             <span className="font-mono">bd human</span>, human-approval gates
@@ -75,6 +104,14 @@ export function NeedsYouView() {
             {mine.map((b) => (
               <AssignedCard key={b.id} bead={b} />
             ))}
+            {completed.length > 0 && (
+              <>
+                <h3 className="text-meta font-medium text-[var(--text-3)]">Completed in the last {RECENTLY_COMPLETED_DAYS} days</h3>
+                {completed.map((b) => (
+                  <AssignedCard key={b.id} bead={b} completed />
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>
