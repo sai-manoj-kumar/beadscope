@@ -94,7 +94,8 @@ try {
   await expectDone(["al-gate", "al-mine", "al-flag", "al-edge"]);
   assert.deepEqual(await cardIds(), ["al-open", "al-gate", "al-mine", "al-flag", "al-edge"], "waiting cards stay above the completed ones");
   await page.getByText("1 waiting on you · 4 completed").waitFor();
-  await page.getByRole("heading", { name: "Completed in the last 3 days" }).waitFor();
+  // The page title is the h1 and nothing sits between it and this heading, so it is an h2 (no skipped level).
+  await page.getByRole("heading", { name: "Completed in the last 3 days", level: 2 }).waitFor();
   await page.locator('[data-keyboard-bead-id="al-mine"]').getByText(/^closed 5h ago$/).waitFor();
   assert.equal(new URL(page.url()).searchParams.get("view"), "needsyou", "the view stays on Needs You");
 
