@@ -17,16 +17,27 @@ pre-1.0. **0.5.1** is the first release made by the workflow.
 
 ## Releasing
 
-Pushing a `vX.Y.Z` tag runs [`release.yml`](../../.github/workflows/release.yml), which
-runs the CI checks, publishes the package to npm, creates the GitHub release from
-`docs/releases/vX.Y.Z.md`, and bumps the Homebrew tap formula. To cut a release:
+Every merge to `main` publishes a release. [`release.yml`](../../.github/workflows/release.yml)
+runs the CI checks, publishes the package to npm, creates the GitHub release, and bumps
+the Homebrew tap formula. You do nothing for an ordinary change: the next **patch** version
+is chosen from the newest `vX.Y.Z` tag (see
+[`scripts/next-version.mjs`](../../scripts/next-version.mjs)), and the release notes are
+generated from the merged pull requests.
 
-1. Bump `version` in `package.json` and add `docs/releases/vX.Y.Z.md`, in a pull request.
-2. After it merges, tag the merge commit and push the tag:
-   `git tag vX.Y.Z && git push origin vX.Y.Z`.
+`main` is protected, so the workflow does not commit the new version back. It creates the
+tag itself and sets the version only inside the CI build. This means `package.json` on
+`main` keeps its last hand-set value and can lag behind the newest tag. The tag, the
+GitHub release and npm are the record of what was released.
 
-The workflow refuses a tag that does not match `package.json` or is not on `main`. Each
-step skips itself if its work is already done, so a failed run can simply be re-run.
+For a **minor or major** release (or any release with hand-written notes):
+
+1. In a pull request, raise `version` in `package.json` and add `docs/releases/vX.Y.Z.md`.
+2. Merge it. The push to `main` releases exactly that version, using your notes file. No
+   tag needs pushing by hand. The next merge goes back to patch bumps from there.
+
+Pushing a `vX.Y.Z` tag by hand also still works. That path insists the tag matches
+`package.json`, is on `main`, and has a notes file. Each step skips itself if its work is
+already done, so a failed run can simply be re-run.
 
 The workflow publishes with npm trusted publishing (no stored npm token) and updates the
 tap with a write-enabled deploy key stored as the `TAP_DEPLOY_KEY` secret.

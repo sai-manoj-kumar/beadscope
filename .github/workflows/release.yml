@@ -1,13 +1,24 @@
 name: Release
 
-# Pushing a vX.Y.Z tag publishes that version: it runs the CI checks, publishes the
-# npm package, creates the GitHub release from docs/releases/vX.Y.Z.md, and bumps the
-# Homebrew tap formula. Every step skips itself when its work is already done, so a
-# failed run can be re-run, and a tag for a version that is already on npm still gets
-# its GitHub release and tap bump.
+# Publishes a version: it runs the CI checks, publishes the npm package, creates the
+# GitHub release, and bumps the Homebrew tap formula. Every step skips itself when its
+# work is already done, so a failed run can be re-run, and a tag for a version that is
+# already on npm still gets its GitHub release and tap bump.
 #
-# To release: bump "version" in package.json, add docs/releases/vX.Y.Z.md, merge to
-# main, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+# Two ways in:
+#   - Every push to main (a merged pull request) publishes the next version, chosen by
+#     scripts/next-version.mjs: a patch bump of the newest tag, or package.json's version
+#     when a pull request raised it for a minor or major release. main is protected, so
+#     nothing commits the version back: the workflow creates the tag itself and sets the
+#     version in this run's checkout only (package.json on main keeps its last manual
+#     value). The release notes come from docs/releases/vX.Y.Z.md when that file exists,
+#     otherwise GitHub generates them from the merged pull requests.
+#   - Pushing a vX.Y.Z tag by hand still works as before: the tag must match
+#     package.json, be on main, and have docs/releases/vX.Y.Z.md.
+#
+# The tag the workflow creates is pushed with the job token. GitHub does not start
+# workflows from pushes made with that token, so the tag does not re-trigger this
+# workflow. Do not swap in a personal token for it, or every release would run twice.
 #
 # One-time setup this workflow depends on (neither is a stored npm token):
 #   - npm trusted publisher for the `beadscope` package: repository
@@ -17,6 +28,7 @@ name: Release
 #     sai-manoj-kumar/homebrew-beadscope. It can push to that one repository only.
 on:
   push:
+    branches: [main]
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
 permissions:
@@ -30,25 +42,79 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  # Decides the tag to publish: the pushed tag, or for a push to main the next version.
+  # Runs are serialized by the concurrency group above, so each one sees the tag the
+  # previous run created.
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+      mode: ${{ steps.pick.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Pick the version
+        id: pick
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            tag="$REF_NAME"
+            mode=tag
+          else
+            tag="v$(node scripts/next-version.mjs)"
+            mode=main
+          fi
+          echo "Publishing $tag ($mode)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
   check:
+    needs: version
     uses: ./.github/workflows/ci.yml
 
   publish:
-    needs: check
+    needs: [version, check]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write # create the GitHub release
+      contents: write # create the tag and the GitHub release
       id-token: write # npm trusted publishing and provenance
     env:
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ needs.version.outputs.tag }}
+      MODE: ${{ needs.version.outputs.mode }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      # Only after CI has passed, so a red main does not use up a version number. If the
+      # commit is already tagged (a re-run), this is a no-op.
+      - name: Create the tag
+        if: env.MODE == 'main'
+        run: |
+          if existing="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}")"; then
+            if [ "$existing" != "$GITHUB_SHA" ]; then
+              echo "::error::$TAG already exists on $existing, not on $GITHUB_SHA"
+              exit 1
+            fi
+            echo "$TAG already points at this commit"
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+
       - name: Verify the tag
+        if: env.MODE == 'tag'
         run: |
           version="${TAG#v}"
           package_version="$(node -p "require('./package.json').version")"
@@ -74,6 +140,12 @@ jobs:
       - name: Install
         run: npm ci
 
+      # The version exists only in this checkout (see the header). prepack builds with it,
+      # so the published app reports the right version.
+      - name: Set the version
+        if: env.MODE == 'main'
+        run: npm version "${TAG#v}" --no-git-tag-version --allow-same-version
+
       # prepack runs `next build`, and publishConfig turns provenance on.
       - name: Publish to npm
         run: |
@@ -91,16 +163,21 @@ jobs:
             exit 0
           fi
           notes="docs/releases/$TAG.md"
-          title="$(sed -n '1s/^# //p' "$notes")"
-          tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
-          gh release create "$TAG" --verify-tag --title "${title:-$TAG}" --notes-file "$RUNNER_TEMP/notes.md"
+          if [ -f "$notes" ]; then
+            title="$(sed -n '1s/^# //p' "$notes")"
+            tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" --verify-tag --title "${title:-$TAG}" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            # An automatic patch release has no hand-written notes: list the merged pull requests.
+            gh release create "$TAG" --verify-tag --title "Beadscope $TAG" --generate-notes
+          fi
 
   tap:
-    needs: publish
+    needs: [version, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ needs.version.outputs.tag }}
       TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
     steps:
       - name: Hash the published tarball
