@@ -19,6 +19,7 @@ import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { DescriptionContent, hasImageRef } from "@/components/description-content";
 import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
+import { attachmentFilesOf, repointAttachmentFiles, repointAttachmentRefs } from "@/lib/attachment-refs";
 import { cloneDraft } from "@/lib/clone-bead";
 import { inputValueToDue } from "@/lib/due-input";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
@@ -235,15 +236,38 @@ function CreateForm({
       },
       {
         onSuccess: async (newBead) => {
-          if (form.description.includes(`attachment://${draftId}/`)) {
+          // Images added in this dialog sit under a draft folder, and a clone's images under the
+          // source bead's. Both are moved or copied under the new bead's id so its description no
+          // longer depends on either folder.
+          const draftRef = form.description.includes(`attachment://${draftId}/`);
+          const cloneFiles = source ? attachmentFilesOf(form.description, source.id) : [];
+          if (draftRef || cloneFiles.length > 0) {
             try {
-              await api.attachments.finalize(projectId, draftId, newBead.id);
-              const rewritten = form.description.replaceAll(
-                `attachment://${draftId}/`,
-                `attachment://${newBead.id}/`,
-              );
-              await api.update(projectId, newBead.id, { description: rewritten });
-              qc.invalidateQueries({ queryKey: beadsKey(projectId) });
+              let rewritten = form.description;
+              // The copy goes first and the two steps fail apart: one failing must not strand the other.
+              let failure: unknown;
+              if (source && cloneFiles.length > 0) {
+                try {
+                  const { copied } = await api.attachments.copy(projectId, source.id, newBead.id, cloneFiles);
+                  // Only refs whose file was copied are repointed; a missing source image stays as written.
+                  rewritten = repointAttachmentFiles(rewritten, source.id, newBead.id, copied);
+                } catch (e) {
+                  failure = e;
+                }
+              }
+              if (draftRef) {
+                try {
+                  await api.attachments.finalize(projectId, draftId, newBead.id);
+                  rewritten = repointAttachmentRefs(rewritten, draftId, newBead.id);
+                } catch (e) {
+                  failure ??= e;
+                }
+              }
+              if (rewritten !== form.description) {
+                await api.update(projectId, newBead.id, { description: rewritten });
+                qc.invalidateQueries({ queryKey: beadsKey(projectId) });
+              }
+              if (failure) throw failure;
             } catch (e) {
               toast.error((e as Error).message);
             }

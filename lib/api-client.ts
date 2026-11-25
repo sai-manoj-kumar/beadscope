@@ -262,6 +262,12 @@ export const api = {
         method: "PUT",
         body: JSON.stringify({ draftId, beadId }),
       }),
+    /** Copy the named files from one bead's attachments into another's (cloning a bead). */
+    copy: (projectId: string, fromId: string, beadId: string, files: string[]) =>
+      request<{ copied: string[] }>(`${base(projectId)}/attachments`, {
+        method: "PUT",
+        body: JSON.stringify({ copyFrom: fromId, beadId, files }),
+      }),
     /** Map an `attachment://<beadId>/<file>` ref to its serve URL. */
     urlFor: (projectId: string, ref: string) => {
       const rel = ref.replace(/^attachment:\/\//, "");

@@ -74,11 +74,50 @@ export async function POST(req: Request, { params }: Ctx) {
 }
 
 // PUT — finalize: rename a draft attachment folder to the real bead id once it exists.
+// With `copyFrom` + `files` it instead copies those files from another bead's folder (a clone), so
+// the new bead keeps its images if the source bead is deleted. The source folder is left as is.
 export async function PUT(req: Request, { params }: Ctx) {
   try {
     const { projectId } = await params;
     const dir = attachmentsDir(projectId);
-    const body = (await req.json()) as { draftId?: string; beadId?: string };
+    const body = (await req.json()) as { draftId?: string; beadId?: string; copyFrom?: string; files?: unknown };
+    if (body.copyFrom !== undefined) {
+      const fromId = safeSegment(String(body.copyFrom || ""), "");
+      const toId = safeSegment(String(body.beadId || ""), "");
+      if (!fromId || !toId || !Array.isArray(body.files)) {
+        return ok({ error: "Missing copyFrom, beadId or files", code: "invalid_input" }, 400);
+      }
+      const copied: string[] = [];
+      try {
+        // A symlinked source folder would lead out of the attachments dir; copy nothing from it.
+        if (!fs.lstatSync(path.join(dir, fromId)).isDirectory()) return ok({ copied });
+      } catch {
+        return ok({ copied }); // no folder: nothing to copy
+      }
+      for (const raw of body.files) {
+        const name = safeSegment(String(raw), "");
+        if (!name || name !== raw) continue; // only plain file names, never a path
+        const src = path.join(dir, fromId, name);
+        // lstat: a symlink in the source folder must not be followed out of the attachments dir.
+        let stat: fs.Stats;
+        try {
+          stat = fs.lstatSync(src);
+        } catch {
+          continue; // the source image is already gone; nothing to copy
+        }
+        if (!stat.isFile()) continue;
+        const target = path.join(dir, toId, name);
+        try {
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(src, target, fs.constants.COPYFILE_EXCL);
+          copied.push(name);
+        } catch {
+          // One unreadable or already-present file must not hide the others; it is simply not
+          // reported as copied, so its ref keeps pointing where it did.
+        }
+      }
+      return ok({ copied });
+    }
     const draftId = safeSegment(String(body.draftId || ""), "");
     const beadId = safeSegment(String(body.beadId || ""), "");
     if (!draftId || !beadId) {

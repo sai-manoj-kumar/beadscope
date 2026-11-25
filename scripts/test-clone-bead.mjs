@@ -140,6 +140,48 @@ try {
   assert.equal(commentCount(source), 1, "the source keeps its comment");
   await page.close();
 
+  // Images in the description are copied into the new bead, so the clone survives the source's deletion.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==", "base64");
+  const withImage = (await (await post(projectId, { title: "has an image" })).json()).id;
+  const shotsDir = path.join(dir, ".beads", "attachments", withImage);
+  fs.mkdirSync(shotsDir, { recursive: true });
+  fs.writeFileSync(path.join(shotsDir, "shot.png"), png);
+  fs.writeFileSync(path.join(shotsDir, "unused.png"), png);
+  bd(["update", withImage, "--description", `see ![shot](attachment://${withImage}/shot.png) and ![gone](attachment://${withImage}/gone.png)`]);
+  {
+    const p = await desktop.newPage();
+    p.setDefaultTimeout(20000);
+    await p.goto(`${base}/p/${projectId}?bead=${withImage}`);
+    await p.getByRole("button", { name: "Clone bead" }).click();
+    const d = p.getByRole("dialog").filter({ hasText: `Clone ${withImage}` });
+    await d.waitFor();
+    await d.getByPlaceholder("What needs doing?").fill("image clone");
+    await d.getByRole("button", { name: /Create bead/ }).click();
+    await d.waitFor({ state: "detached" });
+    const imageCopy = await waitBead("image clone");
+    // The description is rewritten after the create, so wait for it.
+    let desc = "";
+    for (let i = 0; i < 40; i++) {
+      desc = show(imageCopy).description ?? "";
+      if (desc.includes(`attachment://${imageCopy}/shot.png`)) break;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    assert.equal(
+      desc,
+      `see ![shot](attachment://${imageCopy}/shot.png) and ![gone](attachment://${withImage}/gone.png)`,
+      "a copied image points at the new bead; a source image that is already missing is left as written",
+    );
+    const copiedDir = path.join(dir, ".beads", "attachments", imageCopy);
+    assert.deepEqual(fs.readdirSync(copiedDir), ["shot.png"], "only the referenced image is copied");
+    assert.ok(fs.readFileSync(path.join(copiedDir, "shot.png")).equals(png), "the copy has the same bytes");
+    assert.ok(fs.existsSync(path.join(shotsDir, "shot.png")), "the source keeps its image");
+    // Delete the source's files: the clone's image still serves.
+    fs.rmSync(shotsDir, { recursive: true, force: true });
+    const served = await fetch(`${base}/api/p/${projectId}/attachments/${imageCopy}/shot.png`);
+    assert.equal(served.status, 200, "the clone's image still serves after the source's images are gone");
+    await p.close();
+  }
+
   // Cancel creates nothing.
   ({ page, dialog } = await openClone(desktop));
   await dialog.getByRole("button", { name: "Cancel" }).click();
