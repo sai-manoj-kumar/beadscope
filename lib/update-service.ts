@@ -58,15 +58,32 @@ export function createUpdater(options: Options) {
     if (!sha || !/^[a-f0-9]{40}$/.test(sha)) throw new Error("The update target is unavailable.");
     return sha;
   }
+  const manualText = "This installation needs a manual update. Run `npm install -g beadscope` or `brew upgrade beadscope`, then `beadscope stop` and `beadscope start`; for a source download or Docker, follow the release notes.";
+  /** How this copy was installed: a Git checkout, an npm global install we can replace, or something we leave alone. */
+  function installKind(): { kind: "git" | "manual" } | { kind: "npm"; prefix: string; problem?: string } {
+    if (isGit()) return { kind: "git" };
+    try {
+      const real = fs.realpathSync(cwd);
+      const modules = path.dirname(real);
+      const manifest = JSON.parse(fs.readFileSync(path.join(real, "package.json"), "utf8"));
+      // Homebrew and npx keep their own copies under node_modules too; only a plain global npm install is ours to replace.
+      if (manifest.name !== "beadscope" || path.basename(modules) !== "node_modules" || /cellar|linuxbrew|homebrew|_npx/i.test(real)) return { kind: "manual" };
+      const parent = path.dirname(modules);
+      const prefix = path.basename(parent) === "lib" ? path.dirname(parent) : parent;
+      try { fs.accessSync(modules, fs.constants.W_OK); }
+      catch { return { kind: "npm", prefix, problem: "This npm installation is not writable by the Beadscope server. Run `sudo npm install -g beadscope` yourself, then restart Beadscope." }; }
+      return { kind: "npm", prefix };
+    } catch { return { kind: "manual" }; }
+  }
   async function checkoutProblem(): Promise<string | undefined> {
-    if (!isGit()) return "This installation needs a manual update. Run `npm install -g beadscope` or `brew upgrade beadscope`, then `beadscope stop` and `beadscope start`; for a source download or Docker, follow the release notes.";
+    if (!isGit()) return manualText;
     const branch = await git("branch", "--show-current");
     if (branch && branch !== "main") return "Switch to the main branch before updating; your working branch will not be changed.";
     if (await git("status", "--porcelain")) return "Your checkout has uncommitted changes. Commit or stash them before updating.";
   }
   async function check(channel: UpdateChannel = "stable"): Promise<UpdateStatus> {
     const base: UpdateStatus = { channel, currentVersion: version, isGitRepo: isGit(), supervised: !!options.supervised,
-      updateAvailable: false, canUpdate: false, behind: 0, localSha: "", remoteSha: "" };
+      updateAvailable: false, canUpdate: false, behind: 0, localSha: "", remoteSha: "", installKind: installKind().kind };
     try {
       if (channel === "stable") {
         const tag = await latest();
@@ -75,6 +92,13 @@ export function createUpdater(options: Options) {
         base.releaseUrl = `https://github.com/${repository}/releases/tag/${encodeURIComponent(tag)}`;
         base.updateAvailable = newer(tag, version);
         if (!base.updateAvailable) return base;
+        const install = installKind();
+        if (install.kind === "npm") {
+          // An npm install has no Git history: the release tag is the whole target, and npm verifies the package.
+          base.manualReason = install.problem; base.target = { channel, tag };
+          base.canUpdate = !install.problem;
+          return base;
+        }
         base.manualReason = await checkoutProblem();
         if (!base.isGitRepo) return base;
         base.localSha = await git("rev-parse", "HEAD");
@@ -97,12 +121,36 @@ export function createUpdater(options: Options) {
       return base;
     } catch (e) { return { ...base, canUpdate: false, error: (e as Error).message }; }
   }
+  /** In-place update of a global npm install: `npm install -g beadscope@X.Y.Z` into the prefix this copy lives in. */
+  async function updateNpm(tag: string, install: { prefix: string; problem?: string }): Promise<UpdateResult> {
+    if (install.problem) throw new Error(install.problem);
+    await releaseTag(tag);
+    if (!newer(tag, version)) throw new Error("This release is not newer than the running version.");
+    const wanted = tag.replace(/^v/, "");
+    const steps: UpdateStep[] = [];
+    try {
+      const output = await runner("npm", ["install", "-g", "--prefix", install.prefix, `beadscope@${wanted}`, "--no-audit", "--no-fund"],
+        { cwd: install.prefix, timeout: 300_000, maxBuffer: 64 * 1024 * 1024 });
+      steps.push({ name: `Install beadscope ${wanted} with npm`, ok: true, output: `${output.stdout}${output.stderr}`.slice(-4000) });
+    } catch {
+      throw new Error(`npm could not install beadscope ${wanted}. A release can take a few minutes to reach npm; try again shortly, or run \`npm install -g beadscope\` yourself.`);
+    }
+    let installed = "";
+    try { installed = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version; } catch { /* reported below */ }
+    if (installed !== wanted) throw new Error(`The installed version (${installed || "unknown"}) is not ${wanted}. Run \`npm install -g beadscope\` yourself, then restart.`);
+    restartPending = !!options.supervised;
+    return { ok: true, steps, restarting: restartPending, fromSha: version, toSha: wanted };
+  }
   async function update(target: UpdateTarget): Promise<UpdateResult> {
     if (updating) throw new Error("An update is already running.");
     updating = true;
     try {
-      if (!target || !["stable", "development"].includes(target.channel) || !/^[a-f0-9]{40}$/.test(target.sha) ||
+      if (!target || !["stable", "development"].includes(target.channel) ||
           (target.channel === "stable" && (!target.tag || !tagPattern.test(target.tag)))) throw new Error("Invalid update target. Check for updates again.");
+      const install = installKind();
+      if (install.kind === "npm" && target.channel === "stable") return await updateNpm(target.tag!, install);
+      if (!target.sha || !/^[a-f0-9]{40}$/.test(target.sha)) throw new Error("Invalid update target. Check for updates again.");
+      const sha = target.sha;
       if (!isGit()) throw new Error("A Git checkout is required for in-app updates. See the release instructions.");
       const problem = await checkoutProblem(); if (problem) throw new Error(problem);
       if (target.channel === "stable") {
@@ -110,14 +158,14 @@ export function createUpdater(options: Options) {
         if (!newer(target.tag!, version)) throw new Error("This release is not newer than the running version.");
       }
       const resolved = await resolve(target.channel, target.tag);
-      if (resolved !== target.sha) throw new Error("The advertised update target changed. Check for updates again.");
-      await git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", remote, target.sha);
+      if (resolved !== sha) throw new Error("The advertised update target changed. Check for updates again.");
+      await git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", remote, sha);
       if (target.channel === "stable") {
-        const manifest = JSON.parse(await git("show", `${target.sha}:package.json`));
+        const manifest = JSON.parse(await git("show", `${sha}:package.json`));
         if (manifest.name !== "beadscope" || manifest.version !== target.tag!.replace(/^v/, "")) throw new Error("Release tag and package version do not match.");
       }
       const fromSha = await git("rev-parse", "HEAD");
-      try { await git("merge-base", "--is-ancestor", fromSha, target.sha); }
+      try { await git("merge-base", "--is-ancestor", fromSha, sha); }
       catch { throw new Error("Your checkout has diverged from this update. A fast-forward is required; no local work was overwritten."); }
       // Recheck after network requests, before changing tracked files.
       const recheck = await checkoutProblem(); if (recheck) throw new Error(recheck);
@@ -128,9 +176,9 @@ export function createUpdater(options: Options) {
           steps.push({ name, ok: true, output: `${output.stdout}${output.stderr}`.slice(-4000) });
         } catch { throw new Error(`${name} failed. Source files may already be updated; fix the problem and retry, or rebuild manually.`); }
       };
-      await run("Install selected source version", "git", ["merge", "--ff-only", target.sha]);
+      await run("Install selected source version", "git", ["merge", "--ff-only", sha]);
       const toSha = await git("rev-parse", "HEAD");
-      if (toSha !== target.sha) throw new Error("The checkout does not match the selected update.");
+      if (toSha !== sha) throw new Error("The checkout does not match the selected update.");
       // Always install locked dependencies: this also repairs retries after a failed build/install.
       await run("Install dependencies", "npm", ["ci", "--include=dev", "--no-audit", "--no-fund"]);
       await run("Build app", "npm", ["run", "build"]);

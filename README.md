@@ -210,11 +210,17 @@ These GitHub requests are independent of the optional usage-statistics setting.
 When a new version is available, click the sidebar notice to read its release notes.
 A clean main/detached Git checkout can install the exact advertised target with
 **Update now**. Dependencies are restored with `npm ci` and the app is rebuilt.
-The supervised `npm run serve` launcher restarts automatically; other launchers
-need a manual restart. Local changes or diverged history must be resolved first.
-npm, Homebrew, source-download and Docker installations receive the notice with
-manual update instructions (`npm install -g beadscope` or `brew upgrade beadscope`,
-then restart). No update is installed automatically.
+A global npm install (`npm install -g beadscope`) updates in place too: **Update now**
+runs `npm install -g beadscope@X.Y.Z` into the folder the running copy lives in
+(stable channel only; the folder must be writable by the server's user).
+The supervised `npm run serve` launcher restarts automatically; so does any
+launcher that restarts the process when it exits (for example a systemd unit with
+`Restart=always`) once it sets `BEADSCOPE_SUPERVISED=1` in the server's environment:
+after an update the server exits with code 75 and the open page reloads when it is
+back. Other launchers need a manual restart. Local changes or diverged history must
+be resolved first. Homebrew, source-download and Docker installations receive the
+notice with manual update instructions (`brew upgrade beadscope`, then restart).
+Nothing is installed without a click.
 
 Release notes and the versioning policy are in [`docs/releases/`](docs/releases/).
 

@@ -22,6 +22,19 @@ export function UpdateIndicator() {
       if (selected) qc.setQueryData<UpdateStatus>(["update-check", selected.channel], prev => prev ? { ...prev, updateAvailable: false } : prev);
     },
   });
+  // After a restart the open page still runs the old code: reload once the server answers again.
+  const restarting = !!run.data?.restarting;
+  React.useEffect(() => {
+    if (!restarting) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try { if ((await fetch("/api/telemetry", { cache: "no-store" })).ok) { window.location.reload(); return; } } catch { /* still down */ }
+      if (!stopped) timer = setTimeout(poll, 1500);
+    };
+    timer = setTimeout(poll, 3000);
+    return () => { stopped = true; clearTimeout(timer); };
+  }, [restarting]);
   if (!data?.updateAvailable && !selected) return null;
   const label = data?.channel === "stable" ? `Version ${data.latestVersion} available` : "Development update available";
   return <>
@@ -42,7 +55,8 @@ export function UpdateIndicator() {
         </a>
         {!selected.canUpdate && <p className="text-body leading-relaxed">{selected.manualReason || "Follow the release instructions to update this installation."}</p>}
         {selected.canUpdate && !run.data && <p className="text-label leading-relaxed text-[var(--text-3)]">
-          Update now installs the selected source version, restores its dependencies, and builds the app.
+          {selected.installKind === "npm" ? `Update now runs npm install -g beadscope@${selected.latestVersion} for you, in the folder this copy is installed in.`
+            : "Update now installs the selected source version, restores its dependencies, and builds the app."}
           {selected.supervised ? " The server then restarts automatically." : " Restart the server manually afterward to load the new version."}
         </p>}
         {run.isError && <p role="alert" className="rounded-lg border border-red-400 p-3 text-label">{run.error.message}</p>}
