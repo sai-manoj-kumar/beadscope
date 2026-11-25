@@ -6,14 +6,17 @@
 //
 // A push that only touches documentation does not release (see docsOnly). Otherwise the
 // version is chosen by these rules, in order:
-//   1. The commit already carries a vX.Y.Z tag (a re-run of the same push): reuse it.
+//   1. The commit is already released (a re-run of the same push): reuse that version. That
+//      means a vX.Y.Z tag on the commit itself, or on the "release: vX.Y.Z" commit the
+//      workflow built directly on top of it.
 //   2. No release tag exists yet: use package.json's version.
 //   3. package.json is ahead of the newest tag (a pull request raised the version on
 //      purpose, for a minor or major release): release exactly that version.
 //   4. Otherwise: the newest tag with its patch number plus one.
 //
-// main is protected, so nothing commits the new version back. The workflow sets it in
-// the CI checkout only; the tag is the record of what was released.
+// The workflow records each release as a "release: vX.Y.Z [skip ci]" commit that sets the
+// version in package.json and package-lock.json. The tag sits on that commit, which then
+// lands on main through a deploy key that the main ruleset lets bypass its rules.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -63,9 +66,24 @@ export function docsOnly(paths) {
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).split('\n').filter(Boolean);
 
+/** Release tags that already cover HEAD: on it, or on the release commit built right above it. */
+function tagsCoveringHead() {
+  const head = git('rev-parse', 'HEAD')[0];
+  return git('tag', '--list', 'v*').filter((tag) => {
+    const commit = git('rev-parse', `${tag}^{commit}`)[0];
+    if (commit === head) return true;
+    try {
+      const isReleaseCommit = git('log', '-1', '--format=%s', commit)[0] === `release: ${tag} [skip ci]`;
+      return isReleaseCommit && git('rev-parse', `${commit}^`)[0] === head;
+    } catch {
+      return false; // a root commit has no parent
+    }
+  });
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv.includes('--docs-only')) {
   console.log(docsOnly(readFileSync(0, 'utf8').split('\n')));
 } else if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-  console.log(nextVersion({ tags: git('tag', '--list', 'v*'), headTags: git('tag', '--points-at', 'HEAD'), packageVersion }));
+  console.log(nextVersion({ tags: git('tag', '--list', 'v*'), headTags: tagsCoveringHead(), packageVersion }));
 }
