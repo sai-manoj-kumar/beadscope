@@ -26,10 +26,13 @@ is chosen from the newest `vX.Y.Z` tag (see
 [`scripts/next-version.mjs`](../../scripts/next-version.mjs)), and the release notes are
 generated from the merged pull requests.
 
-`main` is protected, so the workflow does not commit the new version back. It creates the
-tag itself and sets the version only inside the CI build. This means `package.json` on
-`main` keeps its last hand-set value and can lag behind the newest tag. The tag, the
-GitHub release and npm are the record of what was released.
+Each release is a `release: vX.Y.Z [skip ci]` commit that sets the version in `package.json`
+and `package-lock.json` on top of the merged commit. The package is built from that commit
+and the tag goes on it. A final `land` step then pushes the commit to `main`, so `package.json`
+always shows the newest release. `main` only takes pull requests, so that push uses a deploy
+key that the `main` ruleset lets bypass its rules; if `main` moved on in the meantime, only
+the version change is replayed on top of it. The `[skip ci]` marker stops that push from
+starting another run, so leave it in the message.
 
 For a **minor or major** release (or any release with hand-written notes):
 
@@ -42,4 +45,15 @@ Pushing a `vX.Y.Z` tag by hand also still works. That path insists the tag match
 already done, so a failed run can simply be re-run.
 
 The workflow publishes with npm trusted publishing (no stored npm token) and updates the
-tap with a write-enabled deploy key stored as the `TAP_DEPLOY_KEY` secret.
+tap with a write-enabled deploy key stored as the `TAP_DEPLOY_KEY` secret. It lands the
+release commit with a second deploy key on this repository, stored as `RELEASE_DEPLOY_KEY`.
+
+## Protecting `main`
+
+`main` is protected by a repository ruleset named **main** (Settings → Rules → Rulesets), not
+by classic branch protection. It requires a pull request, the `check` status, a linear
+history and conversation resolution, and it blocks force pushes and deletion. There is no
+administrator bypass. The only bypass is **deploy keys**, so the one write-enabled deploy key
+on this repository (the one behind `RELEASE_DEPLOY_KEY`) can push straight to `main`. Do not
+add another write-enabled deploy key to this repository without meaning to give it the same
+power, and rotate `RELEASE_DEPLOY_KEY` by replacing both the key and the secret.
