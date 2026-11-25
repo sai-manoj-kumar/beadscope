@@ -1,0 +1,21 @@
+[Unit]
+Description=Install the Beadscope version the app asked for
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/beadscope-updater/beadscope-updater
+Environment=PATH=/opt/node/bin:/usr/local/bin:/usr/bin:/bin
+# Root-written status (the app only reads it), npm's cache, and the staging/backup folders next to the install.
+RuntimeDirectory=beadscope-updater
+RuntimeDirectoryPreserve=yes
+CacheDirectory=beadscope-updater
+ReadWritePaths=/opt /var/lib/beadscope/update
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+NoNewPrivileges=true
+# npm needs about 800 MB while it unpacks; the app is stopped meanwhile.
+MemoryMax=1500M
+TimeoutStartSec=15min

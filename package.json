@@ -33,6 +33,7 @@
     "!.next/trace*",
     "!.next/diagnostics",
     "public",
+    "server-updater",
     "next.config.ts"
   ],
   "engines": {

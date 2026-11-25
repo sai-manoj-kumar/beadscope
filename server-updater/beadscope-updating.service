@@ -1,0 +1,16 @@
+[Unit]
+Description=Beadscope "Updating" page (stands in for the app while it is replaced)
+Conflicts=beadscope.service
+
+[Service]
+DynamicUser=yes
+Environment=HOST=127.0.0.1
+Environment=PORT=3000
+Environment=BEADSCOPE_UPDATE_STATUS_FILE=/run/beadscope-updater/status.json
+ExecStart=/opt/node/bin/node /usr/local/lib/beadscope-updater/updating.mjs
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+MemoryMax=64M

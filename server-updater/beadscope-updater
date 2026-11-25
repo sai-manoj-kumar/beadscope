@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# Root-owned updater for a Beadscope systemd service (see README.md here).
+#
+# The web app cannot write its own code: its install folder is root-owned and read-only to it. Update now only drops
+# request.json ({"version":"X.Y.Z"}) in a folder the app owns; systemd starts this script (beadscope-updater.path).
+# Everything in that file is untrusted, so only a strict X.Y.Z that is newer than the installed version is used, and
+# nothing here writes to the app's folder: status goes to a root-owned file the app only reads.
+#
+# Steps: stop the app, show the "Updating" page (beadscope-updating.service), install into a staging prefix, swap it in
+# place of the old one, start the app and wait for it to answer. Any failure puts the old install back.
+set -euo pipefail
+
+REQUEST_DIR=${BEADSCOPE_UPDATE_REQUEST_DIR:-/var/lib/beadscope/update}
+STATUS_FILE=${BEADSCOPE_UPDATE_STATUS_FILE:-/run/beadscope-updater/status.json}
+LOCK_FILE=${BEADSCOPE_UPDATE_LOCK_FILE:-/run/beadscope-updater/lock}
+PREFIX=${BEADSCOPE_PREFIX:-/opt/beadscope}
+APP_UNIT=${BEADSCOPE_APP_UNIT:-beadscope}
+HOLD_UNIT=${BEADSCOPE_HOLD_UNIT:-beadscope-updating}
+HEALTH_URL=${BEADSCOPE_HEALTH_URL:-http://127.0.0.1:3000/api/telemetry}
+HEALTH_SECONDS=${BEADSCOPE_HEALTH_SECONDS:-90}
+NPM=${BEADSCOPE_NPM:-/opt/node/bin/npm}
+SYSTEMCTL=${BEADSCOPE_SYSTEMCTL:-systemctl}
+CURL=${BEADSCOPE_CURL:-curl}
+
+SEMVER='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+case "$PREFIX" in /?*) ;; *) echo "BEADSCOPE_PREFIX must be an absolute path" >&2; exit 2 ;; esac
+[ "$PREFIX" != "/" ] || exit 2
+APP_DIR=$PREFIX/lib/node_modules/beadscope
+STAGE=$PREFIX.next
+PREV=$PREFIX.prev
+
+log() { echo "beadscope-updater: $*"; }
+mkdir -p "$(dirname "$STATUS_FILE")"
+
+# status STATE VERSION [MESSAGE]: written atomically; the Updating page and the app read it.
+status() {
+  local message
+  message=$(printf '%s' "${3:-}" | tr -d '"\\' | tr '\n\t' '  ' | cut -c1-300)
+  printf '{"state":"%s","version":"%s","message":"%s","since":%s}\n' "$1" "$2" "$message" "$(date +%s)" > "$STATUS_FILE.tmp"
+  chmod 644 "$STATUS_FILE.tmp"
+  mv -f "$STATUS_FILE.tmp" "$STATUS_FILE"
+}
+version_in() { sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$1/package.json" 2>/dev/null | head -1; }
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || { log "another update is running"; exit 0; }
+
+# 1. Read the request, then delete it so a failure cannot loop.
+REQUEST=$REQUEST_DIR/request.json
+[ -f "$REQUEST" ] || exit 0
+if [ -L "$REQUEST" ]; then rm -f "$REQUEST"; status failed "" "request is a symlink"; exit 0; fi
+WANTED=$(head -c 2000 "$REQUEST" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9.]*\)".*/\1/p' | head -1)
+rm -f "$REQUEST"
+if ! [[ $WANTED =~ $SEMVER ]]; then status failed "" "the request did not contain a plain X.Y.Z version"; log "bad request"; exit 0; fi
+
+# 2. Only ever move forward.
+CURRENT=$(version_in "$APP_DIR")
+if [[ -z $CURRENT || $WANTED == "$CURRENT" || $(printf '%s\n%s\n' "$CURRENT" "$WANTED" | sort -V | tail -1) != "$WANTED" ]]; then
+  status failed "$WANTED" "version $WANTED is not newer than the installed ${CURRENT:-unknown}"; log "not newer: $WANTED vs $CURRENT"; exit 0
+fi
+log "updating $CURRENT -> $WANTED"
+
+SWAPPED=0 TOUCHED=0 FINISHED=0
+restore_app() {
+  # Whatever happened, leave the app running: the old install if the swap did not finish or did not work.
+  if [ "$SWAPPED" = 1 ]; then
+    "$SYSTEMCTL" stop "$APP_UNIT" || true
+    rm -rf "$PREFIX.failed"; mv "$PREFIX" "$PREFIX.failed"; mv "$PREV" "$PREFIX"
+    SWAPPED=0
+  fi
+  "$SYSTEMCTL" stop "$HOLD_UNIT" || true
+  "$SYSTEMCTL" start "$APP_UNIT" || true
+}
+fail() {
+  log "failed: $1"
+  FINISHED=1
+  restore_app
+  status failed "$WANTED" "$1"
+  exit 1
+}
+# An unexpected error after the app was stopped must not leave it stopped.
+trap 'if [ "$TOUCHED" = 1 ] && [ "$FINISHED" = 0 ]; then FINISHED=1; restore_app; status failed "$WANTED" "the updater stopped unexpectedly"; fi' EXIT
+
+# 3. Show the Updating page in place of the app, then install into a staging prefix.
+status installing "$WANTED"
+TOUCHED=1
+"$SYSTEMCTL" stop "$APP_UNIT" || fail "could not stop $APP_UNIT"
+"$SYSTEMCTL" start "$HOLD_UNIT" || log "could not start the Updating page; continuing"
+rm -rf "$STAGE"
+export npm_config_cache=${CACHE_DIRECTORY:-/var/cache/beadscope-updater}
+export HOME=$npm_config_cache
+if ! OUT=$("$NPM" install -g --prefix "$STAGE" --ignore-scripts --no-audit --no-fund "beadscope@$WANTED" 2>&1); then
+  rm -rf "$STAGE"
+  fail "npm could not install beadscope $WANTED: $(printf '%s\n' "$OUT" | grep -E 'npm (error|ERR)' | head -2 | tr '\n' ' ')"
+fi
+INSTALLED=$(version_in "$STAGE/lib/node_modules/beadscope")
+if [ "$INSTALLED" != "$WANTED" ]; then rm -rf "$STAGE"; fail "installed version was ${INSTALLED:-missing}, not $WANTED"; fi
+
+# 4. Swap in, keeping the old install as $PREFIX.prev (the next update replaces it).
+status starting "$WANTED"
+rm -rf "$PREV"
+mv "$PREFIX" "$PREV" || { rm -rf "$STAGE"; fail "could not move the old install aside"; }
+if ! mv "$STAGE" "$PREFIX"; then mv "$PREV" "$PREFIX"; fail "could not move the new install into place"; fi
+SWAPPED=1
+"$SYSTEMCTL" stop "$HOLD_UNIT" || true
+"$SYSTEMCTL" start "$APP_UNIT" || fail "could not start $APP_UNIT on $WANTED"
+
+# 5. The new version must answer, or the old one goes back.
+for _ in $(seq 1 "$HEALTH_SECONDS"); do
+  if "$CURL" -fsS -o /dev/null --max-time 3 "$HEALTH_URL" 2>/dev/null; then
+    FINISHED=1; status done "$WANTED"; log "now on $WANTED"; exit 0
+  fi
+  sleep 1
+done
+fail "$WANTED did not answer at $HEALTH_URL within ${HEALTH_SECONDS}s; the old version is back"
