@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import type { Bead } from "@/lib/schema";
 import { Icon, typeIconName } from "@/components/icons";
 import { useApp } from "@/components/app-context";
+import { BulkCheck, isSelectGesture } from "@/components/bulk-bar";
 import { AssigneeAvatar } from "@/components/assignee-picker";
 import { CopyableId } from "@/components/copyable-id";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -24,7 +25,24 @@ import {
   checklistProgress,
 } from "@/lib/beads-view";
 
-export function BeadCard({ bead, childCount = 0 }: { bead: Bead; childCount?: number }) {
+/** Bulk edit on a card: checkboxes show and a click ticks the card instead of opening it. */
+export interface CardSelection {
+  /** Checkboxes are showing (Select mode, or at least one card ticked). */
+  active: boolean;
+  checked: boolean;
+  onToggle: () => void;
+}
+
+export function BeadCard({
+  bead,
+  childCount = 0,
+  selection,
+}: {
+  bead: Bead;
+  childCount?: number;
+  /** Absent in a read-only board, where nothing can be edited. */
+  selection?: CardSelection;
+}) {
   const { openDetail, readOnly, selectedBeadId, selectBead } = useApp();
   // Phones do not drag: status changes in the drawer, and a draggable card would swallow the
   // touch that should scroll the page.
@@ -39,17 +57,31 @@ export function BeadCard({ bead, childCount = 0 }: { bead: Bead; childCount?: nu
     <article
       ref={setNodeRef}
       {...(mobile ? {} : listeners)}
-      {...(noDrag ? { role: "button", tabIndex: 0 } : attributes)}
-      {...(noDrag ? { onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+      {...(noDrag ? { tabIndex: 0 } : attributes)}
+      role="button"
+      onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
         if (e.target !== e.currentTarget) return;
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetail(bead.id); }
-      } } : {})}
+        if (e.key !== "Enter" && e.key !== " ") return;
+        // Cmd/Ctrl+Enter or Space ticks, the keyboard twin of Cmd/Ctrl-click. A plain Enter on a
+        // draggable card is left to the app's own keyboard shortcuts, as before.
+        if (selection && (selection.active || isSelectGesture(e))) {
+          e.preventDefault();
+          selection.onToggle();
+        } else if (noDrag) {
+          e.preventDefault();
+          openDetail(bead.id);
+        }
+      }}
       data-keyboard-bead-id={bead.id}
       aria-current={selectedBeadId === bead.id ? "true" : undefined}
+      aria-pressed={selection?.active ? selection.checked : undefined}
       onFocus={() => selectBead(bead.id)}
-      onClick={() => {
+      onClick={(e) => {
         selectBead(bead.id);
-        openDetail(bead.id);
+        // Cmd (Mac) or Ctrl (Windows) starts a selection; once one is going, a plain click ticks too.
+        // A drag does not click: dnd-kit swallows the click that ends one.
+        if (selection && (selection.active || isSelectGesture(e))) selection.onToggle();
+        else openDetail(bead.id);
       }}
       style={{
         transform: CSS.Transform.toString(transform),
@@ -63,6 +95,9 @@ export function BeadCard({ bead, childCount = 0 }: { bead: Bead; childCount?: nu
           : "border-border hover:border-[var(--text-3)]"
       }`}
     >
+      {selection?.active && (
+        <BulkCheck id={bead.id} checked={selection.checked} onToggle={selection.onToggle} className="-mb-[6px] -ml-2 -mt-[6px] self-start" />
+      )}
       <BeadCardFace bead={bead} childCount={childCount} />
     </article>
   );
