@@ -1,6 +1,6 @@
 {
   "name": "beadscope",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "A local web UI for the beads (bd) issue tracker",
   "keywords": [
     "beads",
