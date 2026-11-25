@@ -9,7 +9,7 @@ import { useApp } from "@/components/app-context";
 import { useAssigneeNames } from "@/components/assignee-picker";
 import { beadsKey } from "@/hooks/use-beads";
 import { api } from "@/lib/api-client";
-import { BULK_STATUSES, bulkPatch, hasBulkChanges, type BulkChanges } from "@/lib/bulk-edit";
+import { BULK_STATUSES, bulkPatch, hasBulkChanges, type BulkChanges, type BulkTarget } from "@/lib/bulk-edit";
 import { prioLabel, statusLabel } from "@/lib/beads-view";
 
 const NO_CHANGE = "__keep__";
@@ -32,11 +32,40 @@ export function BulkEditDialog({
   /** Called with the ids that were updated, so the caller can drop them from the selection. */
   onDone: (updated: string[]) => void;
 }) {
+  const { projectId } = useApp();
+  const assigneeNames = useAssigneeNames();
+  const targets = React.useMemo(() => ids && ids.map((id) => ({ projectId, id })), [ids, projectId]);
+  return (
+    <BulkEditTargetsDialog
+      targets={targets}
+      assigneeNames={assigneeNames}
+      onClose={onClose}
+      onDone={(updated) => onDone(updated.map((t) => t.id))}
+    />
+  );
+}
+
+/**
+ * The dialog for beads that may belong to different repos (the all-repos Agent Queue), so it does
+ * not read the current project from the app context: every target names its own repo, and the
+ * caller supplies the assignee choices.
+ */
+export function BulkEditTargetsDialog({
+  targets,
+  assigneeNames,
+  onClose,
+  onDone,
+}: {
+  targets: BulkTarget[] | null;
+  assigneeNames: string[];
+  onClose: () => void;
+  onDone: (updated: BulkTarget[]) => void;
+}) {
   // Lifted here so Esc, an outside click and the close button can all be refused while writes are in flight.
   const [busy, setBusy] = React.useState(false);
   return (
     <Dialog
-      open={ids !== null}
+      open={targets !== null}
       onOpenChange={(open) => {
         if (!open && !busy) onClose();
       }}
@@ -45,7 +74,9 @@ export function BulkEditDialog({
         showCloseButton={!busy}
         className="w-[440px] max-w-[100%] gap-0 rounded-2xl border border-border bg-[var(--surface)] p-0 shadow-[var(--shadow-lg)]"
       >
-        {ids && <BulkEditForm ids={ids} busy={busy} onBusy={setBusy} onClose={onClose} onDone={onDone} />}
+        {targets && (
+          <BulkEditForm ids={targets} names={assigneeNames} busy={busy} onBusy={setBusy} onClose={onClose} onDone={onDone} />
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -53,20 +84,20 @@ export function BulkEditDialog({
 
 function BulkEditForm({
   ids,
+  names,
   busy,
   onBusy,
   onClose,
   onDone,
 }: {
-  ids: string[];
+  ids: BulkTarget[];
+  names: string[];
   busy: boolean;
   onBusy: (busy: boolean) => void;
   onClose: () => void;
-  onDone: (updated: string[]) => void;
+  onDone: (updated: BulkTarget[]) => void;
 }) {
-  const { projectId } = useApp();
   const qc = useQueryClient();
-  const names = useAssigneeNames();
   const [priority, setPriority] = React.useState(NO_CHANGE);
   const [assignee, setAssignee] = React.useState(NO_CHANGE);
   const [status, setStatus] = React.useState(NO_CHANGE);
@@ -86,29 +117,31 @@ function BulkEditForm({
     e.preventDefault();
     if (busy || !hasBulkChanges(changes)) return;
     const patch = bulkPatch(changes);
-    const updated: string[] = [];
-    const failed: { id: string; message: string }[] = [];
+    const updated: BulkTarget[] = [];
+    const failed: { target: BulkTarget; message: string }[] = [];
     setError(null);
     onBusy(true);
-    for (const id of todo) {
+    for (const target of todo) {
       setProgress(updated.length + failed.length);
       try {
-        await api.update(projectId, id, patch);
-        updated.push(id);
+        await api.update(target.projectId, target.id, patch);
+        updated.push(target);
       } catch (err) {
-        failed.push({ id, message: (err as Error).message });
+        failed.push({ target, message: (err as Error).message });
       }
     }
     onBusy(false);
-    qc.invalidateQueries({ queryKey: beadsKey(projectId) });
+    for (const projectId of new Set(todo.map((t) => t.projectId))) {
+      qc.invalidateQueries({ queryKey: beadsKey(projectId) });
+    }
     if (updated.length) onDone(updated);
     if (failed.length === 0) {
       toast.success(`Updated ${updated.length} bead${updated.length === 1 ? "" : "s"} · bd update`);
       onClose();
     } else {
-      setTodo(failed.map((f) => f.id));
+      setTodo(failed.map((f) => f.target));
       setError(
-        `${failed.length} of ${todo.length} could not be updated (${failed.map((f) => f.id).join(", ")}): ${failed[0].message}. ` +
+        `${failed.length} of ${todo.length} could not be updated (${failed.map((f) => f.target.id).join(", ")}): ${failed[0].message}. ` +
           (updated.length ? `${updated.length} were updated. ` : "") +
           "Update again to retry the rest.",
       );

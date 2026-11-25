@@ -12,15 +12,25 @@ import { avatarColor, initials } from "@/lib/beads-view";
  */
 export function useAssigneeNames(): string[] {
   const { beads, meta } = useApp();
-  return React.useMemo(() => {
-    const clean = (names: Array<string | null | undefined>) =>
-      names.map((n) => n?.trim()).filter((n): n is string => !!n);
-    const first = Array.from(new Set(clean([meta?.humanActor, ...enabledAgentNames(meta?.agents)])));
-    const rest = Array.from(new Set(clean([...beads.map((b) => b.assignee)])))
-      .filter((n) => !first.includes(n))
-      .sort((a, b) => a.localeCompare(b));
-    return [...first, ...rest];
-  }, [beads, meta?.humanActor, meta?.agents]);
+  return React.useMemo(
+    () => assigneeNameList(meta?.humanActor, meta?.agents, beads),
+    [beads, meta?.humanActor, meta?.agents],
+  );
+}
+
+/** The same list for a page that has no single project (the all-repos Agent Queue): `beads` may come from several repos. */
+export function assigneeNameList(
+  humanActor: string | null | undefined,
+  agents: Parameters<typeof enabledAgentNames>[0],
+  beads: ReadonlyArray<{ assignee?: string | null }>,
+): string[] {
+  const clean = (names: Array<string | null | undefined>) =>
+    names.map((n) => n?.trim()).filter((n): n is string => !!n);
+  const first = Array.from(new Set(clean([humanActor, ...enabledAgentNames(agents)])));
+  const rest = Array.from(new Set(clean(beads.map((b) => b.assignee))))
+    .filter((n) => !first.includes(n))
+    .sort((a, b) => a.localeCompare(b));
+  return [...first, ...rest];
 }
 
 /** An agent's icon when the name is an agent identity, else the person's coloured initials. */
