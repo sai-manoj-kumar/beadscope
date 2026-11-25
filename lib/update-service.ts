@@ -6,7 +6,7 @@ import type { UpdateChannel, UpdateStatus, UpdateTarget, UpdateResult, UpdateSte
 
 const exec = promisify(execFile);
 type Runner = (cmd: string, args: string[], options: { cwd: string; timeout: number; maxBuffer: number }) => Promise<{ stdout: string; stderr: string }>;
-type Options = { cwd: string; version: string; buildSha?: string; repository: string; remote?: string; supervised?: boolean; fetch?: typeof fetch; run?: Runner };
+type Options = { cwd: string; version: string; buildSha?: string; repository: string; remote?: string; supervised?: boolean; requestDir?: string; statusFile?: string; fetch?: typeof fetch; run?: Runner };
 const tagPattern = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 function versionParts(value: string) {
   const match = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.exec(value);
@@ -72,6 +72,13 @@ export function createUpdater(options: Options) {
       if (process.platform === "win32" || manifest.name !== "beadscope" || path.basename(modules) !== "node_modules" ||
           path.basename(parent) !== "lib" || /[\\/]Cellar[\\/]|_npx/.test(real)) return { kind: "manual" };
       const prefix = path.dirname(parent);
+      // With an updater service configured the install folder stays read-only: all this process needs is the folder
+      // it leaves the request in. Otherwise it installs into the prefix itself and needs to write there.
+      if (options.requestDir) {
+        try { fs.accessSync(options.requestDir, fs.constants.W_OK); }
+        catch { return { kind: "npm", prefix, problem: "The update request folder is not writable by the Beadscope server. Run `sudo npm install -g beadscope` yourself, then restart Beadscope." }; }
+        return { kind: "npm", prefix };
+      }
       try { fs.accessSync(modules, fs.constants.W_OK); }
       catch { return { kind: "npm", prefix, problem: "This npm installation is not writable by the Beadscope server. Run `sudo npm install -g beadscope` yourself, then restart Beadscope." }; }
       return { kind: "npm", prefix };
@@ -85,7 +92,7 @@ export function createUpdater(options: Options) {
   }
   async function check(channel: UpdateChannel = "stable"): Promise<UpdateStatus> {
     const base: UpdateStatus = { channel, currentVersion: version, isGitRepo: isGit(), supervised: !!options.supervised,
-      updateAvailable: false, canUpdate: false, behind: 0, localSha: "", remoteSha: "", installKind: installKind().kind };
+      updateAvailable: false, canUpdate: false, behind: 0, localSha: "", remoteSha: "", installKind: installKind().kind, viaUpdater: !!options.requestDir };
     try {
       if (channel === "stable") {
         const tag = await latest();
@@ -97,7 +104,7 @@ export function createUpdater(options: Options) {
         const install = installKind();
         if (install.kind === "npm") {
           // An npm install has no Git history: the release tag is the whole target, and npm verifies the package.
-          base.manualReason = install.problem; base.target = { channel, tag };
+          base.manualReason = install.problem; base.target = { channel, tag }; base.updaterError = updaterError();
           base.canUpdate = !install.problem;
           return base;
         }
@@ -130,6 +137,7 @@ export function createUpdater(options: Options) {
     if (!newer(tag, version)) throw new Error("This release is not newer than the running version.");
     const wanted = tag.replace(/^v/, "");
     const steps: UpdateStep[] = [];
+    if (options.requestDir) return queueUpdate(wanted);
     try {
       const output = await runner("npm", ["install", "-g", "--prefix", install.prefix, `beadscope@${wanted}`, "--no-audit", "--no-fund"],
         { cwd: install.prefix, timeout: 300_000, maxBuffer: 64 * 1024 * 1024 });
@@ -145,6 +153,30 @@ export function createUpdater(options: Options) {
     if (installed !== wanted) throw new Error(`The installed version (${installed || "unknown"}) is not ${wanted}. Run \`npm install -g beadscope\` yourself, then restart.`);
     restartPending = !!options.supervised;
     return { ok: true, steps, restarting: restartPending, fromSha: version, toSha: wanted };
+  }
+  /**
+   * Hand the install to the server's updater (a root-owned systemd unit, server-updater/): leave the version in a
+   * request file and stop. The updater validates it, swaps the install, restarts this server, and shows an "Updating"
+   * page meanwhile. This process never writes its own code, so it must not exit: the updater stops it.
+   */
+  function queueUpdate(wanted: string): UpdateResult {
+    const file = path.join(options.requestDir!, "request.json");
+    const tmp = `${file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify({ version: wanted, requestedAt: new Date().toISOString() }), { mode: 0o644 });
+    fs.renameSync(tmp, file);
+    restartPending = true;
+    return { ok: true, queued: true, restarting: true, fromSha: version, toSha: wanted,
+      steps: [{ name: `Ask the updater to install beadscope ${wanted}`, ok: true, output: "" }] };
+  }
+  /** The updater's last failure for a release newer than this one, so the dialog can say why nothing changed. */
+  function updaterError(): string | undefined {
+    if (!options.statusFile) return undefined;
+    try {
+      const status = JSON.parse(fs.readFileSync(options.statusFile, "utf8"));
+      if (status?.state === "failed" && typeof status.version === "string" && tagPattern.test(status.version) && newer(status.version, version)) {
+        return `The updater could not install beadscope ${status.version}: ${String(status.message ?? "unknown error").slice(0, 300)}`;
+      }
+    } catch { /* no status file yet */ }
   }
   async function update(target: UpdateTarget): Promise<UpdateResult> {
     if (updating) throw new Error("An update is already running.");

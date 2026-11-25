@@ -214,6 +214,9 @@ A global npm install (`npm install -g beadscope`) updates in place too: **Update
 runs `npm install -g beadscope@X.Y.Z` into the folder the running copy lives in
 (stable channel only, macOS and Linux; the folder must be writable by the server's
 user; project-local, pnpm, npx and Windows installs stay manual).
+On a systemd server the install folder can stay root-owned: set `BEADSCOPE_UPDATE_REQUEST_DIR` and
+`BEADSCOPE_UPDATE_STATUS_FILE` and install the root-owned updater in [`server-updater/`](server-updater/README.md), and
+**Update now** only asks it to install the release, while a page tells anyone opening Beadscope that it is updating.
 The supervised `npm run serve` launcher restarts automatically; so does any
 launcher that restarts the process when it exits (for example a systemd unit with
 `Restart=always`) once it sets `BEADSCOPE_SUPERVISED=1` in the server's environment:
