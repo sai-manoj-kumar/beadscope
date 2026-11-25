@@ -1,13 +1,34 @@
 name: Release
 
-# Pushing a vX.Y.Z tag publishes that version: it runs the CI checks, publishes the
-# npm package, creates the GitHub release from docs/releases/vX.Y.Z.md, and bumps the
-# Homebrew tap formula. Every step skips itself when its work is already done, so a
-# failed run can be re-run, and a tag for a version that is already on npm still gets
-# its GitHub release and tap bump.
+# Publishes a version: it runs the CI checks, publishes the npm package, creates the
+# GitHub release, and bumps the Homebrew tap formula. Every step skips itself when its
+# work is already done, so a failed run can be re-run, and a tag for a version that is
+# already on npm still gets its GitHub release and tap bump.
 #
-# To release: bump "version" in package.json, add docs/releases/vX.Y.Z.md, merge to
-# main, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+# Two ways in:
+#   - Every push to main (a merged pull request) publishes the next version, chosen by
+#     scripts/next-version.mjs: a patch bump of the newest tag, or package.json's version
+#     when a pull request raised it for a minor or major release. A push that only changes
+#     documentation does not release. The release is a "release: vX.Y.Z [skip ci]" commit
+#     that sets the version in package.json and package-lock.json on top of the pushed
+#     commit. The tag goes on that commit, the package is built from it, and the "land" job
+#     then pushes it to main, so package.json always matches the newest release. The release
+#     notes come from docs/releases/vX.Y.Z.md when that file exists, otherwise GitHub
+#     generates them from the merged pull requests.
+#   - Pushing a vX.Y.Z tag by hand still works as before: the tag must match
+#     package.json, be on main, and have docs/releases/vX.Y.Z.md.
+#
+# Two pushes in this workflow deliberately do not start another run:
+#   - The tag is pushed with the job token, and GitHub does not start workflows from pushes
+#     made with that token. Do not swap in a personal token, or every release would run twice.
+#   - The release commit lands on main with the deploy key, which does start workflows, so
+#     its message carries [skip ci]. Keep that marker in the message.
+#
+# The reverse is a trap: GitHub skips every workflow for a push whose head commit message
+# contains that marker anywhere, and a squash merge builds the commit message from the pull
+# request description. Never write the marker in a pull request title or description (say
+# "skip-ci marker" instead). The first merge of this workflow was skipped that way and
+# released nothing.
 #
 # One-time setup this workflow depends on (neither is a stored npm token):
 #   - npm trusted publisher for the `beadscope` package: repository
@@ -15,8 +36,12 @@ name: Release
 #     OIDC identity and records a provenance attestation.
 #   - TAP_DEPLOY_KEY secret: the private half of a write-enabled deploy key on
 #     sai-manoj-kumar/homebrew-beadscope. It can push to that one repository only.
+#   - RELEASE_DEPLOY_KEY secret: the private half of a write-enabled deploy key on this
+#     repository, and the "main" ruleset (Settings > Rules) lists deploy keys in its bypass
+#     list. That bypass is the only way past the pull-request rule, and it is for this job.
 on:
   push:
+    branches: [main]
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
 permissions:
@@ -30,18 +55,78 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
+  # Decides the tag to publish: the pushed tag, or for a push to main the next version.
+  # Runs are serialized by the concurrency group above, so each one sees the tag the
+  # previous run created.
+  version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.pick.outputs.tag }}
+      mode: ${{ steps.pick.outputs.mode }}
+      skip: ${{ steps.skip.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # A push that only changes documentation cannot change the published package, so it
+      # does not release (scripts/next-version.mjs says what counts as documentation). A
+      # pushed tag always releases. When the previous commit is unknown (a forced push),
+      # release rather than guess.
+      - name: Skip docs-only pushes
+        id: skip
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          skip=false
+          if [ "$REF_TYPE" != "tag" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            skip="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" | node scripts/next-version.mjs --docs-only)"
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          if [ "$skip" = "true" ]; then
+            echo "Docs-only push: no release." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Pick the version
+        id: pick
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_TYPE" = "tag" ]; then
+            tag="$REF_NAME"
+            mode=tag
+          else
+            tag="v$(node scripts/next-version.mjs)"
+            mode=main
+          fi
+          echo "Publishing $tag ($mode)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+
+  # Skipping this job skips publish and tap too: a job whose dependency was skipped is
+  # skipped itself.
   check:
+    needs: version
+    if: needs.version.outputs.skip != 'true'
     uses: ./.github/workflows/ci.yml
 
   publish:
-    needs: check
+    needs: [version, check]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write # create the GitHub release
+      contents: write # create the tag and the GitHub release
       id-token: write # npm trusted publishing and provenance
     env:
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ needs.version.outputs.tag }}
+      MODE: ${{ needs.version.outputs.mode }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
@@ -49,6 +134,7 @@ jobs:
           fetch-depth: 0
 
       - name: Verify the tag
+        if: env.MODE == 'tag'
         run: |
           version="${TAG#v}"
           package_version="$(node -p "require('./package.json').version")"
@@ -74,6 +160,34 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Runs only after CI has passed, so a red main does not use up a version number. The
+      # release commit sets the version on top of the pushed commit; the tag goes on it and
+      # prepack builds from it, so the published app reports the right version. If a pull
+      # request already set this exact version, there is nothing to commit and the pushed
+      # commit is tagged. A re-run finds the tag and builds exactly that commit.
+      - name: Make the release commit and tag it
+        if: env.MODE == 'main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if existing="$(git rev-parse -q --verify "refs/tags/$TAG^{commit}")"; then
+            if [ "$existing" != "$GITHUB_SHA" ] && [ "$(git rev-parse "$existing^")" != "$GITHUB_SHA" ]; then
+              echo "::error::$TAG exists on $existing, which is neither $GITHUB_SHA nor a release commit on top of it"
+              exit 1
+            fi
+            git checkout -q --detach "$TAG"
+            echo "$TAG already exists; building that commit"
+          else
+            npm version "${TAG#v}" --no-git-tag-version --allow-same-version
+            if git diff --quiet; then
+              echo "package.json already says ${TAG#v}; tagging the pushed commit"
+            else
+              git commit -q -am "release: $TAG [skip ci]"
+            fi
+            git tag "$TAG"
+            git push origin "refs/tags/$TAG"
+          fi
+
       # prepack runs `next build`, and publishConfig turns provenance on.
       - name: Publish to npm
         run: |
@@ -91,16 +205,57 @@ jobs:
             exit 0
           fi
           notes="docs/releases/$TAG.md"
-          title="$(sed -n '1s/^# //p' "$notes")"
-          tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
-          gh release create "$TAG" --verify-tag --title "${title:-$TAG}" --notes-file "$RUNNER_TEMP/notes.md"
+          if [ -f "$notes" ]; then
+            title="$(sed -n '1s/^# //p' "$notes")"
+            tail -n +2 "$notes" > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" --verify-tag --title "${title:-$TAG}" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            # An automatic patch release has no hand-written notes: list the merged pull requests.
+            gh release create "$TAG" --verify-tag --title "Beadscope $TAG" --generate-notes
+          fi
+
+  # Puts the release commit on main so package.json matches what was published. main only
+  # takes pull requests, so this pushes with a deploy key that the main ruleset lets bypass
+  # it. Runs next to the tap job; scripts/land-release.sh has the details.
+  land:
+    needs: [version, publish]
+    if: needs.version.outputs.mode == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+      RELEASE_DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ needs.version.outputs.tag }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Land the release commit on main
+        run: |
+          if [ -z "$RELEASE_DEPLOY_KEY" ]; then
+            echo "::error::The RELEASE_DEPLOY_KEY secret is not set, so the version commit cannot land on main"
+            exit 1
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$RELEASE_DEPLOY_KEY" > ~/.ssh/release_key
+          chmod 600 ~/.ssh/release_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/release_key -o IdentitiesOnly=yes"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          REMOTE="git@github.com:$GITHUB_REPOSITORY.git" scripts/land-release.sh
 
   tap:
-    needs: publish
+    needs: [version, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ needs.version.outputs.tag }}
       TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
     steps:
       - name: Hash the published tarball

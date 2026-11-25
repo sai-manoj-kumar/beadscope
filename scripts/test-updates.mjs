@@ -76,5 +76,48 @@ try {
  assert.match((await badRelease.check()).error,/Invalid/);
  git(remote,'tag','v0.4.0',newest);
  await assert.rejects(createUpdater(options).update({channel:'stable',tag:'v0.4.0',sha:newest}),/version do not match/);
- console.log('PASS: stable notices, installed copies, semver, no-release/offline/rate-limit, exact tag update, development channel, dirty/branch/divergence/target guards');
+ // A global npm install is updated in place with `npm install -g --prefix <its prefix> beadscope@<tag>`.
+ const prefix=path.join(root,'npm-prefix');const app=path.join(prefix,'lib','node_modules','beadscope');
+ fs.mkdirSync(app,{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ const npmCalls=[];let npmFails=false,npmWrites=true;
+ const npmRun=async(cmd,args,opts)=>{if(cmd!=='npm')throw Error('unexpected '+cmd);npmCalls.push(args);if(npmFails)throw Error('E404');
+  if(npmWrites)fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'beadscope',version:args.find(a=>a.startsWith('beadscope@')).slice(10)}));return {stdout:'added 1 package',stderr:''};};
+ latest='v0.3.0';
+ const npmOpts={...options,cwd:app,run:npmRun};
+ const npmUpdater=createUpdater(npmOpts);
+ const ns=await npmUpdater.check();
+ assert.equal(ns.installKind,'npm');assert.equal(ns.updateAvailable,true);assert.equal(ns.canUpdate,true);assert.equal(ns.manualReason,undefined);
+ assert.deepEqual(ns.target,{channel:'stable',tag:'v0.3.0'});
+ assert.equal((await npmUpdater.check('development')).canUpdate,false,'development needs a Git checkout');
+ await assert.rejects(npmUpdater.update({channel:'stable',tag:'--prefix=/tmp/evil'}),/invalid/i);
+ assert.equal(npmCalls.length,0);
+ await assert.rejects(createUpdater({...npmOpts,version:'0.3.0'}).update(ns.target),/not newer/);
+ npmFails=true;await assert.rejects(npmUpdater.update(ns.target),/npm could not install/);npmFails=false;
+ npmWrites=false;await assert.rejects(npmUpdater.update(ns.target),/installed version/);npmWrites=true;
+ npmCalls.length=0;
+ const nr=await npmUpdater.update(ns.target);
+ assert.equal(nr.ok,true);assert.equal(nr.restarting,false);assert.equal(nr.toSha,'0.3.0');
+ assert.deepEqual(npmCalls,[['install','-g','--prefix',fs.realpathSync(prefix),'beadscope@0.3.0','--no-audit','--no-fund']]);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(app,'package.json'),'utf8')).version,'0.3.0');
+ fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ const sup=createUpdater({...npmOpts,supervised:true});
+ assert.equal((await sup.update(ns.target)).restarting,true);
+ await assert.rejects(sup.update(ns.target),/already running/);
+ // Homebrew, npx and unrelated packages are never replaced from inside the app.
+ const brew=path.join(root,'Cellar','beadscope','0.1.0','libexec','lib','node_modules','beadscope');fs.mkdirSync(brew,{recursive:true});fs.writeFileSync(path.join(brew,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ const bs=await createUpdater({...npmOpts,cwd:brew}).check();assert.equal(bs.installKind,'manual');assert.equal(bs.canUpdate,false);assert.match(bs.manualReason,/manual update/);
+ // A project-local copy (`npm i beadscope` in a project, pnpm) is not a global install: never given a prefix.
+ const local=path.join(root,'proj','node_modules','beadscope');fs.mkdirSync(local,{recursive:true});fs.writeFileSync(path.join(local,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ const ls=await createUpdater({...npmOpts,cwd:local}).check();assert.equal(ls.installKind,'manual');assert.equal(ls.canUpdate,false);
+ await assert.rejects(createUpdater({...npmOpts,cwd:local}).update({...ns.target,sha:newest}),/checkout/i);
+ // A stable target without a sha is only valid for npm installs.
+ await assert.rejects(updater.update({channel:'stable',tag:'v0.3.0'}),/invalid/i);
+ // A failed npm run reports why and does not wedge a later attempt, even when supervised.
+ npmFails=true;const supFail=createUpdater({...npmOpts,supervised:true});
+ await assert.rejects(supFail.update(ns.target),/npm could not install beadscope 0\.3\.0.*E404/);npmFails=false;
+ assert.equal((await supFail.update(ns.target)).ok,true);
+ // A read-only install directory is reported, not attempted.
+ fs.chmodSync(path.dirname(app),0o555);
+ try{const ro=await createUpdater(npmOpts).check();if(process.getuid?.()!==0){assert.equal(ro.canUpdate,false);assert.match(ro.manualReason,/not writable/);await assert.rejects(createUpdater(npmOpts).update(ns.target),/not writable/);}}finally{fs.chmodSync(path.dirname(app),0o755);}
+ console.log('PASS: stable notices, installed copies, semver, no-release/offline/rate-limit, exact tag update, in-place npm update, development channel, dirty/branch/divergence/target guards');
 } finally {fs.rmSync(root,{recursive:true,force:true});}

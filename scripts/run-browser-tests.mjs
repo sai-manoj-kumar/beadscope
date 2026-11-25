@@ -68,7 +68,10 @@ async function startServer(label, { readOnly }) {
   const port = await freePort();
   const config = fs.mkdtempSync(path.join(os.tmpdir(), `beadscope-browser-${label}-`));
   tempDirs.push(config);
-  const env = { ...process.env, XDG_CONFIG_HOME: config, BEADS_DEMO: "1", POSTHOG_KEY: "", NEXT_TELEMETRY_DISABLED: "1" };
+  // BEADS_REPO points at the throwaway config dir, which has no .beads: with no config on
+  // disk the server otherwise registers its working directory (this checkout) as a project,
+  // and the checkout now carries a tracked .beads/metadata.json for a server CI cannot reach.
+  const env = { ...process.env, XDG_CONFIG_HOME: config, BEADS_REPO: config, BEADS_DEMO: "1", POSTHOG_KEY: "", NEXT_TELEMETRY_DISABLED: "1" };
   delete env.BEADSCOPE_READ_ONLY;
   // A Claude Code session runs with BEADS_ACTOR=claude-code. Left in, it would become the
   // throwaway server's human actor and clash with the agent of the same name.
