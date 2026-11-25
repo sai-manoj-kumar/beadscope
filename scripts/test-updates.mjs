@@ -106,6 +106,16 @@ try {
  // Homebrew, npx and unrelated packages are never replaced from inside the app.
  const brew=path.join(root,'Cellar','beadscope','0.1.0','libexec','lib','node_modules','beadscope');fs.mkdirSync(brew,{recursive:true});fs.writeFileSync(path.join(brew,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
  const bs=await createUpdater({...npmOpts,cwd:brew}).check();assert.equal(bs.installKind,'manual');assert.equal(bs.canUpdate,false);assert.match(bs.manualReason,/manual update/);
+ // A project-local copy (`npm i beadscope` in a project, pnpm) is not a global install: never given a prefix.
+ const local=path.join(root,'proj','node_modules','beadscope');fs.mkdirSync(local,{recursive:true});fs.writeFileSync(path.join(local,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ const ls=await createUpdater({...npmOpts,cwd:local}).check();assert.equal(ls.installKind,'manual');assert.equal(ls.canUpdate,false);
+ await assert.rejects(createUpdater({...npmOpts,cwd:local}).update({...ns.target,sha:newest}),/checkout/i);
+ // A stable target without a sha is only valid for npm installs.
+ await assert.rejects(updater.update({channel:'stable',tag:'v0.3.0'}),/invalid/i);
+ // A failed npm run reports why and does not wedge a later attempt, even when supervised.
+ npmFails=true;const supFail=createUpdater({...npmOpts,supervised:true});
+ await assert.rejects(supFail.update(ns.target),/npm could not install beadscope 0\.3\.0.*E404/);npmFails=false;
+ assert.equal((await supFail.update(ns.target)).ok,true);
  // A read-only install directory is reported, not attempted.
  fs.chmodSync(path.dirname(app),0o555);
  try{const ro=await createUpdater(npmOpts).check();if(process.getuid?.()!==0){assert.equal(ro.canUpdate,false);assert.match(ro.manualReason,/not writable/);await assert.rejects(createUpdater(npmOpts).update(ns.target),/not writable/);}}finally{fs.chmodSync(path.dirname(app),0o755);}

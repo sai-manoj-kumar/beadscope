@@ -212,7 +212,8 @@ A clean main/detached Git checkout can install the exact advertised target with
 **Update now**. Dependencies are restored with `npm ci` and the app is rebuilt.
 A global npm install (`npm install -g beadscope`) updates in place too: **Update now**
 runs `npm install -g beadscope@X.Y.Z` into the folder the running copy lives in
-(stable channel only; the folder must be writable by the server's user).
+(stable channel only, macOS and Linux; the folder must be writable by the server's
+user; project-local, pnpm, npx and Windows installs stay manual).
 The supervised `npm run serve` launcher restarts automatically; so does any
 launcher that restarts the process when it exits (for example a systemd unit with
 `Restart=always`) once it sets `BEADSCOPE_SUPERVISED=1` in the server's environment:

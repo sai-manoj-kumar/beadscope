@@ -66,10 +66,12 @@ export function createUpdater(options: Options) {
       const real = fs.realpathSync(cwd);
       const modules = path.dirname(real);
       const manifest = JSON.parse(fs.readFileSync(path.join(real, "package.json"), "utf8"));
-      // Homebrew and npx keep their own copies under node_modules too; only a plain global npm install is ours to replace.
-      if (manifest.name !== "beadscope" || path.basename(modules) !== "node_modules" || /cellar|linuxbrew|homebrew|_npx/i.test(real)) return { kind: "manual" };
+      // Only <prefix>/lib/node_modules/beadscope, the layout of `npm install -g`, is ours to replace. A project-local
+      // or pnpm copy, a Homebrew formula (under Cellar), npx's cache and Windows (npm is npm.cmd) stay manual.
       const parent = path.dirname(modules);
-      const prefix = path.basename(parent) === "lib" ? path.dirname(parent) : parent;
+      if (process.platform === "win32" || manifest.name !== "beadscope" || path.basename(modules) !== "node_modules" ||
+          path.basename(parent) !== "lib" || /[\\/]Cellar[\\/]|_npx/.test(real)) return { kind: "manual" };
+      const prefix = path.dirname(parent);
       try { fs.accessSync(modules, fs.constants.W_OK); }
       catch { return { kind: "npm", prefix, problem: "This npm installation is not writable by the Beadscope server. Run `sudo npm install -g beadscope` yourself, then restart Beadscope." }; }
       return { kind: "npm", prefix };
@@ -132,8 +134,11 @@ export function createUpdater(options: Options) {
       const output = await runner("npm", ["install", "-g", "--prefix", install.prefix, `beadscope@${wanted}`, "--no-audit", "--no-fund"],
         { cwd: install.prefix, timeout: 300_000, maxBuffer: 64 * 1024 * 1024 });
       steps.push({ name: `Install beadscope ${wanted} with npm`, ok: true, output: `${output.stdout}${output.stderr}`.slice(-4000) });
-    } catch {
-      throw new Error(`npm could not install beadscope ${wanted}. A release can take a few minutes to reach npm; try again shortly, or run \`npm install -g beadscope\` yourself.`);
+    } catch (e) {
+      const err = e as { code?: string | number; stderr?: string; message?: string };
+      const detail = `${err.stderr || err.message || ""}`.trim().split("\n").filter(Boolean).at(-1)?.slice(0, 200) ?? "";
+      throw new Error(`npm could not install beadscope ${wanted}${err.code ? ` (${err.code})` : ""}${detail ? `: ${detail.replace(/[.\s]+$/, "")}` : ""}. ` +
+        "A new release can take a few minutes to reach npm; try again shortly, or run `npm install -g beadscope` yourself.");
     }
     let installed = "";
     try { installed = JSON.parse(fs.readFileSync(path.join(cwd, "package.json"), "utf8")).version; } catch { /* reported below */ }
