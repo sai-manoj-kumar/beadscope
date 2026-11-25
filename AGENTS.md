@@ -15,15 +15,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 **Issue data for this repo is stored on a private Dolt SQL server. It is never in this
 repository and never on a public host.** This is deliberate, not an unfinished setup.
-Do not "fix" it. This file is public, so the server's address and credentials are not
-written here.
+Do not "fix" it. This file is public, so no credentials are written here.
 
 How it is set up:
 
 - **Server mode.** `bd` talks to the server rather than a database on this machine.
-  `.beads/metadata.json` (gitignored) names the server, user and database; the password
-  comes from `~/.config/beads/credentials` or `BEADS_DOLT_PASSWORD`. Never commit, print or
-  paste any of these.
+  `.beads/metadata.json` is committed (it is the only tracked file under `.beads/`): it
+  names the server host, port, user and database, never a password. Leave those fields
+  alone unless the server moves. The password comes from `~/.config/beads/credentials` or
+  `BEADS_DOLT_PASSWORD`; never commit, print or paste it.
 - **Private network only.** The server is reachable only from the maintainer's own devices.
   If `bd` reports that the server is unreachable, say so and stop. Do **not** work around
   it with `bd init`, `bd dolt start`, `bd migrate` or anything else that creates a local
@@ -31,15 +31,16 @@ How it is set up:
 - **There is an off-site copy.** The server pushes every database to a private cloud
   storage remote called `origin` every few minutes, and the server's disk is snapshotted
   daily. You do not export or push anything yourself.
-- **A fresh clone has no `.beads/`** (it is gitignored). Ask the maintainer to provision it;
-  do not run `bd init`.
+- **A fresh clone already has `.beads/metadata.json`**, so `bd` reaches the server once the
+  credentials file is in place. If it cannot, ask the maintainer; do not run `bd init`.
 - `dolt.local-only` is no longer set. Do not set it.
 
 Never do any of these unless the user explicitly asks in the current session:
 
 - `bd dolt remote add …` — above all, never add GitHub or any other public host as a remote
 - `git push` of anything under `.beads/`, or of `refs/dolt/data` to this repo's GitHub origin
-- un-ignoring `.beads/` in `.gitignore`, or force-adding files inside it
+- un-ignoring anything else in `.beads/` in `.gitignore`, or force-adding any file inside it
+  other than `.beads/metadata.json`
 
 `bd dolt push` is not needed, because the server does it, and it only ever reaches the
 private `origin`.
