@@ -18,7 +18,7 @@ Beadscope runs as a login service (launchd), not through `beadscope start`.
 - **Allowed hosts:** Beadscope refuses hostnames it was not told about. The plist sets
   `BEADSCOPE_ALLOWED_HOSTS=beadscope.local,beads.<tailnet>.ts.net`; a new name must be added there.
 - **Adding a project:** run `beadscope add [path]` (the current folder if no path; the folder needs a
-  `.beads` directory, so `bd init` first). It registers the repo with the running service on port 3000 and
+  `.beads` directory: a repo with a committed `.beads/metadata.json` already has one). It registers the repo with the running service on port 3000 and
   prints the project URL; add `--port <n>` if it is elsewhere. Or use **Add project…** in the project
   switcher, which also works from the phone. Never run `beadscope start` inside a repo to add it: it would
   start a second server on port 3001 next to the service.
