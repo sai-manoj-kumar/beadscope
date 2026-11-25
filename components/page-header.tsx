@@ -54,10 +54,10 @@ export function PageHeader({
         </div>
         {/* On phones the dropdown(s) take the row below the title, centred. */}
         <div className="flex min-w-0 justify-center max-md:order-3 max-md:mt-3 max-md:basis-full">{center}</div>
-        {/* Desktop: the right cell, `extra` then `actions`. Phones: both stay at the right of the title, so the toggle takes no row of its own. */}
+        {/* Desktop: the right cell, `extra` then `actions`. Phones: `extra` stays at the right of the title, so the toggle takes no row of its own; `actions` are desktop only here (an empty box would still add a flex gap). */}
         <div className="flex items-center gap-3 md:justify-self-end max-md:contents">
           {extra && <div className="flex flex-shrink-0 items-center max-md:order-2">{extra}</div>}
-          {actions && <div className="flex flex-shrink-0 items-center gap-3 max-md:order-2">{actions}</div>}
+          {actions && <div className="flex flex-shrink-0 items-center gap-3 max-md:hidden">{actions}</div>}
         </div>
       </header>
     );

@@ -93,7 +93,8 @@ try {
         const sel = await page.locator("header select").first().boundingBox();
         assert.ok(t.y < h1.y + h1.height && t.y + t.height > h1.y, `${where} Completed toggle sits on the title row`);
         assert.ok(sel.y >= t.y + t.height, `${where} dropdowns are on the row below the toggle`);
-        assert.ok(t.x + t.width <= width - 8, `${where} toggle inside the right edge`);
+        // The header pads 16px at each side; a leftover empty box beside the toggle would push it further in.
+        assert.ok(Math.abs(t.x + t.width - (width - 16)) <= 1.5, `${where} toggle sits at the right padding edge, right ${t.x + t.width} of ${width}`);
       }
       const a = await page.evaluate(pageAudit);
       if (mobile) {

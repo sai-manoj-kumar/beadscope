@@ -154,7 +154,7 @@ export function AllNeedsYouView() {
           </SelectField>
         }
         extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
-        actions={<div className="max-md:hidden"><ThemeToggle /></div>}
+        actions={<ThemeToggle />}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {!settled ? (
