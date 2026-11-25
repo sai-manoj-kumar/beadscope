@@ -45,7 +45,9 @@ export function hasBulkChanges(c: BulkChanges): boolean {
 export function bulkPatch(c: BulkChanges): UpdateInput {
   const patch: UpdateInput = {};
   if (c.priority !== undefined) patch.priority = c.priority;
-  if (c.assignee !== undefined) patch.assignee = c.assignee;
+  // Reassigning to someone else and then closing would make bd refuse the close (only the assignee may
+  // close a claimed bead), leaving the bead reassigned and open, so a close never changes the assignee.
+  if (c.assignee !== undefined && !bulkCloses(c)) patch.assignee = c.assignee;
   if (c.status !== undefined && c.status !== "closed") patch.status = c.status;
   if (c.addLabels?.length) patch.addLabels = c.addLabels;
   if (c.removeLabels?.length) patch.removeLabels = c.removeLabels;

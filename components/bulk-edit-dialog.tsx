@@ -190,7 +190,7 @@ function BulkEditForm({
         </label>
         <label className="flex flex-col gap-[6px]">
           <span className={labelClass}>Assignee</span>
-          <SelectField value={assignee} disabled={busy} onChange={(e) => setAssignee(e.target.value)}>
+          <SelectField value={closing ? NO_CHANGE : assignee} disabled={busy || closing} onChange={(e) => setAssignee(e.target.value)}>
             <option value={NO_CHANGE}>No change</option>
             <option value={UNASSIGNED}>Unassigned</option>
             {names.map((n) => (
@@ -199,6 +199,9 @@ function BulkEditForm({
               </option>
             ))}
           </SelectField>
+          {closing && (
+            <span className="text-meta text-[var(--text-3)]">Not changed when closing: bd only lets the assignee close a bead.</span>
+          )}
         </label>
         <label className="flex flex-col gap-[6px]">
           <span className={labelClass}>Status</span>

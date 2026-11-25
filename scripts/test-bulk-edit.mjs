@@ -203,7 +203,9 @@ try {
   await row(page, g).click({ modifiers: ["Meta"] });
   await bar(page).getByRole("button", { name: "Bulk edit" }).click();
   await dialog.waitFor();
+  await dialog.getByLabel("Assignee").selectOption("alice");
   await dialog.getByLabel("Status").selectOption("closed");
+  assert.equal(await dialog.getByLabel("Assignee").isDisabled(), true, "the assignee is not changed together with a close");
   await dialog.getByRole("button", { name: /^Update 1 bead$/ }).click();
   await dialog.getByRole("alert").waitFor();
   assert.match(await dialog.getByRole("alert").innerText(), new RegExp(`1 of 1 could not be updated \\(${g}\\)`));
