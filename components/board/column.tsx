@@ -24,6 +24,7 @@ export function Column({
   control,
   manualSort = true,
   dropTarget = false,
+  bulk,
 }: {
   col: ColumnDef;
   cards: Bead[];
@@ -36,6 +37,8 @@ export function Column({
    * board decides, so hovering one of this column's cards counts, not just empty space.
    */
   dropTarget?: boolean;
+  /** Bulk edit state for the board; absent when it is read-only. */
+  bulk?: { active: boolean; selected: ReadonlySet<string>; toggle: (id: string) => void };
 }) {
   const { setNodeRef } = useDroppable({ id: col.id, disabled: !col.droppable });
   // Phones stack the columns and fold each one; the long Done column starts folded.
@@ -82,7 +85,14 @@ export function Column({
       >
         <SortableContext items={cards.map((b) => b.id)} strategy={manualSort ? verticalListSortingStrategy : () => null}>
           {cards.map((b) => (
-            <BeadCard key={b.id} bead={b} childCount={childCounts?.get(b.id) ?? 0} />
+            <BeadCard
+              key={b.id}
+              bead={b}
+              childCount={childCounts?.get(b.id) ?? 0}
+              selection={
+                bulk && { active: bulk.active, checked: bulk.selected.has(b.id), onToggle: () => bulk.toggle(b.id) }
+              }
+            />
           ))}
         </SortableContext>
         {cards.length === 0 && (

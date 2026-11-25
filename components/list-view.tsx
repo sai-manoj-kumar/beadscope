@@ -25,7 +25,7 @@ import { PageHeader } from "@/components/page-header";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { BrandButton } from "@/components/brand-button";
 import { BulkEditDialog } from "@/components/bulk-edit-dialog";
-import { Button, CheckInput } from "@/components/controls";
+import { BulkBar, BulkCheck, SelectButton, isSelectGesture } from "@/components/bulk-bar";
 import { Chip } from "@/components/chip";
 import { useBulkSelect } from "@/hooks/use-bulk-select";
 import { useOrder, useSetOrder } from "@/hooks/use-order";
@@ -174,15 +174,7 @@ export function ListView() {
         actions={
           !readOnly && (
             <>
-              {/* Phones and touch screens (a tablet has no Cmd key). With a mouse, Cmd/Ctrl-click starts a selection, and the header row is full. */}
-              <Button
-                icon="check"
-                pressed={bulk.active}
-                className="hidden max-md:inline-flex pointer-coarse:inline-flex"
-                onClick={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))}
-              >
-                Select
-              </Button>
+              <SelectButton active={bulk.active} onToggle={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))} />
               <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>
             </>
           )
@@ -201,27 +193,13 @@ export function ListView() {
       />
 
       {!readOnly && bulk.active && (
-        <div
-          data-testid="bulk-bar"
-          className="flex flex-shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border bg-[var(--surface-2)] p-[8px_22px] max-md:p-[8px_16px]"
-        >
-          <span aria-live="polite" className="text-label font-medium text-[var(--text)]">
-            {selectedIds.length === 0 ? "Tick beads to edit them together" : `${selectedIds.length} selected`}
-          </span>
-          <div className="flex flex-wrap items-center gap-2 md:ml-auto">
-            {selectedIds.length < rowIds.length && (
-              <Button variant="outline" size="sm" onClick={bulk.selectAll}>
-                Select all {rowIds.length}
-              </Button>
-            )}
-            <BrandButton size="sm" icon="pencil" disabled={selectedIds.length === 0} onClick={() => setBulkIds(selectedIds)}>
-              Bulk edit
-            </BrandButton>
-            <Button variant="outline" size="sm" onClick={bulk.clear}>
-              Clear
-            </Button>
-          </div>
-        </div>
+        <BulkBar
+          selected={selectedIds.length}
+          total={rowIds.length}
+          onSelectAll={bulk.selectAll}
+          onEdit={() => setBulkIds(selectedIds)}
+          onClear={bulk.clear}
+        />
       )}
       <BulkEditDialog ids={bulkIds} onClose={() => setBulkIds(null)} onDone={bulk.deselect} />
 
@@ -341,7 +319,7 @@ function Row({
       onClick={(e) => {
         selectBead(bead.id);
         // Cmd (Mac) or Ctrl (Windows) starts a selection; once one is going, a plain click ticks too.
-        if (!readOnly && (selectMode || e.metaKey || e.ctrlKey)) onToggle();
+        if (!readOnly && (selectMode || isSelectGesture(e))) onToggle();
         else onOpen();
       }}
       onKeyDown={openFromKeyboard}
@@ -359,12 +337,7 @@ function Row({
     >
       {selectMode && (
         // The whole 44px square is the target on phones; the row's own click is not triggered by it.
-        <label
-          className="tap-target -my-[10px] -ml-2 flex flex-shrink-0 cursor-pointer items-center justify-center max-md:-order-3 md:min-h-[32px] md:min-w-[32px]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <CheckInput aria-label={`Select ${bead.id}`} checked={checked} onChange={onToggle} />
-        </label>
+        <BulkCheck id={bead.id} checked={checked} onToggle={onToggle} className="-my-[10px] -ml-2 max-md:-order-3" />
       )}
       <span
         className="h-[9px] w-[9px] flex-shrink-0 rounded-full max-md:-order-2"

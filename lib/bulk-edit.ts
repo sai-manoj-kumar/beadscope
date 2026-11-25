@@ -29,3 +29,21 @@ export function bulkPatch(c: BulkChanges): UpdateInput {
   if (c.status !== undefined) patch.status = c.status;
   return patch;
 }
+
+/** A bead in one repo. Bead ids are only unique within a repo, so the all-repos Agent Queue names both. */
+export interface BulkTarget {
+  projectId: string;
+  id: string;
+}
+
+const KEY_SEPARATOR = "\u001f";
+
+/** One string per bead across repos, for `useBulkSelect`, which tracks plain strings. */
+export function targetKey(t: BulkTarget): string {
+  return `${t.projectId}${KEY_SEPARATOR}${t.id}`;
+}
+
+export function parseTargetKey(key: string): BulkTarget {
+  const i = key.indexOf(KEY_SEPARATOR);
+  return { projectId: key.slice(0, i), id: key.slice(i + 1) };
+}

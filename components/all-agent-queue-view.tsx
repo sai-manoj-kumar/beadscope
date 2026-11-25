@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { AgentIcon } from "@/components/agent-icon";
-import { PriorityChip } from "@/components/board/bead-card";
+import { PriorityChip, type CardSelection } from "@/components/board/bead-card";
+import { BulkBar, BulkCheck, SelectButton, isSelectGesture } from "@/components/bulk-bar";
+import { BulkEditTargetsDialog } from "@/components/bulk-edit-dialog";
+import { assigneeNameList } from "@/components/assignee-picker";
+import { useBulkSelect } from "@/hooks/use-bulk-select";
+import { parseTargetKey, targetKey, type BulkTarget } from "@/lib/bulk-edit";
 import { StatusChip } from "@/components/chip";
 import { CompletedHeading, CompletedToggle, DONE_PARAM } from "@/components/completed-toggle";
 import { SelectField } from "@/components/controls";
@@ -126,6 +131,20 @@ export function AllAgentQueueView() {
   const doneTotal = shown.reduce((sum, s) => sum + s.done.length, 0);
   const withItems = shown.filter((s) => s.items.length + s.done.length > 0);
   // Counts in the filter labels: per repo for the chosen agent, per agent for the chosen repo.
+  // Bulk edit across repos: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change
+  // them together. Bead ids are only unique within a repo, so a tick is keyed by repo and id.
+  const cardKeys = shown.flatMap(({ project, items, done }) =>
+    [...items.map((i) => i.bead), ...done].map((b) => targetKey({ projectId: project.id, id: b.id })),
+  );
+  const bulk = useBulkSelect(cardKeys);
+  // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
+  const [bulkTargets, setBulkTargets] = React.useState<BulkTarget[] | null>(null);
+  const selectedKeys = cardKeys.filter((k) => bulk.selected.has(k));
+  const assigneeNames = assigneeNameList(
+    results.find((r) => r.data?.meta.humanActor)?.data?.meta.humanActor,
+    identities,
+    results.flatMap((r) => r.data?.beads ?? []),
+  );
   const repoCount = (id: string) => sections.find((s) => s.project.id === id)?.items.length ?? 0;
   const agentCount = (a: AgentIdentity) =>
     shown.reduce((sum, s) => sum + s.queued.filter((q) => agentByName([a], q.bead.assignee)?.id === a.id).length, 0);
@@ -194,7 +213,28 @@ export function AllAgentQueueView() {
         extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
         actions={<ThemeToggle />}
       />
+      {!readOnly && bulk.active && (
+        <BulkBar
+          selected={selectedKeys.length}
+          total={cardKeys.length}
+          onSelectAll={bulk.selectAll}
+          onEdit={() => setBulkTargets(selectedKeys.map(parseTargetKey))}
+          onClear={bulk.clear}
+        />
+      )}
+      <BulkEditTargetsDialog
+        targets={bulkTargets}
+        assigneeNames={assigneeNames}
+        onClose={() => setBulkTargets(null)}
+        onDone={(updated) => bulk.deselect(updated.map(targetKey))}
+      />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        {/* Phones and touch screens: the header has no room for Select, so it sits above the list. With a mouse, Cmd/Ctrl-click starts a selection. */}
+        {!readOnly && settled && cardKeys.length > 0 && (
+          <div className="mx-auto mb-3 hidden max-w-3xl justify-end max-md:flex pointer-coarse:flex">
+            <SelectButton active={bulk.active} onToggle={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))} />
+          </div>
+        )}
         {!settled ? (
           <div className="p-10 text-center text-body text-[var(--text-3)]">Loading…</div>
         ) : (
@@ -225,6 +265,7 @@ export function AllAgentQueueView() {
                   agents={identities}
                   showHeading={repo === ALL}
                   onOpen={drawer.openBead}
+                  bulk={readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle }}
                 />
               ))
             )}
@@ -247,7 +288,10 @@ function RepoSection({
   agents,
   showHeading,
   onOpen,
+  bulk,
 }: {
+  /** Bulk edit state of the page, keyed by `targetKey`; absent when the viewer is read-only. */
+  bulk?: { active: boolean; selected: ReadonlySet<string>; toggle: (key: string) => void };
   project: ProjectInfo;
   items: Item[];
   /** Beads completed in the last few days; empty unless the page's toggle is on. */
@@ -257,6 +301,11 @@ function RepoSection({
   onOpen: (projectId: string, id: string) => void;
 }) {
   const { page } = useDefaultPage();
+  const selectionFor = (id: string): CardSelection | undefined => {
+    if (!bulk) return undefined;
+    const key = targetKey({ projectId: project.id, id });
+    return { active: bulk.active, checked: bulk.selected.has(key), onToggle: () => bulk.toggle(key) };
+  };
   return (
     <section data-repo-section={project.id} aria-label={project.name} className="flex flex-col gap-3">
       {showHeading && (
@@ -271,7 +320,14 @@ function RepoSection({
         </h2>
       )}
       {items.map((item) => (
-        <QueueCard key={item.bead.id} projectId={project.id} item={item} agents={agents} onOpen={onOpen} />
+        <QueueCard
+          key={item.bead.id}
+          projectId={project.id}
+          item={item}
+          agents={agents}
+          onOpen={onOpen}
+          selection={selectionFor(item.bead.id)}
+        />
       ))}
       {done.length > 0 && (
         <>
@@ -283,6 +339,7 @@ function RepoSection({
               item={{ bead, blocked: false, blockers: [] }}
               agents={agents}
               onOpen={onOpen}
+              selection={selectionFor(bead.id)}
               completed
             />
           ))}
@@ -297,8 +354,11 @@ function QueueCard({
   item,
   agents,
   onOpen,
+  selection,
   completed = false,
 }: {
+  /** Bulk edit on this card; absent when the viewer is read-only. */
+  selection?: CardSelection;
   projectId: string;
   item: Item;
   agents: AgentIdentity[];
@@ -308,12 +368,15 @@ function QueueCard({
 }) {
   const { bead, blocked, blockers } = item;
   const agent = agentByName(agents, bead.assignee);
-  const open = () => onOpen(projectId, bead.id);
+  // Cmd (Mac) or Ctrl (Windows) starts a selection; once one is going, a plain click ticks too.
+  const act = (e: { metaKey: boolean; ctrlKey: boolean }) =>
+    selection && (selection.active || isSelectGesture(e)) ? selection.onToggle() : onOpen(projectId, bead.id);
   return (
     <article
       role="button"
       tabIndex={0}
       aria-label={bead.title}
+      aria-pressed={selection?.active ? selection.checked : undefined}
       data-keyboard-bead-id={bead.id}
       data-agent={agent?.id}
       data-completed-card={completed ? "" : undefined}
@@ -321,13 +384,16 @@ function QueueCard({
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          open();
+          act(event);
         }
       }}
-      onClick={open}
+      onClick={act}
       className="cursor-pointer rounded-[11px] border border-border bg-[var(--surface)] p-[10px_12px] shadow-[var(--shadow)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-lg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/30"
     >
       <div className="mb-[5px] flex items-center gap-[7px]">
+        {selection?.active && (
+          <BulkCheck id={bead.id} checked={selection.checked} onToggle={selection.onToggle} className="-my-[10px] -ml-2" />
+        )}
         <span className="font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
         <StatusChip status={blocked && bead.status === "open" ? "blocked" : bead.status} />
         <span className="flex-1" />

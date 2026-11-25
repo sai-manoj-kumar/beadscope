@@ -24,6 +24,9 @@ import { isBlocked, childrenCountMap } from "@/lib/beads-view";
 import { FilterBar } from "@/components/filter-bar";
 import { PageHeader } from "@/components/page-header";
 import { BrandButton } from "@/components/brand-button";
+import { BulkBar, SelectButton } from "@/components/bulk-bar";
+import { BulkEditDialog } from "@/components/bulk-edit-dialog";
+import { useBulkSelect } from "@/hooks/use-bulk-select";
 import { matchesFilters, labelOptionsFrom, assigneeOptionsFrom } from "@/lib/filters";
 import {
   BOARD_COLUMNS as COLUMNS,
@@ -131,6 +134,14 @@ export function Board() {
     [columns, boardPrefs.blockedColumn],
   );
 
+  // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
+  // Only the cards on screen can be ticked: a hidden Blocked column or a Done window drops its cards.
+  const cardIds = React.useMemo(() => shownColumns.flatMap(({ cards }) => cards.map((b) => b.id)), [shownColumns]);
+  const bulk = useBulkSelect(cardIds);
+  // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
+  const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
+  const selectedIds = cardIds.filter((id) => bulk.selected.has(id));
+
   // Which column each visible bead currently sits in (drag targets resolve here).
   const colOfBead = React.useMemo(() => {
     const m = new Map<string, string>();
@@ -203,7 +214,14 @@ export function Board() {
       <PageHeader
         title="Board"
         subtitle={<>{visible.length} beads · live from <span className="font-mono">bd list</span></>}
-        actions={!readOnly && <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>}
+        actions={
+          !readOnly && (
+            <>
+              <SelectButton active={bulk.active} onToggle={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))} />
+              <BrandButton icon="plus" onClick={() => openCreate()}>New</BrandButton>
+            </>
+          )
+        }
         controls={<>
         <FilterBar
           filters={filters}
@@ -244,6 +262,17 @@ export function Board() {
         </>}
       />
 
+      {!readOnly && bulk.active && (
+        <BulkBar
+          selected={selectedIds.length}
+          total={cardIds.length}
+          onSelectAll={bulk.selectAll}
+          onEdit={() => setBulkIds(selectedIds)}
+          onClear={bulk.clear}
+        />
+      )}
+      <BulkEditDialog ids={bulkIds} onClose={() => setBulkIds(null)} onDone={bulk.deselect} />
+
       <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px] max-md:overflow-x-hidden max-md:overflow-y-auto max-md:p-[8px_16px_24px]">
         {loading && beads.length === 0 ? (
           <div className="text-body text-[var(--text-3)]">Loading beads…</div>
@@ -265,6 +294,7 @@ export function Board() {
                   childCounts={childCounts}
                   manualSort={boardPrefs.sortMode === "manual"}
                   dropTarget={dropColumn?.id === col.id}
+                  bulk={readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle }}
                   control={
                     col.id === "done" ? (
                       <select
