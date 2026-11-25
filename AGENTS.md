@@ -51,6 +51,19 @@ bd export --all -o ~/bd-backups/<project>-$(date +%F).jsonl
 
 Git commits still work normally — this section is only about bead/Dolt data.
 
+## Commit often, keep commits small
+
+Commit as you go. Do not wait to be asked, and do not batch a session's work into one
+commit. This overrides the more cautious commit wording in the generated Beads blocks below.
+
+- One logical change per commit: finish a step, run its checks, commit, then start the next.
+- Commit as soon as something works and its checks pass. Several small commits are better
+  than one large one, and a commit that moves one thing forward is easy to review and revert.
+- Write the message in the repo's style: `type: summary (bead-id)`, with `type` one of `feat`,
+  `fix`, `test`, `ci`, `docs`, `refactor`. Add a body only when the reason is not obvious.
+- Commits are local and cheap. Pushing, opening a pull request and merging are separate steps:
+  do those only when asked.
+
 ## Work assigned to you
 
 The maintainer assigns beads to an agent from Beadscope (Settings → Agents lists the
@@ -90,7 +103,7 @@ bd close <id>         # Complete work
 
 The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
 
-- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
+- **Conservative (default)**: Use `bd` for task tracking. Commit often in small commits (see "Commit often, keep commits small" above). Do not run git pushes or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
 - **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
 - **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
 
@@ -103,7 +116,8 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 3. **Update issue status** - Close finished work, update in-progress items
 4. **Handle git/sync by active profile**:
    ```bash
-   # Conservative/minimal/default: report status and proposed commands; wait for approval.
+   # Conservative/minimal/default: commit finished work in small commits, then report
+   # status and wait for approval before pushing.
    git status
 
    # Team-maintainer opt-in only, unless current instructions forbid it:
@@ -115,7 +129,7 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 **Critical rules:**
 - Explicit user or orchestrator instructions override this Beads block.
-- Do not commit or push without clear authority from the active profile or the current user request.
+- Do not push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
 
