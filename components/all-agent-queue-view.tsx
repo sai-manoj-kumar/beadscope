@@ -147,10 +147,10 @@ export function AllAgentQueueView() {
           <>
             <Link
               href="/"
-              className="tap-target inline-flex items-center justify-center gap-1.5 text-label text-[var(--text-3)] hover:text-[var(--text)] max-md:-ml-2 max-md:px-2"
+              className="inline-flex items-center justify-center gap-1.5 text-label text-[var(--text-3)] hover:text-[var(--text)]"
             >
-              <ArrowLeft size={14} aria-hidden="true" className="max-md:size-5" />
-              {/* The arrow stands alone (a 44px target on phones); the name stays for screen readers. */}
+              {/* Desktop only: the header hides the back arrow on phones. The name stays for screen readers. */}
+              <ArrowLeft size={14} aria-hidden="true" />
               <span className="sr-only">Projects</span>
             </Link>
           </>
@@ -192,7 +192,7 @@ export function AllAgentQueueView() {
           </div>
         }
         extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
-        actions={<div className="max-md:hidden"><ThemeToggle /></div>}
+        actions={<ThemeToggle />}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {!settled ? (

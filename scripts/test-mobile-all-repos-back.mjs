@@ -1,6 +1,6 @@
-// Beads bui-4e1.28, bui-ih7.17.1: on the all-repos pages (Needs You, Agent Queue) the header shows the
-// back arrow alone, with no "Projects" text beside it on any width. On phones it is a 44px target and
-// "Repo" is hidden too. The names stay for screen readers. Every request is intercepted.
+// Beads bui-4e1.28, bui-ih7.17.1, bui-ih7.21: on the all-repos pages (Needs You, Agent Queue) the header
+// shows the back arrow alone on desktop, with no "Projects" text beside it. Phones show no back arrow
+// (and no "Repo" label) at all. The names stay for screen readers. Every request is intercepted.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { pageAudit } from "./mobile-audit.mjs";
@@ -35,12 +35,8 @@ try {
       const ctx = await browser.newContext({ viewport: { width, height: 844 }, hasTouch: true, isMobile: true });
       const page = await open(ctx, path);
       const where = `${path} @${width}px`;
-      const back = page.getByRole("link", { name: "Projects" });
-      assert.equal(await back.getAttribute("href"), "/", `${where} the back link goes to the project list`);
-      const box = await back.boundingBox();
-      assert.ok(box.width >= 44 && box.height >= 44, `${where} back link is 44px, got ${box.width}x${box.height}`);
-      // No visible text beside the arrow: the link is only as wide as a tap target.
-      assert.ok(box.width < 60, `${where} back link shows the arrow alone, got width ${box.width}`);
+      // Bead bui-ih7.21: phones have no back arrow here (getByRole skips hidden elements); desktop keeps it, below.
+      assert.equal(await page.getByRole("link", { name: "Projects" }).count(), 0, `${where} no back link on phones`);
       // Nothing visible reads "Projects" or "Repo" (screen-reader-only text is clipped to 1px). The Repo
       // label is gone on every width since bui-ih7.17.6; this guards it from coming back.
       const visible = await page.locator("main, body").first().evaluate(() => {

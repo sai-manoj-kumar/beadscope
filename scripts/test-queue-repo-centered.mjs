@@ -1,6 +1,6 @@
 // Bead bui-ih7.17.6: on the all-repos pages (Needs You, Agent Queue) the Repo dropdown sits in the
 // middle of the top bar, not against the left edge. Desktop: its centre is the header's centre.
-// Phone: it is centred on its own row beside the back arrow, and nothing overflows or shrinks
+// Phone: it is centred on its own row (no back arrow; the Completed toggle is on the title row), and nothing overflows or shrinks
 // below a 44px target. Every request is intercepted. Set SHOTS_DIR to also save screenshots.
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -81,11 +81,21 @@ try {
       const c = await centres(page);
       assert.ok(Math.abs(c.select - c.header) <= 1.5, `${where} dropdown is centred in the top bar: select ${c.select}, header ${c.header}`);
 
-      // The back arrow and the Completed toggle stay in the header, and the toggle is still reachable.
+      // The Completed toggle stays in the header and reachable. The back arrow is desktop only (bui-ih7.21).
       const header = page.locator("header");
-      await header.getByRole("link", { name: "Projects" }).waitFor();
+      assert.equal(await header.getByRole("link", { name: "Projects" }).count(), mobile ? 0 : 1, `${where} back arrow ${mobile ? "hidden on phones" : "shown on desktop"}`);
       assert.equal(await header.locator("[data-completed-toggle]").count(), 1, `${where} one Completed toggle in the header`);
 
+      if (mobile) {
+        // Bead bui-ih7.21: the toggle shares the title's row (no row of its own) and the dropdowns sit on the next row.
+        const t = await page.locator("header [data-completed-toggle]").boundingBox();
+        const h1 = await page.locator("header h1").boundingBox();
+        const sel = await page.locator("header select").first().boundingBox();
+        assert.ok(t.y < h1.y + h1.height && t.y + t.height > h1.y, `${where} Completed toggle sits on the title row`);
+        assert.ok(sel.y >= t.y + t.height, `${where} dropdowns are on the row below the toggle`);
+        // The header pads 16px at each side; a leftover empty box beside the toggle would push it further in.
+        assert.ok(Math.abs(t.x + t.width - (width - 16)) <= 1.5, `${where} toggle sits at the right padding edge, right ${t.x + t.width} of ${width}`);
+      }
       const a = await page.evaluate(pageAudit);
       if (mobile) {
         assert.equal(a.pageScroll, false, `${where} no horizontal page scroll`);
