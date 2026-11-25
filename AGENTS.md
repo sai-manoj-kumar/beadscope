@@ -11,45 +11,57 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- This section is project-owned and deliberately sits OUTSIDE the generated
      Beads blocks below, which `bd setup` may rewrite. If a generated block ever
      contradicts this section, THIS SECTION WINS. -->
-# Beads data is local-only — never sync it
+# Beads data lives on a private server — never put it on GitHub
 
-**Issue data in this repo never leaves the machine it was created on.** This is a
-deliberate choice, not an unfinished setup. Do not "fix" it.
+**Issue data for this repo is stored on a private Dolt SQL server. It is never in this
+repository and never on a public host.** This is deliberate, not an unfinished setup.
+Do not "fix" it. This file is public, so the server's address and credentials are not
+written here.
 
-Concretely, never do any of these unless the user explicitly asks in the current
-session:
+How it is set up:
 
-- `bd dolt remote add …` — do not wire up a Dolt remote
-- `bd dolt push` / `bd dolt pull` — there is nothing to push to and nothing to pull
-- `git push` of anything under `.beads/`
+- **Server mode.** `bd` talks to the server rather than a database on this machine.
+  `.beads/metadata.json` (gitignored) names the server, user and database; the password
+  comes from `~/.config/beads/credentials` or `BEADS_DOLT_PASSWORD`. Never commit, print or
+  paste any of these.
+- **Private network only.** The server is reachable only from the maintainer's own devices.
+  If `bd` reports that the server is unreachable, say so and stop. Do **not** work around
+  it with `bd init`, `bd dolt start`, `bd migrate` or anything else that creates a local
+  database or starts a local Dolt server: it would quietly diverge from the real data.
+- **There is an off-site copy.** The server pushes every database to a private cloud
+  storage remote called `origin` every few minutes, and the server's disk is snapshotted
+  daily. You do not export or push anything yourself.
+- **A fresh clone has no `.beads/`** (it is gitignored). Ask the maintainer to provision it;
+  do not run `bd init`.
+- `dolt.local-only` is no longer set. Do not set it.
+
+Never do any of these unless the user explicitly asks in the current session:
+
+- `bd dolt remote add …` — above all, never add GitHub or any other public host as a remote
+- `git push` of anything under `.beads/`, or of `refs/dolt/data` to this repo's GitHub origin
 - un-ignoring `.beads/` in `.gitignore`, or force-adding files inside it
 
-`bd` prints a "no Dolt remote configured" advisory with a `repair:` command that
-adds a remote and pushes. **That advisory is wrong for this repo — ignore it.**
-It is suppressed locally via `dolt.local-only: true` in `.beads/config.yaml`, but
-that file is itself gitignored, so a fresh clone will start nagging again. Re-set
-it rather than following the repair hint:
+`bd dolt push` is not needed, because the server does it, and it only ever reaches the
+private `origin`.
 
-```bash
-bd config set dolt.local-only true
-```
+**Why:** this repository is public. Pushing issue data to it would publish internal planning
+notes and `bd remember` memories alongside the source. External bug reports live in GitHub
+Issues; beads is the private work tracker.
 
-**Why:** this is a single-maintainer project worked on from one machine. A Dolt
-remote only buys cross-machine sync, which nobody here needs, and pushing issue
-data to a public repo would publish internal planning notes and `bd remember`
-memories alongside the source. External bug reports live in GitHub Issues; beads
-is the private, local work tracker.
+Git commits are unaffected by any of this — this section is only about bead/Dolt data.
 
-**The trade-off, stated plainly:** because `.beads/` is gitignored *and* there is
-no remote, the issue database has **no offsite copy**. If the disk fails, every
-issue, comment and memory is gone. Guard against that with periodic local
-exports, which involve no remote at all:
+## Commit often, keep commits small
 
-```bash
-bd export --all -o ~/bd-backups/<project>-$(date +%F).jsonl
-```
+Commit as you go. Do not wait to be asked, and do not batch a session's work into one
+commit. This overrides the more cautious commit wording in the generated Beads blocks below.
 
-Git commits still work normally — this section is only about bead/Dolt data.
+- One logical change per commit: finish a step, run its checks, commit, then start the next.
+- Commit as soon as something works and its checks pass. Several small commits are better
+  than one large one, and a commit that moves one thing forward is easy to review and revert.
+- Write the message in the repo's style: `type: summary (bead-id)`, with `type` one of `feat`,
+  `fix`, `test`, `ci`, `docs`, `refactor`. Add a body only when the reason is not obvious.
+- Commits are local and cheap. Pushing, opening a pull request and merging are separate steps:
+  do those only when asked.
 
 ## Work assigned to you
 
@@ -84,13 +96,13 @@ bd close <id>         # Complete work
 - Run `bd prime` for detailed command reference and session close protocol
 - Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
 
-**Architecture in one line:** issues live in a local Dolt DB and **stay there** — this repo runs local-only, with no Dolt remote and no `refs/dolt/data` sync (see "Beads data is local-only" above, which overrides this block); `.beads/issues.jsonl` is a passive local export and is gitignored.
+**Architecture in one line:** issues live in a Dolt database on a private server, backed up off-site by the server itself, and never go to GitHub — no `refs/dolt/data` sync (see "Beads data lives on a private server" above, which overrides this block); `.beads/issues.jsonl` is a passive local export and is gitignored.
 
 ## Agent Context Profiles
 
 The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
 
-- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
+- **Conservative (default)**: Use `bd` for task tracking. Commit often in small commits (see "Commit often, keep commits small" above). Do not run git pushes or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
 - **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
 - **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
 
@@ -103,7 +115,8 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 3. **Update issue status** - Close finished work, update in-progress items
 4. **Handle git/sync by active profile**:
    ```bash
-   # Conservative/minimal/default: report status and proposed commands; wait for approval.
+   # Conservative/minimal/default: commit finished work in small commits, then report
+   # status and wait for approval before pushing.
    git status
 
    # Team-maintainer opt-in only, unless current instructions forbid it:
@@ -115,7 +128,7 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 **Critical rules:**
 - Explicit user or orchestrator instructions override this Beads block.
-- Do not commit or push without clear authority from the active profile or the current user request.
+- Do not push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
 
@@ -140,5 +153,5 @@ bd prime                # Refresh Beads context
 - Run `bd prime` when Beads context is missing or stale. Codex 0.129.0+ can load Beads context automatically through native hooks; use `/hooks` to inspect or toggle them.
 - Keep persistent project memory in Beads via `bd remember`; do not create ad hoc memory files.
 
-**Architecture in one line:** issues live in a local Dolt DB and **stay there** — this repo runs local-only, with no Dolt remote and no `refs/dolt/data` sync (see "Beads data is local-only" above, which overrides this block); `.beads/issues.jsonl` is a passive local export and is gitignored.
+**Architecture in one line:** issues live in a Dolt database on a private server, backed up off-site by the server itself, and never go to GitHub — no `refs/dolt/data` sync (see "Beads data lives on a private server" above, which overrides this block); `.beads/issues.jsonl` is a passive local export and is gitignored.
 <!-- END BEADS CODEX SETUP -->

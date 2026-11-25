@@ -2,6 +2,8 @@
 
 ## Launching Beadscope on macOS login
 
+> **Superseded 2026-11-25:** Beadscope no longer runs on this Mac. It runs as a systemd service on the private beads server (tailnet only), installed from the npm release. The launchd job below is disabled: don't re-enable it or run `scripts/reinstall.sh`. To try a PR build locally, run it on another port (`beadscope run --port 3001`). Upgrading the server copy is in the maintainer's runbook.
+
 Beadscope runs as a login service (launchd), not through `beadscope start`.
 
 - **Service:** `~/Library/LaunchAgents/com.saimanoj.beadscope.plist` (label `com.saimanoj.beadscope`). It
