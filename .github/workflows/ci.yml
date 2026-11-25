@@ -46,7 +46,7 @@ jobs:
       # "browser" job below.
       - name: Unit and launcher tests
         run: |
-          for t in actor-default blocking dep-candidates telemetry updates daemon global-beads-dir type-system shared-controls; do
+          for t in actor-default blocking dep-candidates telemetry updates daemon global-beads-dir type-system shared-controls next-version; do
             echo "::group::test-$t"
             node "scripts/test-$t.mjs"
             echo "::endgroup::"
