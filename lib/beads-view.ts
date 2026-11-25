@@ -354,6 +354,24 @@ export function fmtDue(bead: Pick<Bead, "due_at">): string {
   return dueMs(bead) === null ? "" : fmtDateTime(bead.due_at);
 }
 
+/** A bead's defer time in ms, or null when it has none (or an unreadable one). */
+export function deferMs(bead: Pick<Bead, "defer_until">): number | null {
+  if (!bead.defer_until) return null;
+  const t = Date.parse(bead.defer_until);
+  return Number.isFinite(t) ? t : null;
+}
+
+/** True while the bead is not closed and its defer time is still ahead: bd keeps it out of ready work until then. */
+export function isDeferredUntilLater(bead: Pick<Bead, "defer_until" | "status">, now: Date = new Date()): boolean {
+  const until = deferMs(bead);
+  return until !== null && bead.status !== "closed" && until > now.getTime();
+}
+
+/** Defer date and time for display, e.g. "Dec 1, 2026, 3:30 PM"; "" when there is none. */
+export function fmtDefer(bead: Pick<Bead, "defer_until">): string {
+  return deferMs(bead) === null ? "" : fmtDateTime(bead.defer_until);
+}
+
 /** Full absolute timestamp, e.g. "Jun 24, 2026, 2:15 PM" — used as the hover
  *  title behind relative times like "3d ago" (bead hl2). */
 export function fmtDateTime(iso?: string | null): string {
