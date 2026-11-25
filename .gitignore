@@ -53,8 +53,12 @@ yarn-error.log*
 next-env.d.ts
 
 # Beads / Dolt files (added by bd init)
-# .beads holds local tracker state (embedded Dolt DB, config, logs) — not app source.
-.beads/
+# .beads holds tracker state (config, logs, local files) — not app source. The one
+# exception is metadata.json: it names the shared Dolt server (host, port, user,
+# database; never a password), so a fresh clone can reach the server. A directory that is
+# ignored cannot have files re-included, hence .beads/* rather than .beads/.
+.beads/*
+!.beads/metadata.json
 .dolt/
 *.db
 .beads-credential-key
