@@ -24,6 +24,12 @@ name: Release
 #   - The release commit lands on main with the deploy key, which does start workflows, so
 #     its message carries [skip ci]. Keep that marker in the message.
 #
+# The reverse is a trap: GitHub skips every workflow for a push whose head commit message
+# contains that marker anywhere, and a squash merge builds the commit message from the pull
+# request description. Never write the marker in a pull request title or description (say
+# "skip-ci marker" instead). The first merge of this workflow was skipped that way and
+# released nothing.
+#
 # One-time setup this workflow depends on (neither is a stored npm token):
 #   - npm trusted publisher for the `beadscope` package: repository
 #     sai-manoj-kumar/beadscope, workflow release.yml. npm then accepts this job's

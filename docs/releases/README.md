@@ -34,6 +34,11 @@ key that the `main` ruleset lets bypass its rules; if `main` moved on in the mea
 the version change is replayed on top of it. The `[skip ci]` marker stops that push from
 starting another run, so leave it in the message.
 
+**Never write that marker in a pull request title or description.** `main` takes squash merges
+only, so the description becomes the commit message, and GitHub then skips every workflow for
+the push: no CI and no release. Call it "the skip-ci marker" in prose. If a merge was skipped
+this way, the next merge to `main` that changes anything beyond documentation releases it.
+
 For a **minor or major** release (or any release with hand-written notes):
 
 1. In a pull request, raise `version` in `package.json` and add `docs/releases/vX.Y.Z.md`.
