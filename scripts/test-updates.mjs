@@ -116,6 +116,26 @@ try {
  npmFails=true;const supFail=createUpdater({...npmOpts,supervised:true});
  await assert.rejects(supFail.update(ns.target),/npm could not install beadscope 0\.3\.0.*E404/);npmFails=false;
  assert.equal((await supFail.update(ns.target)).ok,true);
+ // With an updater service the install stays read-only: the app only leaves a request and stays up.
+ const reqDir=path.join(root,'request');fs.mkdirSync(reqDir);const statusFile=path.join(root,'status.json');
+ fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'beadscope',version:'0.1.0'}));
+ fs.chmodSync(path.dirname(app),0o555);
+ const queuedUpdater=createUpdater({...npmOpts,supervised:true,requestDir:reqDir,statusFile});npmCalls.length=0;
+ const qs=await queuedUpdater.check();assert.equal(qs.canUpdate,true,'a read-only install is fine when an updater does the install');assert.equal(qs.viaUpdater,true);
+ const qr=await queuedUpdater.update(qs.target);
+ assert.equal(qr.queued,true);assert.equal(qr.restarting,true);assert.equal(qr.toSha,'0.3.0');assert.equal(npmCalls.length,0,'the app must not run npm itself');
+ assert.equal(JSON.parse(fs.readFileSync(path.join(reqDir,'request.json'),'utf8')).version,'0.3.0');
+ assert.deepEqual(fs.readdirSync(reqDir),['request.json'],'no temp file left behind');
+ await assert.rejects(queuedUpdater.update(qs.target),/already running/);
+ await assert.rejects(createUpdater({...npmOpts,requestDir:reqDir}).update({channel:'stable',tag:'--evil'}),/invalid/i);
+ await assert.rejects(createUpdater({...npmOpts,version:'0.3.0',requestDir:reqDir}).update(qs.target),/not newer/);
+ const noDir=await createUpdater({...npmOpts,requestDir:path.join(root,'missing')}).check();assert.equal(noDir.canUpdate,false);assert.match(noDir.manualReason,/request folder/);
+ // The updater's failure is shown only for a release newer than the running one.
+ fs.writeFileSync(statusFile,JSON.stringify({state:'failed',version:'0.3.0',message:'npm ETARGET'}));
+ assert.match((await createUpdater({...npmOpts,requestDir:reqDir,statusFile}).check()).updaterError,/0\.3\.0.*ETARGET/);
+ assert.equal((await createUpdater({...npmOpts,version:'0.3.0',requestDir:reqDir,statusFile}).check()).updaterError,undefined);
+ fs.writeFileSync(statusFile,'not json');assert.equal((await createUpdater({...npmOpts,requestDir:reqDir,statusFile}).check()).updaterError,undefined);
+ fs.chmodSync(path.dirname(app),0o755);
  // A read-only install directory is reported, not attempted.
  fs.chmodSync(path.dirname(app),0o555);
  try{const ro=await createUpdater(npmOpts).check();if(process.getuid?.()!==0){assert.equal(ro.canUpdate,false);assert.match(ro.manualReason,/not writable/);await assert.rejects(createUpdater(npmOpts).update(ns.target),/not writable/);}}finally{fs.chmodSync(path.dirname(app),0o755);}

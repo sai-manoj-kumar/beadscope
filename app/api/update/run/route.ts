@@ -7,7 +7,7 @@ const targetSchema = z.object({ channel: z.enum(["stable", "development"]), sha:
 export async function POST(request: Request) {
   try {
     const result = await runUpdate(targetSchema.parse(await request.json()));
-    if (result.restarting) setTimeout(() => process.exit(RESTART_EXIT_CODE), 750);
+    if (result.restarting && !result.queued) setTimeout(() => process.exit(RESTART_EXIT_CODE), 750);
     return ok(result);
   } catch (e) { return fail(e); }
 }
