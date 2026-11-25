@@ -192,7 +192,7 @@ export function AllAgentQueueView() {
           </div>
         }
         extra={<CompletedToggle on={showDone} onChange={setShowDone} />}
-        actions={<ThemeToggle />}
+        actions={<div className="max-md:hidden"><ThemeToggle /></div>}
       />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {!settled ? (
@@ -230,6 +230,9 @@ export function AllAgentQueueView() {
             )}
           </div>
         )}
+        <div className="mx-auto mt-8 flex max-w-3xl justify-end border-t border-border pt-3 md:hidden">
+          <ThemeToggle />
+        </div>
       </div>
       <RepoBeadDrawer drawer={drawer} dataFor={dataFor} readOnly={readOnly} />
     </div>
