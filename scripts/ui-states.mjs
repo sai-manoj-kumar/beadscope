@@ -82,8 +82,9 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
   });
 
   // Bulk edit: the List's Select mode (checkboxes and the selection bar), then the dialog it opens.
-  await attempt("bulk-edit", async () => {
-    await page.goto(`${projectUrl}?view=list`, { waitUntil: "domcontentloaded" });
+  // The Board and Focus have the same Select mode on their cards.
+  const selectMode = async (view) => {
+    await page.goto(`${projectUrl}?view=${view}`, { waitUntil: "domcontentloaded" });
     await page.locator("h1").first().waitFor({ timeout: 15000 });
     await settle(900);
     // Phones have a Select button; on desktop a Cmd-click on a row starts the selection.
@@ -91,12 +92,21 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     else await page.locator("[data-keyboard-bead-id]").first().click({ modifiers: ["Meta"] });
     await page.getByRole("checkbox", { name: /^Select / }).first().check();
     await settle(300);
+  };
+  await attempt("bulk-edit", async () => {
+    await selectMode("list");
     await onState("bulk-select", "");
     await page.getByRole("button", { name: "Bulk edit" }).click();
     await page.locator(DIALOG).waitFor({ timeout: 8000 });
     await settle(500);
     await onState("bulk-edit", DIALOG);
   });
+  for (const view of ["board", "focus"]) {
+    await attempt(`bulk-select-${view}`, async () => {
+      await selectMode(view);
+      await onState(`bulk-select-${view}`, "");
+    });
+  }
 
   await attempt("palette", async () => {
     await openBoard();

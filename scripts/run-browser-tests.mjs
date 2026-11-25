@@ -30,6 +30,7 @@ const NEEDS_WRITABLE = new Set([
   "test-due-create.mjs", // creates beads with and without a due date in a throwaway project
   "test-clone-bead.mjs", // clones a bead in a throwaway project
   "test-bulk-edit.mjs", // bulk-edits beads in a throwaway project
+  "test-bulk-edit-views.mjs", // bulk-edits beads on the Board, Focus and Agent Queue in two throwaway projects
   "test-mobile-header.mjs",
   "test-mobile-drawer.mjs",
   "test-quality-phone.mjs", // opens the create dialog and the drawer editor
