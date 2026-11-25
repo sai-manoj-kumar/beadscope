@@ -229,6 +229,9 @@ export function createBdStore(repoPath: string): BeadsStore {
             if (current.length) args.push("--remove-label", current.join(","));
           }
         }
+        // Incremental label edits leave the other labels alone. A label in both lists is added, then removed.
+        if (patch.addLabels?.length) args.push("--add-label", patch.addLabels.join(","));
+        if (patch.removeLabels?.length) args.push("--remove-label", patch.removeLabels.join(","));
         // `bd update <id>` with no field flags is a no-op error; skip the call
         // when clearing labels on a bead that had none.
         if (args.length > 2) await runBdRaw(args, rw(actor));

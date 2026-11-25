@@ -205,6 +205,13 @@ export const updateInputSchema = z.object({
    */
   labels: z.array(z.string()).optional(),
   /**
+   * Labels to add to the bead's own set, and labels to remove from it (`bd update --add-label` /
+   * `--remove-label`). Unlike `labels` they leave every other label alone, so they are what a bulk
+   * edit sends. Absent or `[]` means nothing to add or remove.
+   */
+  addLabels: z.array(z.string().trim().min(1).max(200)).optional(),
+  removeLabels: z.array(z.string().trim().min(1).max(200)).optional(),
+  /**
    * New parent issue id. Mirrors `bd update --parent` semantics exactly, and
    * the absent-vs-empty distinction IS the contract: field absent means "leave
    * the parent alone", `""` means "detach from the current parent". Hence
