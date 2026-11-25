@@ -6,12 +6,21 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { api } from '../lib/api-client.ts';
+import { attachmentFilesOf, repointAttachmentFiles } from '../lib/attachment-refs.ts';
 
 // Refs from bead text cannot steer the URL with dot segments.
 assert.equal(api.attachments.urlFor('p', 'attachment://bd-1/shot.png'), '/api/p/p/attachments/bd-1/shot.png');
 assert.equal(api.attachments.urlFor('p', 'attachment://../../config'), '/api/p/p/attachments/config');
 assert.equal(api.attachments.urlFor('p', 'attachment://bd-1/./../x.png'), '/api/p/p/attachments/bd-1/x.png');
 assert.equal(api.attachments.urlFor('p', 'attachment://bd-1/%2e%2e/x.png'), '/api/p/p/attachments/bd-1/%252e%252e/x.png');
+
+// Cloning copies only the files a description names, and repoints only those whole refs.
+const desc = 'a ![x](attachment://bd-1/a.png) b ![y](attachment://bd-1/a.png.bak) c attachment://bd-2/a.png';
+assert.deepEqual(attachmentFilesOf(desc, 'bd-1'), ['a.png', 'a.png.bak']);
+assert.equal(
+  repointAttachmentFiles(desc, 'bd-1', 'bd-9', ['a.png']),
+  'a ![x](attachment://bd-9/a.png) b ![y](attachment://bd-1/a.png.bak) c attachment://bd-2/a.png',
+);
 
 const base = process.env.BEADSCOPE_TEST_URL;
 assert.ok(base, 'Set BEADSCOPE_TEST_URL to an isolated app server');

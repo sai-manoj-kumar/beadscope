@@ -16,6 +16,14 @@ export function attachmentFilesOf(description: string, beadId: string): string[]
   return [...files];
 }
 
+/** Like `repointAttachmentRefs`, but only for refs whose whole file name is in `names`. */
+export function repointAttachmentFiles(description: string, fromId: string, toId: string, names: string[]): string {
+  const wanted = new Set(names);
+  return description.replace(refPattern(fromId), (ref, file: string) =>
+    wanted.has(file) ? `attachment://${toId}/${file}` : ref,
+  );
+}
+
 /** The description with every `attachment://<fromId>/` ref pointed at `toId` instead. */
 export function repointAttachmentRefs(description: string, fromId: string, toId: string): string {
   return description.replaceAll(`attachment://${fromId}/`, `attachment://${toId}/`);

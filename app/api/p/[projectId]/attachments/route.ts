@@ -88,6 +88,12 @@ export async function PUT(req: Request, { params }: Ctx) {
         return ok({ error: "Missing copyFrom, beadId or files", code: "invalid_input" }, 400);
       }
       const copied: string[] = [];
+      try {
+        // A symlinked source folder would lead out of the attachments dir; copy nothing from it.
+        if (!fs.lstatSync(path.join(dir, fromId)).isDirectory()) return ok({ copied });
+      } catch {
+        return ok({ copied }); // no folder: nothing to copy
+      }
       for (const raw of body.files) {
         const name = safeSegment(String(raw), "");
         if (!name || name !== raw) continue; // only plain file names, never a path
@@ -101,9 +107,14 @@ export async function PUT(req: Request, { params }: Ctx) {
         }
         if (!stat.isFile()) continue;
         const target = path.join(dir, toId, name);
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.copyFileSync(src, target, fs.constants.COPYFILE_EXCL);
-        copied.push(name);
+        try {
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(src, target, fs.constants.COPYFILE_EXCL);
+          copied.push(name);
+        } catch {
+          // One unreadable or already-present file must not hide the others; it is simply not
+          // reported as copied, so its ref keeps pointing where it did.
+        }
       }
       return ok({ copied });
     }

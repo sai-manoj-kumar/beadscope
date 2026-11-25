@@ -19,7 +19,7 @@ import { useResizableWidth } from "@/hooks/use-resizable-width";
 import { DescriptionContent, hasImageRef } from "@/components/description-content";
 import { api } from "@/lib/api-client";
 import { typeLabel } from "@/lib/beads-view";
-import { attachmentFilesOf, repointAttachmentRefs } from "@/lib/attachment-refs";
+import { attachmentFilesOf, repointAttachmentFiles, repointAttachmentRefs } from "@/lib/attachment-refs";
 import { cloneDraft } from "@/lib/clone-bead";
 import { inputValueToDue } from "@/lib/due-input";
 import { isSubmitKey } from "@/lib/keyboard-shortcuts";
@@ -244,24 +244,30 @@ function CreateForm({
           if (draftRef || cloneFiles.length > 0) {
             try {
               let rewritten = form.description;
-              if (draftRef) {
-                await api.attachments.finalize(projectId, draftId, newBead.id);
-                rewritten = repointAttachmentRefs(rewritten, draftId, newBead.id);
-              }
+              // The copy goes first and the two steps fail apart: one failing must not strand the other.
+              let failure: unknown;
               if (source && cloneFiles.length > 0) {
-                const { copied } = await api.attachments.copy(projectId, source.id, newBead.id, cloneFiles);
-                // Only refs whose file was copied are repointed; a missing source image stays as written.
-                for (const name of copied) {
-                  rewritten = rewritten.replaceAll(
-                    `attachment://${source.id}/${name}`,
-                    `attachment://${newBead.id}/${name}`,
-                  );
+                try {
+                  const { copied } = await api.attachments.copy(projectId, source.id, newBead.id, cloneFiles);
+                  // Only refs whose file was copied are repointed; a missing source image stays as written.
+                  rewritten = repointAttachmentFiles(rewritten, source.id, newBead.id, copied);
+                } catch (e) {
+                  failure = e;
+                }
+              }
+              if (draftRef) {
+                try {
+                  await api.attachments.finalize(projectId, draftId, newBead.id);
+                  rewritten = repointAttachmentRefs(rewritten, draftId, newBead.id);
+                } catch (e) {
+                  failure ??= e;
                 }
               }
               if (rewritten !== form.description) {
                 await api.update(projectId, newBead.id, { description: rewritten });
                 qc.invalidateQueries({ queryKey: beadsKey(projectId) });
               }
+              if (failure) throw failure;
             } catch (e) {
               toast.error((e as Error).message);
             }
