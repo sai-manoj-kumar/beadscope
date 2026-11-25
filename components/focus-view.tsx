@@ -3,7 +3,10 @@ import * as React from "react";
 import { useApp } from "@/components/app-context";
 import { Button, LinkButton, SelectField } from "@/components/controls";
 import { Icon, typeIconName } from "@/components/icons";
-import { PriorityChip } from "@/components/board/bead-card";
+import { PriorityChip, type CardSelection } from "@/components/board/bead-card";
+import { BulkBar, BulkCheck, SelectButton, isSelectGesture } from "@/components/bulk-bar";
+import { BulkEditDialog } from "@/components/bulk-edit-dialog";
+import { useBulkSelect } from "@/hooks/use-bulk-select";
 import { AgentIcon } from "@/components/agent-icon";
 import { PageHeader } from "@/components/page-header";
 import { useIsMobile } from "@/hooks/use-is-mobile";
@@ -75,7 +78,7 @@ function laneOf(b: Bead, prefix: string): string | null {
 }
 
 export function FocusView() {
-  const { beads, index, meta, loading } = useApp();
+  const { beads, index, meta, loading, readOnly } = useApp();
   const prefix = meta?.lanePrefix ?? null;
   const [groupBy, setGroupBy] = React.useState<"none" | "assignee">("none");
   const [showRecent, setShowRecent] = React.useState(false);
@@ -147,6 +150,15 @@ export function FocusView() {
   ];
   const groups = groupBy === "assignee" ? assigneeGroups(columns) : [];
 
+  // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
+  // A bead can sit in two columns (in progress and blocked), so ids are listed once.
+  const cardIds = [...new Set(columns.flatMap((c) => c.items.map((b) => b.id)))];
+  const bulk = useBulkSelect(cardIds);
+  // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
+  const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
+  const selectedIds = cardIds.filter((id) => bulk.selected.has(id));
+  const cardBulk = readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle };
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PageHeader
@@ -201,7 +213,19 @@ export function FocusView() {
           </div>
         )}
         </>}
+        actions={!readOnly && <SelectButton active={bulk.active} onToggle={() => (bulk.active ? bulk.clear() : bulk.setSelecting(true))} />}
       />
+
+      {!readOnly && bulk.active && (
+        <BulkBar
+          selected={selectedIds.length}
+          total={cardIds.length}
+          onSelectAll={bulk.selectAll}
+          onEdit={() => setBulkIds(selectedIds)}
+          onClear={bulk.clear}
+        />
+      )}
+      <BulkEditDialog ids={bulkIds} onClose={() => setBulkIds(null)} onDone={bulk.deselect} />
 
       {showRecent && (
         <div className="flex flex-shrink-0 flex-wrap items-center gap-3 border-b border-border px-[22px] py-2 text-label text-[var(--text-2)] max-md:px-4">
@@ -217,7 +241,7 @@ export function FocusView() {
       {groupBy === "none" ? (
         <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px] max-md:overflow-x-hidden max-md:overflow-y-auto max-md:p-[8px_16px_24px]">
           <div className="flex h-full min-h-0 gap-4 max-md:h-auto max-md:flex-col max-md:gap-1">
-            {columns.map(c => <FocusColumnView key={c.id} column={c} />)}
+            {columns.map(c => <FocusColumnView key={c.id} column={c} bulk={cardBulk} />)}
           </div>
         </div>
       ) : (
@@ -237,7 +261,7 @@ export function FocusView() {
                     </h2>
                     <p className="mt-1 text-meta text-[var(--text-3)]">{group.key === "none" ? "Not assigned" : "Assigned work"} · {group.columns.reduce((n, c) => n + c.items.length, 0)}</p>
                   </div>
-                  {group.columns.map(c => <FocusColumnView key={c.id} column={c} grouped />)}
+                  {group.columns.map(c => <FocusColumnView key={c.id} column={c} grouped bulk={cardBulk} />)}
                 </section>
               ))}
             </div>
@@ -248,7 +272,9 @@ export function FocusView() {
   );
 }
 
-function FocusColumnView({ column, grouped = false }: { column: FocusColumn; grouped?: boolean }) {
+type CardBulk = { active: boolean; selected: ReadonlySet<string>; toggle: (id: string) => void };
+
+function FocusColumnView({ column, grouped = false, bulk }: { column: FocusColumn; grouped?: boolean; bulk?: CardBulk }) {
   // Phones stack the columns and fold each one; an empty one starts folded so it does not
   // take a screen of blank space.
   const mobile = useIsMobile();
@@ -275,7 +301,12 @@ function FocusColumnView({ column, grouped = false }: { column: FocusColumn; gro
       <div id={listId} hidden={isFolded} className={`rounded-[12px] border border-border bg-[var(--surface-2)] p-2 ${isFolded ? "hidden" : ""} ${grouped ? "min-h-[70px]" : "bd-scroll min-h-0 flex-1 overflow-y-auto max-md:overflow-visible"}`}>
         {column.items.length === 0 ? <div className="p-4 text-center text-label text-[var(--text-3)]">Nothing here.</div> : (
           <div className="flex flex-col gap-2">{column.items.map(b => (
-            <FocusCard key={b.id} bead={b} showBlockers={column.id === "blocked"} />
+            <FocusCard
+              key={b.id}
+              bead={b}
+              showBlockers={column.id === "blocked"}
+              selection={bulk && { active: bulk.active, checked: bulk.selected.has(b.id), onToggle: () => bulk.toggle(b.id) }}
+            />
           ))}</div>
         )}
       </div>
@@ -311,7 +342,7 @@ function LaneChip({
   );
 }
 
-function FocusCard({ bead, showBlockers }: { bead: Bead; showBlockers?: boolean }) {
+function FocusCard({ bead, showBlockers, selection }: { bead: Bead; showBlockers?: boolean; selection?: CardSelection }) {
   const { index, openDetail, selectedBeadId, selectBead } = useApp();
   const blockers = showBlockers ? blockingDeps(bead, index) : [];
   const timestamp = bead.status === "closed" ? completionDate(bead) : bead.updated_at;
@@ -322,17 +353,22 @@ function FocusCard({ bead, showBlockers }: { bead: Bead; showBlockers?: boolean 
       aria-label={bead.title}
       data-keyboard-bead-id={bead.id}
       aria-current={selectedBeadId === bead.id ? "true" : undefined}
+      aria-pressed={selection?.active ? selection.checked : undefined}
       onFocus={() => selectBead(bead.id)}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          openDetail(bead.id);
+          // Cmd/Ctrl+Enter or Space ticks, the keyboard twin of Cmd/Ctrl-click.
+          if (selection && (selection.active || isSelectGesture(event))) selection.onToggle();
+          else openDetail(bead.id);
         }
       }}
-      onClick={() => {
+      onClick={(event) => {
         selectBead(bead.id);
-        openDetail(bead.id);
+        // Cmd (Mac) or Ctrl (Windows) starts a selection; once one is going, a plain click ticks too.
+        if (selection && (selection.active || isSelectGesture(event))) selection.onToggle();
+        else openDetail(bead.id);
       }}
       className={`cursor-pointer rounded-[11px] border bg-[var(--surface)] p-[10px_12px] shadow-[var(--shadow)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-lg)] focus-visible:outline-none ${
         selectedBeadId === bead.id
@@ -341,6 +377,9 @@ function FocusCard({ bead, showBlockers }: { bead: Bead; showBlockers?: boolean 
       }`}
     >
       <div className="mb-[5px] flex items-center gap-[7px]">
+        {selection?.active && (
+          <BulkCheck id={bead.id} checked={selection.checked} onToggle={selection.onToggle} className="-my-[10px] -ml-2" />
+        )}
         <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: catColor(bead.status) }} />
         <span className="font-mono text-meta text-[var(--text-3)]">{bead.id}</span>
         <span className="flex-1" />
