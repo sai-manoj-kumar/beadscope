@@ -59,6 +59,7 @@ next-env.d.ts
 # ignored cannot have files re-included, hence .beads/* rather than .beads/.
 .beads/*
 !.beads/metadata.json
+!.beads/dolt-server.port
 .dolt/
 *.db
 .beads-credential-key
