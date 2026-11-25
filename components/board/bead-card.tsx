@@ -9,8 +9,10 @@ import { AssigneeAvatar } from "@/components/assignee-picker";
 import { CopyableId } from "@/components/copyable-id";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { beadOrigin, originTitle } from "@/lib/attribution";
-import { readableColor, tintStyle } from "@/components/chip";
+import { Chip, readableColor, tintStyle } from "@/components/chip";
 import {
+  fmtDefer,
+  isDeferredUntilLater,
   catColor,
   statusLabel,
   prioColor,
@@ -92,6 +94,7 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
   const depCount = (bead.dependencies ?? []).filter((d) => d.type !== "parent-child").length;
   const commentCount = (bead.comments ?? []).length;
   const checklist = checklistProgress(bead.description);
+  const deferred = isDeferredUntilLater(bead) ? fmtDefer(bead) : "";
 
   return (
     <>
@@ -135,6 +138,11 @@ function BeadCardFace({ bead, childCount, preview = false }: { bead: Bead; child
             {l}
           </span>
         ))}
+        {deferred && (
+          <Chip data-testid="defer-chip" className="whitespace-nowrap">
+            Deferred until {deferred}
+          </Chip>
+        )}
       </div>
 
       <div className="mt-px flex items-center gap-[10px] border-t border-border pt-[9px]">

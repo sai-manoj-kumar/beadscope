@@ -19,6 +19,7 @@ interface Extra {
   updated_at?: string;
   closed_at?: string;
   due_at?: string;
+  defer_until?: string;
   close_reason?: string;
   labels?: string[];
   comments?: Comment[];
@@ -57,6 +58,7 @@ function D(
     updated_at: extra.updated_at ?? "2026-06-14T15:00:00Z",
     closed_at: status === "closed" ? extra.closed_at ?? "2026-06-15T11:00:00Z" : null,
     due_at: extra.due_at ?? null,
+    defer_until: extra.defer_until ?? null,
     // Faithful to bd: closing without `--reason` still records the literal
     // "Closed", which `closeReasonOf` treats as no reason at all.
     close_reason: status === "closed" ? extra.close_reason ?? "Closed" : null,
@@ -90,13 +92,13 @@ export function demoBeads(): Bead[] {
     D("bd-3c71.2", "Top bar filters + text search", "feature", "open", 2, "stevey", "", "bd-3c71", { description: "Status/type/priority/label/assignee filters + fuzzy text search.", blocks: ["bd-3c71.1"] }),
     D("bd-3c71.3", "Origin badge (human vs agent)", "feature", "open", 2, "stevey", "dana", "bd-3c71", { description: "Derive origin from created_by vs the human allowlist; badge + tooltip." }),
     D("bd-3c71.4", "Detail drawer (read-only)", "feature", "open", 2, "claude-agent", "claude-agent", "bd-3c71", { description: "Full fields, deps panel, comments thread, activity. From bd show <id>.", blocks: ["bd-3c71.1"] }),
-    D("bd-3c71.5", "Empty / loading / error states", "chore", "deferred", 3, "stevey", "", "bd-3c71", { description: "Skeletons, empty columns, typed BdError surfaces." }),
+    D("bd-3c71.5", "Empty / loading / error states", "chore", "deferred", 3, "stevey", "", "bd-3c71", { defer_until: "2030-01-15T14:30:00Z", description: "Skeletons, empty columns, typed BdError surfaces." }),
     // M2 children
     D("bd-7e40.1", "Create modal + bd create wiring", "feature", "open", 1, "stevey", "stevey", "bd-7e40", { description: "Type, title, description, priority, assignee, labels, parent epic. Zod-validated." }),
     D("bd-7e40.2", "Inline edit (send only changed fields)", "feature", "deferred", 2, "amp-bot", "", "bd-7e40", { description: "bd update <id> with only the changed flags." }),
     D("bd-7e40.3", "Comments thread + composer", "feature", "open", 2, "stevey", "dana", "bd-7e40", { description: "Author-stamped comments; newest-first with relative time." }),
     D("bd-7e40.4", "Attribution stamping (BEADS_ACTOR)", "task", "open", 1, "stevey", "stevey", "bd-7e40", { description: "Every UI write runs with BEADS_ACTOR=<humanActor>." }),
-    D("bd-7e40.5", "Optimistic updates + toasts", "task", "deferred", 2, "claude-agent", "", "bd-7e40", { description: "TanStack Query optimistic mutations with rollback on adapter error." }),
+    D("bd-7e40.5", "Optimistic updates + toasts", "task", "deferred", 2, "claude-agent", "", "bd-7e40", { defer_until: "2030-03-01T09:00:00Z", description: "TanStack Query optimistic mutations with rollback on adapter error." }),
     // M3 children
     D("bd-b18d.1", "Backlog ↔ Ready drag-and-drop", "feature", "deferred", 2, "stevey", "", "bd-b18d", { description: "dnd-kit; de-defer on drop to Ready, land in Blocked if still dep-blocked." }),
     D("bd-b18d.2", "Kanban status columns", "feature", "deferred", 3, "stevey", "", "bd-b18d", { description: "open → in_progress → closed via columns." }),

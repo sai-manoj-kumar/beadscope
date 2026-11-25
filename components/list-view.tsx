@@ -44,7 +44,9 @@ import {
   relTime,
   fmtDateTime,
   fmtDue,
+  fmtDefer,
   isOverdue,
+  isDeferredUntilLater,
 } from "@/lib/beads-view";
 import { type Bead } from "@/lib/schema";
 
@@ -315,6 +317,7 @@ function Row({
   const labels = (bead.labels ?? []).filter((l) => l !== "archived").slice(0, 2);
   const due = fmtDue(bead);
   const overdue = isOverdue(bead);
+  const deferred = isDeferredUntilLater(bead) ? fmtDefer(bead) : "";
   const openFromKeyboard = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -432,6 +435,11 @@ function Row({
       <span className="flex-shrink-0">
         <PriorityChip p={bead.priority} />
       </span>
+      {deferred && (
+        <Chip data-testid="defer-chip" className="flex-shrink-0 whitespace-nowrap">
+          Deferred until {deferred}
+        </Chip>
+      )}
       {due && (
         <Chip
           data-testid="due-chip"

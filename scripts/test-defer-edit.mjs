@@ -97,6 +97,24 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-testid="defer-field"] input')?.value === "2030-02-01T10:00");
   assert.ok(sameInstant(deferOf(withDefer), "2030-02-01T15:00:00Z"), "an empty field does not clear the date");
 
+  // Clear while the field holds an unsaved edit: the edit is dropped, the date is cleared, and the
+  // later blur does not save the edit again.
+  await input.fill("2030-03-03T03:03");
+  await clear.click();
+  await waitDefer(withDefer, null);
+  await page.waitForFunction(() => document.querySelector('[data-testid="defer-field"] input')?.value === "");
+  await input.blur();
+  await page.waitForTimeout(800); // a wrongly sent save would land within this time
+  assert.equal(deferOf(withDefer), null, "the unsaved edit is not saved after Clear");
+  assert.equal(await fieldValue(page), "", "the field stays empty after Clear and blur");
+  await clear.waitFor({ state: "detached" });
+  await hint.waitFor();
+  // Put a date back so the plain Clear click below still has something to remove.
+  bd(["update", withDefer, "--defer", "2030-02-01T15:00:00Z"]);
+  await page.reload();
+  await page.getByRole("dialog").waitFor();
+  assert.equal(await input.inputValue(), "2030-02-01T10:00", "the date is back after a reload");
+
   // Reset it: one click on Clear removes the date.
   await clear.click();
   await waitDefer(withDefer, null);
