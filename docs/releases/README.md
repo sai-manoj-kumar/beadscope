@@ -17,7 +17,9 @@ pre-1.0. **0.5.1** is the first release made by the workflow.
 
 ## Releasing
 
-Every merge to `main` publishes a release. [`release.yml`](../../.github/workflows/release.yml)
+Every merge to `main` publishes a release, except one that only changes documentation
+(`docs/`, markdown files in the repository root, or `LICENSE`), which cannot change the
+published package. [`release.yml`](../../.github/workflows/release.yml)
 runs the CI checks, publishes the package to npm, creates the GitHub release, and bumps
 the Homebrew tap formula. You do nothing for an ordinary change: the next **patch** version
 is chosen from the newest `vX.Y.Z` tag (see

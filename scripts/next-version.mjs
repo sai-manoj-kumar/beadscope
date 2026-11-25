@@ -1,8 +1,11 @@
-// Decide which version the release workflow publishes for a push to main.
+// Release rules for a push to main, used by .github/workflows/release.yml.
 //
-//   node scripts/next-version.mjs     prints X.Y.Z (run in a clone that has the tags)
+//   node scripts/next-version.mjs                       prints X.Y.Z (run in a clone that has the tags)
+//   git diff --name-only A B | node scripts/next-version.mjs --docs-only
+//                                                       prints true when the push only touched docs
 //
-// Rules, in order:
+// A push that only touches documentation does not release (see docsOnly). Otherwise the
+// version is chosen by these rules, in order:
 //   1. The commit already carries a vX.Y.Z tag (a re-run of the same push): reuse it.
 //   2. No release tag exists yet: use package.json's version.
 //   3. package.json is ahead of the newest tag (a pull request raised the version on
@@ -47,9 +50,22 @@ export function nextVersion({ tags, headTags = [], packageVersion }) {
   return format([latest[0], latest[1], latest[2] + 1]);
 }
 
+// Paths that cannot change what gets published: the docs folder, markdown files in the
+// repository root (README, AGENTS, CLAUDE, SECURITY...) and the license. The npm package
+// ships only bin, .next, public and next.config.ts, and nothing in the app reads these.
+const DOCS = [/^docs\//, /^[^/]+\.md$/i, /^LICENSE(\.[^/]*)?$/];
+
+/** True when every changed path is documentation. No paths at all is not docs-only. */
+export function docsOnly(paths) {
+  const changed = paths.map((p) => p.trim()).filter(Boolean);
+  return changed.length > 0 && changed.every((p) => DOCS.some((re) => re.test(p)));
+}
+
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).split('\n').filter(Boolean);
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] === fileURLToPath(import.meta.url) && process.argv.includes('--docs-only')) {
+  console.log(docsOnly(readFileSync(0, 'utf8').split('\n')));
+} else if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
   console.log(nextVersion({ tags: git('tag', '--list', 'v*'), headTags: git('tag', '--points-at', 'HEAD'), packageVersion }));
 }

@@ -51,6 +51,7 @@ jobs:
     outputs:
       tag: ${{ steps.pick.outputs.tag }}
       mode: ${{ steps.pick.outputs.mode }}
+      skip: ${{ steps.skip.outputs.skip }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,6 +60,25 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+
+      # A push that only changes documentation cannot change the published package, so it
+      # does not release (scripts/next-version.mjs says what counts as documentation). A
+      # pushed tag always releases. When the previous commit is unknown (a forced push),
+      # release rather than guess.
+      - name: Skip docs-only pushes
+        id: skip
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          skip=false
+          if [ "$REF_TYPE" != "tag" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            skip="$(git diff --name-only "$BEFORE" "$GITHUB_SHA" | node scripts/next-version.mjs --docs-only)"
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          if [ "$skip" = "true" ]; then
+            echo "Docs-only push: no release." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Pick the version
         id: pick
@@ -77,8 +97,11 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
+  # Skipping this job skips publish and tap too: a job whose dependency was skipped is
+  # skipped itself.
   check:
     needs: version
+    if: needs.version.outputs.skip != 'true'
     uses: ./.github/workflows/ci.yml
 
   publish:

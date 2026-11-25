@@ -1,6 +1,6 @@
 // The release workflow's version rule, without git or a network.
 import assert from 'node:assert/strict';
-import { compare, nextVersion, parse } from './next-version.mjs';
+import { compare, docsOnly, nextVersion, parse } from './next-version.mjs';
 
 const tags = ['v0.3.1', 'v0.3.2', 'v0.4.0', 'v0.5.1', 'v0.6.0'];
 
@@ -30,4 +30,15 @@ assert.deepEqual(parse('v1.2.3'), [1, 2, 3]);
 assert.equal(parse('1.2'), null);
 assert.ok(compare([0, 6, 10], [0, 6, 9]) > 0);
 
-console.log('PASS: next release version (patch bump, deliberate bump, re-run, ignored tags)');
+// Docs-only pushes do not release.
+assert.equal(docsOnly(['docs/releases/README.md']), true);
+assert.equal(docsOnly(['README.md', 'AGENTS.md', 'docs/a/b.png', 'LICENSE']), true);
+assert.equal(docsOnly(['README.md', 'lib/bd.ts']), false); // one code file is enough to release
+assert.equal(docsOnly(['package.json']), false);
+assert.equal(docsOnly(['scripts/notes.md']), false); // markdown outside the root and docs/ is not docs
+assert.equal(docsOnly(['.github/workflows/release.yml']), false);
+assert.equal(docsOnly(['docs-extra/x.txt']), false); // "docs/" must be the whole first segment
+assert.equal(docsOnly(['']), false); // nothing changed is not docs-only
+assert.equal(docsOnly([]), false);
+
+console.log('PASS: release rules (patch bump, deliberate bump, re-run, ignored tags, docs-only pushes)');
