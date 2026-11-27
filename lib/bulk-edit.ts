@@ -32,13 +32,14 @@ export interface BulkChanges {
 
 /**
  * Turns what a person typed ("frontend, urgent") into a clean label list: comma separated,
- * trimmed, without blanks, repeats or the archive flag.
+ * trimmed, without blanks, repeats, the archive flag, a leading dash (it would read as a flag) or a
+ * double quote (bd reads the list as CSV). These match what the server accepts.
  */
 export function parseLabels(text: string): string[] {
   const out: string[] = [];
   for (const part of text.split(",")) {
     const label = part.trim();
-    if (label && label !== ARCHIVED && !out.includes(label)) out.push(label);
+    if (label && label !== ARCHIVED && !label.startsWith("-") && !label.includes('"') && !out.includes(label)) out.push(label);
   }
   return out;
 }

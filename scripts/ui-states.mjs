@@ -100,6 +100,12 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await page.locator(DIALOG).waitFor({ timeout: 8000 });
     await settle(500);
     await onState("bulk-edit", DIALOG);
+    // Closed adds a reason field; the same label in Add and Remove adds an error line.
+    await page.locator(DIALOG).getByLabel("Status").selectOption("closed");
+    await page.locator(DIALOG).getByLabel("Add labels").fill("urgent");
+    await page.locator(DIALOG).getByLabel("Remove labels").fill("urgent");
+    await settle(300);
+    await onState("bulk-edit-close", DIALOG);
   });
   for (const view of ["board", "focus"]) {
     await attempt(`bulk-select-${view}`, async () => {

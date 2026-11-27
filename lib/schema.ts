@@ -195,7 +195,7 @@ const editableLabelSchema = z
   .trim()
   .min(1)
   .max(200)
-  .refine((l) => !l.includes(",") && l !== "archived", "Not an editable label");
+  .refine((l) => !/[,"\u0000-\u001f]/.test(l) && !l.startsWith("-") && l !== "archived", "Not an editable label");
 
 export const updateInputSchema = z.object({
   title: z.string().min(1).max(500).optional(),

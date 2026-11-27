@@ -143,9 +143,11 @@ function BulkEditForm({
     for (const target of todo) {
       setProgress(updated.length + failed.length);
       try {
-        if (hasPatch) await api.update(target.projectId, target.id, patch);
-        // Closing is its own call: it records the reason, and the server picks the actor bd accepts.
+        // Closing is its own call: it records the reason, and the server picks the actor bd accepts from
+        // the bead's assignee. It goes first, so a refused close changes nothing and a new assignee
+        // from the same edit cannot make bd refuse it.
         if (closing) await api.setStatus(target.projectId, target.id, BULK_CLOSED, changes.closeReason);
+        if (hasPatch) await api.update(target.projectId, target.id, patch);
         updated.push(target);
       } catch (err) {
         failed.push({ target, message: (err as Error).message });
@@ -245,12 +247,12 @@ function BulkEditForm({
           />
         </label>
         {conflicts.length > 0 && (
-          <p role="alert" className="text-label text-destructive">
+          <p role="alert" className="rounded-lg border border-red-400 p-[8px_10px] text-label text-[var(--text)]">
             {conflicts.join(", ")} {conflicts.length === 1 ? "is" : "are"} in both Add and Remove.
           </p>
         )}
         {error && (
-          <p role="alert" className="text-label text-destructive">
+          <p role="alert" className="rounded-lg border border-red-400 p-[8px_10px] text-label text-[var(--text)]">
             {error}
           </p>
         )}
