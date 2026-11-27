@@ -32,6 +32,16 @@ export function useActivity(projectId: string) {
   });
 }
 
+/** One bead's activity (who changed what, newest first) for the drawer. The key extends
+ *  `activityKey`, so the SSE stream's invalidation of the project feed refreshes it too. */
+export function useBeadActivity(projectId: string, issueId: string) {
+  return useQuery({
+    queryKey: [...activityKey(projectId), issueId] as const,
+    queryFn: () => api.activity(projectId, issueId),
+    refetchInterval: 20000,
+  });
+}
+
 /** Flow-metrics for the Insights dashboard over a rolling window of `days`. */
 export function useInsights(projectId: string, days: number) {
   return useQuery({

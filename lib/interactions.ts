@@ -109,13 +109,17 @@ function mapFieldChange(ev: RawInteraction, title: string, origin: Origin): Acti
  * interactions.jsonl; creations and comments come from the beads themselves
  * (the log does not record them). When there are no interaction events (e.g.
  * the demo project), status changes are synthesized from bead timestamps so the
- * feed is not empty.
+ * feed is not empty. With `issueId`, only that bead's entries are returned
+ * (the bead drawer's Activity section).
  */
 export function buildActivity(
-  beads: Bead[],
-  events: RawInteraction[],
+  allBeads: Bead[],
+  allEvents: RawInteraction[],
   humanAllowlist: string[],
+  issueId?: string,
 ): ActivityItem[] {
+  const beads = issueId ? allBeads.filter((b) => b.id === issueId) : allBeads;
+  const events = issueId ? allEvents.filter((ev) => ev.issue_id === issueId) : allEvents;
   const byId = new Map(beads.map((b) => [b.id, b]));
   const items: ActivityItem[] = [];
 
