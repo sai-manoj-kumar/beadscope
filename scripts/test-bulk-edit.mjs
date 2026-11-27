@@ -234,6 +234,48 @@ try {
   }
   assert.notEqual(show(b).status, "closed", "an unticked bead stays open");
   assert.notEqual(show(d).status, "closed", "an unticked bead stays open");
+
+  // Due and defer dates: set one date on every ticked bead, then clear one of them on a single bead.
+  // The field reads and writes the browser's own time zone, so the expected instant comes from the browser.
+  const dueIso = await page.evaluate(() => new Date("2031-03-04T10:30").toISOString());
+  const deferIso = await page.evaluate(() => new Date("2031-05-06T08:15").toISOString());
+  const instant = (v) => (v ? new Date(v).toISOString() : null);
+  await row(page, b).click({ modifiers: ["Meta"] });
+  await row(page, d).click();
+  await bar(page).getByText("2 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  assert.equal(await dialog.getByLabel("Due date and time").count(), 0, "no date field until Set a date is chosen");
+  const updateTwo = dialog.getByRole("button", { name: /^Update 2 beads/ });
+  // (The selects sit inside their labels, so their label text includes the options: match by prefix.)
+  await dialog.getByRole("combobox", { name: /^Due/ }).selectOption("set");
+  await dialog.getByRole("combobox", { name: /^Defer until/ }).selectOption("set");
+  await dialog.getByRole("alert").waitFor();
+  assert.match(await dialog.getByRole("alert").innerText(), /Finish the due and defer date and time/);
+  assert.equal(await updateTwo.isDisabled(), true, "Set a date without a date cannot be applied");
+  await dialog.getByLabel("Due date and time").fill("2031-03-04T10:30");
+  await dialog.getByLabel("Defer until date and time").fill("2031-05-06T08:15");
+  assert.equal(await updateTwo.isEnabled(), true);
+  if (shots) {
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${shots}/bulk-dialog-dates-desktop.png` });
+  }
+  await updateTwo.click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("both beads have the due and defer dates", () =>
+    [b, d].every((id) => instant(show(id).due_at) === dueIso && instant(show(id).defer_until) === deferIso),
+  );
+  assert.ok(!show(c).due_at, "an unticked bead keeps its (empty) due date");
+  await row(page, b).click({ modifiers: ["Meta"] });
+  await bar(page).getByText("1 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  await dialog.getByRole("combobox", { name: /^Due/ }).selectOption("clear");
+  await dialog.getByRole("button", { name: /^Update 1 bead$/ }).click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("the due date is cleared on b", () => !show(b).due_at);
+  assert.equal(instant(show(b).defer_until), deferIso, "the defer date was left alone");
+  assert.equal(instant(show(d).due_at), dueIso, "an unticked bead keeps its due date");
   await page.close();
 
   // Phone: Select shows the checkboxes, each a 44px target.

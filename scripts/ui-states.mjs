@@ -106,6 +106,11 @@ export async function visitStates(page, { device, projectUrl, beadId = "", origi
     await page.locator(DIALOG).getByLabel("Remove labels").fill("urgent");
     await settle(300);
     await onState("bulk-edit-close", DIALOG);
+    // Set a date shows the date and time field, and a line asking to finish it.
+    await page.locator(DIALOG).getByRole("combobox", { name: /^Due/ }).selectOption("set");
+    await page.locator(DIALOG).getByRole("combobox", { name: /^Defer until/ }).selectOption("clear");
+    await settle(300);
+    await onState("bulk-edit-dates", DIALOG);
   });
   for (const view of ["board", "focus"]) {
     await attempt(`bulk-select-${view}`, async () => {
