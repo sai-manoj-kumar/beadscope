@@ -137,10 +137,22 @@ export function Board() {
   // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
   // Only the cards on screen can be ticked: a hidden Blocked column or a Done window drops its cards.
   const cardIds = React.useMemo(() => shownColumns.flatMap(({ cards }) => cards.map((b) => b.id)), [shownColumns]);
-  const bulk = useBulkSelect(cardIds);
+  // On phones columns can be folded. Track which ones are so "Select all" skips hidden cards.
+  // Done starts folded by default (matches Column's own default fold state).
+  const [foldedCols, setFoldedCols] = React.useState<Record<string, boolean>>({ done: true });
+  const handleFoldChange = React.useCallback((colId: string, folded: boolean) => {
+    setFoldedCols((prev) => ({ ...prev, [colId]: folded }));
+  }, []);
+  // On phones, only offer to select cards the user can actually see (unfolded columns).
+  // On desktop columns are never folded, so cardIds is used as-is.
+  const selectableIds = React.useMemo(
+    () => (mobile ? shownColumns.filter(({ col }) => !foldedCols[col.id]).flatMap(({ cards }) => cards.map((b) => b.id)) : cardIds),
+    [mobile, shownColumns, foldedCols, cardIds],
+  );
+  const bulk = useBulkSelect(selectableIds);
   // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
   const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
-  const selectedIds = cardIds.filter((id) => bulk.selected.has(id));
+  const selectedIds = selectableIds.filter((id) => bulk.selected.has(id));
 
   // Which column each visible bead currently sits in (drag targets resolve here).
   const colOfBead = React.useMemo(() => {
@@ -265,7 +277,7 @@ export function Board() {
       {!readOnly && bulk.active && (
         <BulkBar
           selected={selectedIds.length}
-          total={cardIds.length}
+          total={selectableIds.length}
           onSelectAll={bulk.selectAll}
           onEdit={() => setBulkIds(selectedIds)}
           onClear={bulk.clear}
@@ -295,6 +307,7 @@ export function Board() {
                   manualSort={boardPrefs.sortMode === "manual"}
                   dropTarget={dropColumn?.id === col.id}
                   bulk={readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle }}
+                  onFoldChange={handleFoldChange}
                   control={
                     col.id === "done" ? (
                       <select

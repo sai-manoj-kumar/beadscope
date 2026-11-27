@@ -179,6 +179,38 @@ try {
   assert.equal(one.show(b).priority, 0, "Board (phone): an untapped bead keeps its priority");
   await page.close();
 
+  // ---- Select all skips folded lanes on phones (bui-k44.16) ----
+  // The Done column starts folded on phones. Put a bead there and verify that
+  // "Select all" counts only the visible (unfolded) columns.
+  const done = one.make("done bead", ["--status", "closed"]);
+  for (const id of [a, b, c]) one.bd(["update", id, "-p", "1"]); // keep them open/visible
+  page = await open(phone, `${base}/p/${one.id}?view=board`, `[data-keyboard-bead-id="${a}"]`);
+  await page.getByRole("button", { name: "Select", exact: true }).click();
+  await bar(page).waitFor();
+  await card(page, a).tap();
+  await bar(page).getByText("1 selected").waitFor();
+  // The Done column is folded by default: "Select all" should show only 3 (not 4).
+  const selectAllBtn = bar(page).getByRole("button", { name: /^Select all/ });
+  const selectAllText = await selectAllBtn.innerText();
+  assert.match(selectAllText, /Select all 3/, `Board (phone): Select all skips folded Done column (got: ${selectAllText})`);
+  await selectAllBtn.click();
+  await bar(page).getByText("3 selected").waitFor({ timeout: 5000 });
+  // Unfold Done and check that it now appears in Select all count.
+  await bar(page).getByRole("button", { name: "Clear" }).click();
+  await bar(page).waitFor({ state: "detached" });
+  // Unfold the Done column by tapping its header.
+  // The Done column header button is the one with aria-expanded=false (it starts folded).
+  await page.getByRole("button", { name: "Done" }).click();
+  await card(page, done).waitFor();
+  await page.getByRole("button", { name: "Select", exact: true }).click();
+  await bar(page).waitFor();
+  await card(page, a).tap();
+  await bar(page).getByText("1 selected").waitFor();
+  const selectAllBtn2 = bar(page).getByRole("button", { name: /^Select all/ });
+  const selectAllText2 = await selectAllBtn2.innerText();
+  assert.match(selectAllText2, /Select all 4/, `Board (phone): Select all includes Done after unfolding (got: ${selectAllText2})`);
+  await page.close();
+
   // ---- Focus ---- (all P1, so they sit in Next up)
   for (const id of [a, b, c]) one.bd(["update", id, "-p", "1"]);
   page = await open(desktop, `${base}/p/${one.id}?view=focus`, `[data-keyboard-bead-id="${a}"]`);
@@ -237,7 +269,7 @@ try {
   assert.equal(one.show(a).priority, 4, "Agent Queue (phone): an untapped bead keeps its priority");
 
   assert.deepEqual(errors, [], "no page errors");
-  console.log("PASS bulk edit views: Cmd/Ctrl-click and phone Select tick cards on the Board, Focus and Agent Queue (across repos); only ticked beads change; a drag does not tick");
+  console.log("PASS bulk edit views: Cmd/Ctrl-click and phone Select tick cards on the Board, Focus and Agent Queue (across repos); only ticked beads change; a drag does not tick; Select all skips folded lanes on phones");
 } finally {
   await browser?.close();
   for (const repo of repos) {

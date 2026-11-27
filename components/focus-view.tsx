@@ -153,10 +153,28 @@ export function FocusView() {
   // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
   // A bead can sit in two columns (in progress and blocked), so ids are listed once.
   const cardIds = [...new Set(columns.flatMap((c) => c.items.map((b) => b.id)))];
-  const bulk = useBulkSelect(cardIds);
+  // On phones columns can be folded. Track which ones are so "Select all" skips hidden cards.
+  // Empty columns start folded by default (matches FocusColumnView's own default fold state).
+  const [foldedCols, setFoldedCols] = React.useState<Record<string, boolean>>({});
+  const handleFoldChange = React.useCallback((colId: string, folded: boolean) => {
+    setFoldedCols((prev) => ({ ...prev, [colId]: folded }));
+  }, []);
+  // On phones, only offer to select cards the user can actually see (unfolded columns).
+  // On desktop columns are never folded, so cardIds is used as-is.
+  const isMobile = useIsMobile();
+  const selectableIds = React.useMemo(() => {
+    if (!isMobile) return cardIds;
+    // A column whose items are all empty starts folded by default; use the same logic as FocusColumnView.
+    const unfolded = columns.filter((c) => {
+      if (foldedCols[c.id] !== undefined) return !foldedCols[c.id];
+      return c.items.length > 0; // default: non-empty columns start unfolded
+    });
+    return [...new Set(unfolded.flatMap((c) => c.items.map((b) => b.id)))];
+  }, [isMobile, columns, foldedCols, cardIds]);
+  const bulk = useBulkSelect(selectableIds);
   // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
   const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
-  const selectedIds = cardIds.filter((id) => bulk.selected.has(id));
+  const selectedIds = selectableIds.filter((id) => bulk.selected.has(id));
   const cardBulk = readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle };
 
   return (
@@ -219,7 +237,7 @@ export function FocusView() {
       {!readOnly && bulk.active && (
         <BulkBar
           selected={selectedIds.length}
-          total={cardIds.length}
+          total={selectableIds.length}
           onSelectAll={bulk.selectAll}
           onEdit={() => setBulkIds(selectedIds)}
           onClear={bulk.clear}
@@ -241,7 +259,7 @@ export function FocusView() {
       {groupBy === "none" ? (
         <div className="bd-scroll min-h-0 flex-1 overflow-x-auto overflow-y-hidden p-[18px_22px] max-md:overflow-x-hidden max-md:overflow-y-auto max-md:p-[8px_16px_24px]">
           <div className="flex h-full min-h-0 gap-4 max-md:h-auto max-md:flex-col max-md:gap-1">
-            {columns.map(c => <FocusColumnView key={c.id} column={c} bulk={cardBulk} />)}
+            {columns.map(c => <FocusColumnView key={c.id} column={c} bulk={cardBulk} onFoldChange={handleFoldChange} />)}
           </div>
         </div>
       ) : (
@@ -261,7 +279,7 @@ export function FocusView() {
                     </h2>
                     <p className="mt-1 text-meta text-[var(--text-3)]">{group.key === "none" ? "Not assigned" : "Assigned work"} · {group.columns.reduce((n, c) => n + c.items.length, 0)}</p>
                   </div>
-                  {group.columns.map(c => <FocusColumnView key={c.id} column={c} grouped bulk={cardBulk} />)}
+                  {group.columns.map(c => <FocusColumnView key={c.id} column={c} grouped bulk={cardBulk} onFoldChange={handleFoldChange} />)}
                 </section>
               ))}
             </div>
@@ -274,7 +292,7 @@ export function FocusView() {
 
 type CardBulk = { active: boolean; selected: ReadonlySet<string>; toggle: (id: string) => void };
 
-function FocusColumnView({ column, grouped = false, bulk }: { column: FocusColumn; grouped?: boolean; bulk?: CardBulk }) {
+function FocusColumnView({ column, grouped = false, bulk, onFoldChange }: { column: FocusColumn; grouped?: boolean; bulk?: CardBulk; onFoldChange?: (colId: string, folded: boolean) => void }) {
   // Phones stack the columns and fold each one; an empty one starts folded so it does not
   // take a screen of blank space.
   const mobile = useIsMobile();
@@ -289,7 +307,11 @@ function FocusColumnView({ column, grouped = false, bulk }: { column: FocusColum
         <h2 className="m-0 text-body font-semibold text-[var(--text)]">
           {mobile ? (
             <button type="button" aria-expanded={!isFolded} aria-controls={listId} aria-label={`${column.title} lane`}
-              onClick={() => setFolded(!isFolded)}
+              onClick={() => {
+                const next = !isFolded;
+                setFolded(next);
+                onFoldChange?.(column.id, next);
+              }}
               className="tap-target flex items-center text-left after:absolute after:inset-0">
               {column.title}
             </button>
