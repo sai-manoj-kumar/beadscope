@@ -23,9 +23,9 @@ try {
 
   // 1. The pre-defined identities exist; only Claude Code is on by default.
   const initial = await config(ctx);
-  assert.deepEqual(initial.agents.map((a) => a.id), ['claude-code', 'codex', 'cursor', 'gemini', 'copilot']);
-  assert.deepEqual(initial.agents.filter((a) => a.enabled).map((a) => a.name), ['claude-code']);
-  assert.deepEqual((await metaAgents(ctx)).filter((a) => a.enabled).map((a) => a.name), ['claude-code']);
+  assert.deepEqual(initial.agents.map((a) => a.id), ['coding-agent', 'claude-code', 'codex', 'cursor', 'gemini', 'copilot']);
+  assert.deepEqual(initial.agents.filter((a) => a.enabled).map((a) => a.name), ['coding-agent', 'claude-code']);
+  assert.deepEqual((await metaAgents(ctx)).filter((a) => a.enabled).map((a) => a.name), ['coding-agent', 'claude-code']);
 
   // 2. Settings shows each one with a checkbox, an editable name and its icon.
   await page.goto(`${base}/p/demo?view=settings`);
@@ -35,11 +35,15 @@ try {
   assert.equal(await row('codex').locator('input[type=checkbox]').isChecked(), false);
   assert.equal(await row('claude-code').locator('svg').count(), 1, 'a pre-defined agent shows its standard icon');
   assert.equal(await row('claude-code').getByLabel('Name of Claude Code').inputValue(), 'claude-code');
+  // The pool has its own mark and says it covers the numbered actors.
+  assert.equal(await row('coding-agent').locator('[data-agent-icon="coding-agent"] svg circle').count(), 4, 'the pool shows its own mark');
+  assert.equal(await row('coding-agent').getByLabel('Name of Coding agents').inputValue(), 'coding-agent');
+  assert.match(await row('coding-agent').locator('[data-agent-pool-note]').innerText(), /coding-agent-1.*coding-agent-<number>/);
 
   // 3. Checking one takes effect with no restart, and it is offered in the assignee picker.
   await row('codex').locator('input[type=checkbox]').check();
   await page.waitForFunction(async () => (await (await fetch('/api/config')).json()).agents.find((a) => a.id === 'codex').enabled);
-  assert.deepEqual((await metaAgents(ctx)).filter((a) => a.enabled).map((a) => a.name), ['claude-code', 'codex']);
+  assert.deepEqual((await metaAgents(ctx)).filter((a) => a.enabled).map((a) => a.name), ['coding-agent', 'claude-code', 'codex']);
 
   // 4. Add a new identity at run time, then pick a stock emoji for it.
   await page.getByLabel('Name of a new agent').fill('my-agent');

@@ -140,9 +140,15 @@ An *agent identity* is the name an AI agent works under: the `bd` actor it runs
 with, and the assignee you give it. Beadscope keeps a list of them under
 **Settings → Agents**.
 
-- **Pre-defined agents** — Claude Code (`claude-code`, on by default), Codex,
-  Cursor (`cursor-agent`), Gemini CLI and GitHub Copilot (all off by default).
-  Each has its own icon. You can rename or switch them off, but not delete them.
+- **Pre-defined agents** — a pool of coding agents (`coding-agent`) and Claude Code
+  (`claude-code`), both on by default; Codex, Cursor (`cursor-agent`), Gemini CLI and
+  GitHub Copilot (off by default). Each has its own icon. You can rename or switch
+  them off, but not delete them.
+- **The coding-agent pool** — `coding-agent` stands for a fleet: an assignee named
+  `coding-agent` or `coding-agent-<number>` (`coding-agent-0`, `coding-agent-1`, one per
+  machine) all show the pool's icon and appear in its **Focus → Agent** queue. Assign work
+  to `coding-agent` and any machine in the pool can take it. Rename the pool and its
+  numbered members follow the new name. An agent you add yourself is never a pool.
 - **Your own agents** — type a name under **+ add an agent** and pick a stock
   emoji or a colour for it. Remove it whenever you like.
 - **The checkbox** decides whether an agent is offered when you assign a bead.
