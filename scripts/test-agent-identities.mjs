@@ -36,7 +36,7 @@ try {
   assert.equal(await row('claude-code').locator('svg').count(), 1, 'a pre-defined agent shows its standard icon');
   assert.equal(await row('claude-code').getByLabel('Name of Claude Code').inputValue(), 'claude-code');
   // The pool has its own mark and says it covers the numbered actors.
-  assert.equal(await row('coding-agent').locator('[data-agent-icon="coding-agent"] svg circle').count(), 4, 'the pool shows its own mark');
+  assert.equal(await row('coding-agent').locator('[data-agent-icon="coding-agent"] svg circle').count(), 5, 'the pool shows its own mark');
   assert.equal(await row('coding-agent').getByLabel('Name of Coding agents').inputValue(), 'coding-agent');
   assert.match(await row('coding-agent').locator('[data-agent-pool-note]').innerText(), /coding-agent-1.*coding-agent-<number>/);
 
