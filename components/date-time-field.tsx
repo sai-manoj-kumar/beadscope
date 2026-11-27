@@ -1,7 +1,8 @@
 "use client";
 import * as React from "react";
 import { useApp } from "@/components/app-context";
-import { Button, TextInput } from "@/components/controls";
+import { Button } from "@/components/controls";
+import { DateTimeInput } from "@/components/date-time-input";
 import { useUpdateBead } from "@/hooks/use-beads";
 import { dueToInputValue, inputValueToDue } from "@/lib/due-input";
 import type { UpdateInput } from "@/lib/schema";
@@ -89,10 +90,9 @@ export function DateTimeField({
         {label}
       </label>
       <div className="flex flex-wrap items-center gap-2">
-        <TextInput
+        <DateTimeInput
           id={`${testId}-${beadId}`}
-          type="datetime-local"
-          className="min-w-0 flex-1"
+          className="flex-1"
           value={draft}
           disabled={readOnly}
           aria-busy={update.isPending}

@@ -116,6 +116,15 @@ try {
   // Set one on a bead that has none (July is daylight time: UTC-4).
   ({ page, input } = await open(desktop, without));
   assert.equal(await input.inputValue(), "", "no due date, an empty field");
+  // Unset reads blank: "Not set" is shown and the browser's own text (today's date on iOS) is hidden.
+  const notSet = page.getByTestId("due-field").getByText("Not set", { exact: true });
+  await notSet.waitFor();
+  assert.equal(await input.evaluate((el) => getComputedStyle(el).color), "rgba(0, 0, 0, 0)", "the browser's own text is hidden while unset");
+  assert.equal(await page.getByRole("button", { name: "Clear due date" }).count(), 0, "no Clear button while unset");
+  await input.focus();
+  await notSet.waitFor({ state: "hidden" }); // focus brings the real field back
+  await input.blur();
+  await notSet.waitFor();
   await input.fill("2030-07-04T08:15");
   await input.blur();
   await waitDue(without, "2030-07-04T12:15:00Z");

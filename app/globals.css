@@ -521,3 +521,15 @@ html[data-theme="rose-pine"] {
     overflow-x: hidden;
   }
 }
+
+/* An unset date and time field reads blank. iOS Safari paints today's date in an empty datetime-local
+   input, which looks like a saved value; DateTimeInput sets data-blank and shows "Not set" instead.
+   The browser's own text comes back as soon as the field has focus. */
+input[type="datetime-local"][data-blank="true"]:not(:focus) {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+input[type="datetime-local"][data-blank="true"]:not(:focus)::-webkit-datetime-edit,
+input[type="datetime-local"][data-blank="true"]:not(:focus)::-webkit-date-and-time-value {
+  opacity: 0;
+}
