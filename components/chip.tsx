@@ -48,7 +48,15 @@ export function Chip({
   );
 }
 
-/** A bead's status as a tinted Chip. */
+/**
+ * A bead's status as a tinted Chip. It stays on one line: when the row is too narrow the label is
+ * cut short with an ellipsis (the full label is the tooltip) instead of wrapping onto a second line.
+ */
 export function StatusChip({ status }: { status: string }) {
-  return <Chip color={catColor(status)}>{statusLabel(status)}</Chip>;
+  const label = statusLabel(status);
+  return (
+    <Chip color={catColor(status)} title={label} className="min-w-0 max-w-full">
+      <span className="truncate">{label}</span>
+    </Chip>
+  );
 }
