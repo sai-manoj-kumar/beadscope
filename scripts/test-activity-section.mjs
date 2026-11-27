@@ -22,7 +22,7 @@ const browser = await chromium.launch();
 const errors = [];
 let activityUrl = '';
 try {
-  const page = await (await browser.newContext({ viewport: { width: 1500, height: 1000 } })).newPage();
+  const page = await (await browser.newContext({ viewport: { width: 1500, height: 1000 }, timezoneId: 'America/New_York' })).newPage();
   page.setDefaultTimeout(8000);
   page.on('pageerror', (e) => errors.push(e.message));
   await page.route('**/api/p/demo/**', async (route) => {

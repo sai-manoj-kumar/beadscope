@@ -435,7 +435,11 @@ function DrawerBody({
   const comments = newestFirst(bead.comments ?? []);
   const links = reviewLinks(bead);
   // Who did what to this bead, newest first (the server sorts; see buildActivity).
-  const { data: activityData, isLoading: activityLoading } = useBeadActivity(projectId, bead.id);
+  const {
+    data: activityData,
+    isLoading: activityLoading,
+    isError: activityError,
+  } = useBeadActivity(projectId, bead.id);
   const activity = activityData?.items ?? [];
 
   // Every label already in use across the project, offered as datalist
@@ -1184,7 +1188,11 @@ function DrawerBody({
             ))}
             {activity.length === 0 && (
               <div className="text-label text-[var(--text-3)]">
-                {activityLoading ? "Loading activity…" : "No activity yet."}
+                {activityLoading
+                  ? "Loading activity…"
+                  : activityError
+                    ? "Couldn't load activity."
+                    : "No activity yet."}
               </div>
             )}
           </div>

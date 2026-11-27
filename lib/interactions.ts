@@ -130,9 +130,10 @@ export function buildActivity(
     const item = mapFieldChange(ev, b?.title ?? ev.issue_id, originOf(ev.actor, humanAllowlist));
     if (item) items.push(item);
   }
-  const hasEvents = items.length > 0;
+  // A bead whose close the log did not record still gets a synthesized "closed" entry.
+  const closedLogged = new Set(items.filter((i) => i.action === "closed").map((i) => i.issueId));
 
-  // 2. Creations + comments from the beads (+ closes when we have no log).
+  // 2. Creations + comments from the beads (+ closes the log did not record).
   for (const b of beads) {
     if (b.created_at) {
       items.push({
@@ -158,7 +159,7 @@ export function buildActivity(
         at: c.created_at,
       });
     });
-    if (!hasEvents && b.closed_at) {
+    if (!closedLogged.has(b.id) && b.closed_at) {
       items.push({
         id: `${b.id}-closed`,
         issueId: b.id,
