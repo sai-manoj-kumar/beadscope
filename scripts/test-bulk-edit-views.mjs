@@ -193,6 +193,44 @@ try {
   assert.equal(one.show(b).priority, 0, "Focus (phone): an untapped bead keeps its priority");
   await page.close();
 
+  // ---- Folded lanes on a phone: Select all counts only the cards you can see ----
+  // d is closed (the Board's Done lane starts folded); e is in progress (Focus "In flight").
+  const d = one.make("delta done bead");
+  one.bd(["close", d, "--force"]); // --force: it is assigned to claude-code, the actor here is whoever runs the test
+  const e = one.make("echo in flight bead");
+  one.bd(["update", e, "-p", "1", "--status", "in_progress"]);
+  for (const id of [a, b, c]) one.bd(["update", id, "-p", "1"]); // back into Focus "Next up"
+  const checked = (page, id) => page.getByRole("checkbox", { name: `Select ${id}` });
+
+  page = await open(phone, `${base}/p/${one.id}?view=board`, `[data-keyboard-bead-id="${a}"]`);
+  assert.equal(await card(page, d).isVisible(), false, "Board (phone): the Done lane starts folded");
+  await page.getByRole("button", { name: "Select", exact: true }).click();
+  await bar(page).getByRole("button", { name: "Select all 4" }).tap(); // a, b, c, e; not the folded d
+  await bar(page).getByText("4 selected").waitFor();
+  const doneLane = page.getByRole("button", { name: /^Done/ });
+  await doneLane.tap(); // unfold Done: d is shown but was never ticked
+  await card(page, d).waitFor();
+  assert.equal(await checked(page, d).isChecked(), false, "Board (phone): a bead in a folded lane is not ticked by Select all");
+  await bar(page).getByText("4 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Select all 5" }).tap();
+  await bar(page).getByText("5 selected").waitFor();
+  await doneLane.tap(); // fold it again: d drops out of the count, so a bulk edit cannot touch it
+  await bar(page).getByText("4 selected").waitFor();
+  await page.close();
+
+  page = await open(phone, `${base}/p/${one.id}?view=focus`, `[data-keyboard-bead-id="${a}"]`);
+  await page.getByRole("button", { name: "In flight lane" }).tap(); // fold In flight (it holds e)
+  assert.equal(await card(page, e).isVisible(), false, "Focus (phone): a folded lane hides its cards");
+  await page.getByRole("button", { name: "Select", exact: true }).click();
+  await bar(page).getByRole("button", { name: "Select all 3" }).tap(); // a, b, c; not the folded e
+  await bar(page).getByText("3 selected").waitFor();
+  await page.getByRole("button", { name: "In flight lane" }).tap();
+  await card(page, e).waitFor();
+  assert.equal(await checked(page, e).isChecked(), false, "Focus (phone): a bead in a folded lane is not ticked by Select all");
+  await bar(page).getByRole("button", { name: "Select all 4" }).waitFor();
+  await page.close();
+  one.bd(["update", b, "-p", "0"]); // as the Agent Queue checks below expect
+
   // ---- Agent Queue, two repos ----
   const section = (page, repo) => page.locator(`[data-repo-section="${repo.id}"]`);
   const ready = `[data-repo-section="${two.id}"] [data-keyboard-bead-id="${x}"]`;

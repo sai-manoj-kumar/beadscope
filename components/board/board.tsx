@@ -27,6 +27,7 @@ import { BrandButton } from "@/components/brand-button";
 import { BulkBar, SelectButton } from "@/components/bulk-bar";
 import { BulkEditDialog } from "@/components/bulk-edit-dialog";
 import { useBulkSelect } from "@/hooks/use-bulk-select";
+import { useLaneFold } from "@/hooks/use-lane-fold";
 import { matchesFilters, labelOptionsFrom, assigneeOptionsFrom } from "@/lib/filters";
 import {
   BOARD_COLUMNS as COLUMNS,
@@ -47,6 +48,9 @@ const pointerFirstCollision: CollisionDetection = (args) => {
   const underPointer = pointerWithin(args);
   return underPointer.length > 0 ? underPointer : closestCorners(args);
 };
+
+// On phones each column folds; the long Done column starts folded.
+const startsFolded = (id: string) => id === "done";
 
 export function Board() {
   const { beads, index, humanAllowlist, openCreate, loading, projectId, readOnly } = useApp();
@@ -136,7 +140,14 @@ export function Board() {
 
   // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
   // Only the cards on screen can be ticked: a hidden Blocked column or a Done window drops its cards.
-  const cardIds = React.useMemo(() => shownColumns.flatMap(({ cards }) => cards.map((b) => b.id)), [shownColumns]);
+  // On phones a folded column hides its cards too, so Select all leaves them out (a card ticked by hand
+  // before its column was folded stays ticked and counts again on unfold, unless Select all replaced the ticks
+  // meanwhile). The long Done column starts folded.
+  const lanes = useLaneFold(mobile, startsFolded);
+  const cardIds = React.useMemo(
+    () => shownColumns.filter(({ col }) => !lanes.folded(col.id)).flatMap(({ cards }) => cards.map((b) => b.id)),
+    [shownColumns, lanes],
+  );
   const bulk = useBulkSelect(cardIds);
   // The beads the dialog works on, fixed when Bulk edit is clicked (see the List view).
   const [bulkIds, setBulkIds] = React.useState<string[] | null>(null);
@@ -294,6 +305,8 @@ export function Board() {
                   childCounts={childCounts}
                   manualSort={boardPrefs.sortMode === "manual"}
                   dropTarget={dropColumn?.id === col.id}
+                  folded={lanes.folded(col.id)}
+                  onToggleFold={() => lanes.toggle(col.id)}
                   bulk={readOnly ? undefined : { active: bulk.active, selected: bulk.selected, toggle: bulk.toggle }}
                   control={
                     col.id === "done" ? (
