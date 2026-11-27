@@ -32,14 +32,20 @@ export interface AgentPreset {
   name: string;
   /** Product name shown beside the name in Settings. */
   label: string;
-  /** Brand colour behind the icon. */
+  /** Brand colour behind the icon (any CSS background, so a gradient works). */
   color: string;
   /** Enabled the first time Beadscope sees it. */
   enabled: boolean;
+  /**
+   * A pool: the identity also stands for every `<name>-<number>` actor, one per machine
+   * (coding-agent covers coding-agent-0, coding-agent-1, ...). Pre-defined identities only.
+   */
+  pool?: boolean;
 }
 
 /** Pre-defined identities, in display order. They can be disabled and renamed, not deleted. */
 export const AGENT_PRESETS: AgentPreset[] = [
+  { id: "coding-agent", name: "coding-agent", label: "Coding agents", color: "linear-gradient(135deg, #7c3aed 0%, #0ea5e9 100%)", enabled: true, pool: true },
   { id: "claude-code", name: "claude-code", label: "Claude Code", color: "#d97757", enabled: true },
   { id: "codex", name: "codex", label: "Codex", color: "#10a37f", enabled: false },
   { id: "cursor", name: "cursor-agent", label: "Cursor", color: "#4b5563", enabled: false },
@@ -136,11 +142,21 @@ export function enabledAgentNames(agents: AgentIdentity[] | undefined): string[]
   return (agents ?? []).filter((a) => a.enabled).map((a) => a.name);
 }
 
-/** The identity an assignee name belongs to, enabled or not (so old beads keep their icon). */
+/**
+ * The identity an assignee name belongs to, enabled or not (so old beads keep their icon).
+ * A name matches an identity exactly (ignoring case); failing that, `<pool>-<number>` matches
+ * the pool, so coding-agent-1 and coding-agent-2 are both "coding-agent". An exact match wins.
+ */
 export function agentByName(agents: AgentIdentity[] | undefined, name: string | null | undefined): AgentIdentity | undefined {
   const key = name?.trim().toLowerCase();
-  if (!key) return undefined;
-  return (agents ?? []).find((a) => a.name.trim().toLowerCase() === key);
+  if (!key || !agents) return undefined;
+  const exact = agents.find((a) => a.name.trim().toLowerCase() === key);
+  if (exact) return exact;
+  return agents.find((a) => {
+    if (!presetOf(a.id)?.pool) return false;
+    const base = a.name.trim().toLowerCase();
+    return key.length > base.length + 1 && key.startsWith(base + "-") && /^\d+$/.test(key.slice(base.length + 1));
+  });
 }
 
 export function newCustomAgentId(): string {
