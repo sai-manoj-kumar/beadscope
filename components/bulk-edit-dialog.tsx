@@ -20,11 +20,56 @@ import {
   type BulkChanges,
   type BulkTarget,
 } from "@/lib/bulk-edit";
+import { DateTimeInput } from "@/components/date-time-input";
+import { inputValueToDue } from "@/lib/due-input";
 import { prioLabel, statusLabel } from "@/lib/beads-view";
 
 const NO_CHANGE = "__keep__";
 const UNASSIGNED = "__unassigned__";
+/** What a date option does: leave each bead's own date, set one date on all of them, or clear it. */
+type DateMode = typeof NO_CHANGE | "set" | "clear";
 const labelClass = "text-label font-medium text-[var(--text-2)]";
+
+/** The `due` / `defer` value for a date option: "" clears, an ISO timestamp sets, undefined leaves it alone. */
+function dateChange(mode: DateMode, value: string): string | undefined {
+  if (mode === "clear") return "";
+  if (mode === "set") return inputValueToDue(value) ?? undefined;
+  return undefined;
+}
+
+/** One date option: No change / Set / Clear, and the date and time field while Set is chosen. */
+function DateOption({
+  label,
+  mode,
+  value,
+  busy,
+  onMode,
+  onValue,
+}: {
+  label: string;
+  mode: DateMode;
+  value: string;
+  busy: boolean;
+  onMode: (mode: DateMode) => void;
+  onValue: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[6px]">
+      <label className="flex flex-col gap-[6px]">
+        <span className={labelClass}>{label}</span>
+        <SelectField value={mode} disabled={busy} onChange={(e) => onMode(e.target.value as DateMode)}>
+          <option value={NO_CHANGE}>No change</option>
+          <option value="set">Set a date</option>
+          <option value="clear">Clear the date</option>
+        </SelectField>
+      </label>
+      {mode === "set" && (
+        // Local time zone in, ISO UTC out (lib/due-input.ts), the same as the drawer's Due field.
+        <DateTimeInput aria-label={`${label} date and time`} value={value} disabled={busy} onChange={(e) => onValue(e.target.value)} />
+      )}
+    </div>
+  );
+}
 
 /**
  * Change a few common fields on every selected bead at once. A field left on "No change" is not
@@ -114,6 +159,10 @@ function BulkEditForm({
   const [closeReason, setCloseReason] = React.useState("");
   const [addLabels, setAddLabels] = React.useState("");
   const [removeLabels, setRemoveLabels] = React.useState("");
+  const [dueMode, setDueMode] = React.useState<DateMode>(NO_CHANGE);
+  const [dueValue, setDueValue] = React.useState("");
+  const [deferMode, setDeferMode] = React.useState<DateMode>(NO_CHANGE);
+  const [deferValue, setDeferValue] = React.useState("");
   // Beads still to do: all of them, then only the ones that failed, so a retry does not redo the rest.
   const [todo, setTodo] = React.useState(ids);
   const [progress, setProgress] = React.useState(0);
@@ -126,14 +175,18 @@ function BulkEditForm({
     closeReason: closeReason.trim() || undefined,
     addLabels: parseLabels(addLabels),
     removeLabels: parseLabels(removeLabels),
+    due: dateChange(dueMode, dueValue),
+    defer: dateChange(deferMode, deferValue),
   };
+  // "Set" without a finished date and time changes nothing yet; the dialog says so and holds the button.
+  const unfinished = [dueMode === "set" && changes.due === undefined && "due", deferMode === "set" && changes.defer === undefined && "defer"].filter(Boolean);
   const closing = isBulkClose(changes);
   const conflicts = labelConflicts(changes);
   const count = `${todo.length} bead${todo.length === 1 ? "" : "s"}`;
 
   const apply = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (busy || !hasBulkChanges(changes) || conflicts.length) return;
+    if (busy || !hasBulkChanges(changes) || conflicts.length || unfinished.length) return;
     const patch = bulkPatch(changes);
     const hasPatch = Object.keys(patch).length > 0;
     const updated: BulkTarget[] = [];
@@ -246,6 +299,13 @@ function BulkEditForm({
             onChange={(e) => setRemoveLabels(e.target.value)}
           />
         </label>
+        <DateOption label="Due" mode={dueMode} value={dueValue} busy={busy} onMode={setDueMode} onValue={setDueValue} />
+        <DateOption label="Defer until" mode={deferMode} value={deferValue} busy={busy} onMode={setDeferMode} onValue={setDeferValue} />
+        {unfinished.length > 0 && (
+          <p role="alert" className="rounded-lg border border-red-400 p-[8px_10px] text-label text-[var(--text)]">
+            Finish the {unfinished.join(" and ")} date and time, or choose No change.
+          </p>
+        )}
         {conflicts.length > 0 && (
           <p role="alert" className="rounded-lg border border-red-400 p-[8px_10px] text-label text-[var(--text)]">
             {conflicts.join(", ")} {conflicts.length === 1 ? "is" : "are"} in both Add and Remove.
@@ -261,7 +321,7 @@ function BulkEditForm({
         <Button onClick={onClose} disabled={busy}>
           Cancel
         </Button>
-        <BrandButton type="submit" disabled={busy || !hasBulkChanges(changes) || conflicts.length > 0}>
+        <BrandButton type="submit" disabled={busy || !hasBulkChanges(changes) || conflicts.length > 0 || unfinished.length > 0}>
           {busy ? `${closing ? "Closing" : "Updating"} ${progress + 1} of ${todo.length}…` : `${closing ? "Close" : "Update"} ${count}`}
         </BrandButton>
       </div>

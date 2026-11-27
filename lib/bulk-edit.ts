@@ -28,6 +28,9 @@ export interface BulkChanges {
   /** Labels each bead gains, and labels each bead loses. Beads keep every other label they have. */
   addLabels?: string[];
   removeLabels?: string[];
+  /** Due and defer date and time as ISO timestamps with a zone; `""` clears it, as in `UpdateInput`. */
+  due?: string;
+  defer?: string;
 }
 
 /**
@@ -55,7 +58,9 @@ export function hasBulkChanges(c: BulkChanges): boolean {
     c.assignee !== undefined ||
     c.status !== undefined ||
     !!c.addLabels?.length ||
-    !!c.removeLabels?.length
+    !!c.removeLabels?.length ||
+    c.due !== undefined ||
+    c.defer !== undefined
   );
 }
 
@@ -75,6 +80,8 @@ export function bulkPatch(c: BulkChanges): UpdateInput {
   if (c.status !== undefined && c.status !== BULK_CLOSED) patch.status = c.status;
   if (c.addLabels?.length) patch.add_labels = c.addLabels;
   if (c.removeLabels?.length) patch.remove_labels = c.removeLabels;
+  if (c.due !== undefined) patch.due = c.due;
+  if (c.defer !== undefined) patch.defer = c.defer;
   return patch;
 }
 
