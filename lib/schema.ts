@@ -190,6 +190,13 @@ export const createInputSchema = z.object({
 });
 export type CreateInput = z.infer<typeof createInputSchema>;
 
+const editableLabelSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(200)
+  .refine((l) => !l.includes(",") && l !== "archived", "Not an editable label");
+
 export const updateInputSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   description: z.string().optional(),
@@ -204,6 +211,14 @@ export const updateInputSchema = z.object({
    * Absent means "leave labels alone"; `[]` means "clear them".
    */
   labels: z.array(z.string()).optional(),
+  /**
+   * Labels to add to, and to remove from, the bead's own set (`bd update --add-label` and
+   * `--remove-label`). Unlike `labels` they never need the bead's current set, so a bulk edit can
+   * change labels on beads that each carry different ones. `archived` is state, not a tag, and
+   * stays out of reach; a comma would split one label into two.
+   */
+  add_labels: z.array(editableLabelSchema).optional(),
+  remove_labels: z.array(editableLabelSchema).optional(),
   /**
    * New parent issue id. Mirrors `bd update --parent` semantics exactly, and
    * the absent-vs-empty distinction IS the contract: field absent means "leave

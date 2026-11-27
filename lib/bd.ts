@@ -229,6 +229,9 @@ export function createBdStore(repoPath: string): BeadsStore {
             if (current.length) args.push("--remove-label", current.join(","));
           }
         }
+        // Add/remove act on the bead's own labels, so they work without reading them first.
+        if (patch.add_labels?.length) args.push("--add-label", patch.add_labels.join(","));
+        if (patch.remove_labels?.length) args.push("--remove-label", patch.remove_labels.join(","));
         // `bd update <id>` with no field flags is a no-op error; skip the call
         // when clearing labels on a bead that had none.
         if (args.length > 2) await runBdRaw(args, rw(actor));
