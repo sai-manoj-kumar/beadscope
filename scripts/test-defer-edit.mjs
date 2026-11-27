@@ -133,6 +133,14 @@ try {
   assert.equal(await input.inputValue(), "", "no defer date, an empty field");
   await hint.waitFor();
   assert.equal(await clear.count(), 0, "nothing to clear");
+  // Unset reads blank: "Not set" is shown and the browser's own text (today's date on iOS) is hidden.
+  const notSet = page.getByTestId("defer-field").getByText("Not set", { exact: true });
+  await notSet.waitFor();
+  assert.equal(await input.evaluate((el) => getComputedStyle(el).color), "rgba(0, 0, 0, 0)", "the browser's own text is hidden while unset");
+  await input.focus();
+  await notSet.waitFor({ state: "hidden" }); // focus brings the real field back
+  await input.blur();
+  await notSet.waitFor();
   if (shots) {
     await page.waitForTimeout(600);
     await page.screenshot({ path: `${shots}/drawer-defer-unset-desktop.png` });

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Icon } from "@/components/icons";
 import { BrandButton } from "@/components/brand-button";
 import { Button, CheckInput, IconButton, SelectField, TextArea, TextInput } from "@/components/controls";
+import { DateTimeInput } from "@/components/date-time-input";
 import { useApp } from "@/components/app-context";
 import { useCreateBead, beadsKey } from "@/hooks/use-beads";
 import { useImageDrop } from "@/hooks/use-image-drop";
@@ -484,9 +485,7 @@ function CreateForm({
               Due <span className="font-normal text-[var(--text-3)]">· optional</span>
             </span>
             {/* Local time zone in, ISO UTC out (lib/due-input.ts), the same as the drawer's Due field. */}
-            <TextInput
-              type="datetime-local"
-              className="min-w-0"
+            <DateTimeInput
               value={form.due}
               aria-invalid={dueUnusable ? true : undefined}
               aria-describedby={dueUnusable ? "create-due-error" : undefined}

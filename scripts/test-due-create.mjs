@@ -69,6 +69,8 @@ try {
   const desktop = await browser.newContext({ viewport: { width: 1500, height: 1000 }, timezoneId: "America/New_York", locale: "en-US" });
   let { page, dialog, title, due, create } = await openCreate(desktop);
   assert.equal(await due.inputValue(), "", "the due field starts empty");
+  assert.equal(await dialog.getByText("Not set", { exact: true }).count(), 1, "an unset due field reads Not set");
+  assert.equal(await due.evaluate((el) => getComputedStyle(el).color), "rgba(0, 0, 0, 0)", "the browser's own text is hidden while unset");
   const shots = process.env.DUE_SCREENSHOT_DIR;
   if (shots) {
     await page.waitForTimeout(600);
@@ -104,6 +106,12 @@ try {
   const hint = dialog.getByRole("alert").filter({ hasText: /Finish the due date/ });
   await hint.waitFor();
   assert.equal(await due.getAttribute("aria-invalid"), "true", "the field is marked invalid");
+  assert.equal(await dialog.getByText("Not set", { exact: true }).count(), 0, "a half-filled field is not shown as Not set");
+  await title.focus(); // leave the field: the typed parts must stay visible, not be blanked
+  assert.equal(await dialog.getByText("Not set", { exact: true }).count(), 0, "still not Not set after leaving a half-filled field");
+  assert.notEqual(await due.evaluate((el) => getComputedStyle(el).color), "rgba(0, 0, 0, 0)", "the typed parts stay visible after leaving the field");
+  await due.focus(); // back on the month part
+  await page.keyboard.type("04042030"); // retype over the same parts
   if (shots) await page.screenshot({ path: `${shots}/create-due-half-filled.png` });
   assert.equal(await create.isDisabled(), true, "Create is blocked while the date is half filled");
   await page.keyboard.press("Control+Enter");
