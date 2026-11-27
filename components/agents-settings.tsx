@@ -133,6 +133,12 @@ export function AgentsSettings({ agents: saved }: { agents: AgentIdentity[] }) {
                   </>
                 )}
               </div>
+              {preset?.pool && (
+                <div className="ml-[34px] text-meta text-[var(--text-3)] max-md:ml-0" data-agent-pool-note={agent.id}>
+                  A pool: <span className="font-mono">{agent.name}-0</span>, <span className="font-mono">{agent.name}-1</span>{" "}
+                  and every other <span className="font-mono">{agent.name}-&lt;number&gt;</span> share this icon and queue.
+                </div>
+              )}
               {!preset && openPicker === agent.id && (
                 <div className="ml-[34px] max-md:ml-0 flex flex-col gap-[8px] rounded-[10px] border border-border bg-[var(--surface-2)] p-[10px]">
                   <div role="group" aria-label="Emoji" className="flex flex-wrap gap-[4px]">

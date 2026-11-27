@@ -8,6 +8,16 @@ import { initials } from "@/lib/beads-view";
  * colour. They are our own approximations, not the vendors' official artwork.
  */
 const GLYPHS: Record<string, React.ReactNode> = {
+  // A hub with three satellites on an orbit: a pool of agents working as one.
+  "coding-agent": (
+    <g fill="#fff">
+      <circle cx="12" cy="12" r="8.2" fill="none" stroke="#fff" strokeWidth="1.4" strokeOpacity="0.55" />
+      <circle cx="12" cy="12" r="3.1" />
+      <circle cx="12" cy="3.8" r="2.5" />
+      <circle cx="19.1" cy="16.1" r="2.5" />
+      <circle cx="4.9" cy="16.1" r="2.5" />
+    </g>
+  ),
   "claude-code": (
     <path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6 6 18" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" fill="none" />
   ),

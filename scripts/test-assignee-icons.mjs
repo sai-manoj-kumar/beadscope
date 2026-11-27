@@ -14,8 +14,11 @@ const child = bead('ic-child', {
   comments: [{ id: 1, issue_id: 'ic-child', author: 'claude-code', text: 'agent comment', created_at: '2026-09-02T00:00:00Z' }],
 });
 const person = bead('ic-person', { assignee: 'Alice', title: 'Person task' });
-const beads = [epic, child, person];
-const agents = [{ id: 'claude-code', name: 'claude-code', enabled: true }];
+// Machines of the coding-agent pool: coding-agent-<n> share the pool's icon.
+const pooled = bead('ic-pool', { assignee: 'coding-agent-1', title: 'Pool task', comments: [{ id: 2, issue_id: 'ic-pool', author: 'coding-agent-2', text: 'pool comment', created_at: '2026-09-02T00:00:00Z' }] });
+const lookalike = bead('ic-look', { assignee: 'coding-agent-x', title: 'Lookalike task' });
+const beads = [epic, child, person, pooled, lookalike];
+const agents = [{ id: 'coding-agent', name: 'coding-agent', enabled: true }, { id: 'claude-code', name: 'claude-code', enabled: true }];
 const meta = { kind: 'demo', humanActor: 'Alice', humanAllowlist: ['Alice'], agents, pollIntervalMs: 300000 };
 
 const browser = await chromium.launch();
@@ -48,6 +51,14 @@ try {
   await page.goto(`${base}/p/demo?view=epics`);
   await agentMark(page.getByText('Child task').first().locator('xpath=ancestor::*[.//*[@data-agent-icon]][1]'), 'epics row');
 
+  // coding-agent-<n> shows the pool mark (not Claude Code's, not initials); a name that only looks like it does not.
+  await page.goto(`${base}/p/demo?view=list`);
+  const row = (title) => page.getByText(title).first().locator('xpath=ancestor::*[.//*[@data-agent-icon or text()="CA"]][1]');
+  await row('Pool task').locator('[data-agent-icon="coding-agent"]').first().waitFor();
+  assert.equal(await row('Pool task').locator('[data-agent-icon="claude-code"]').count(), 0, 'pool member does not get the Claude Code mark');
+  await row('Lookalike task').getByText('CA', { exact: true }).waitFor();
+  assert.equal(await row('Lookalike task').locator('[data-agent-icon]').count(), 0, 'coding-agent-x is not a pool member');
+
   // The human's own initials still work for a non-agent name.
   await page.goto(`${base}/p/demo?view=list`);
   const alice = page.getByText('Person task').first().locator('xpath=ancestor::*[.//*[@data-agent-icon or text()="AL"]][1]');
@@ -56,6 +67,8 @@ try {
   // Drawer: the comment author's icon matches too.
   await page.goto(`${base}/p/demo?bead=ic-child`);
   await agentMark(page.getByRole('dialog').getByTestId('comment-list'), 'drawer comment');
+  await page.goto(`${base}/p/demo?bead=ic-pool`);
+  await page.getByRole('dialog').getByTestId('comment-list').locator('[data-agent-icon="coding-agent"]').first().waitFor();
 
   assert.deepEqual(errors, [], 'no page errors');
   console.log('assignee icons ok');
