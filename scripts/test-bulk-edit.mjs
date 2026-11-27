@@ -57,7 +57,7 @@ try {
     page.setDefaultTimeout(20000);
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(`${base}/p/${projectId}?view=list`);
-    await page.locator(`[data-keyboard-bead-id="${a}"]`).waitFor();
+    await page.locator(`[data-keyboard-bead-id="${b}"]`).waitFor();
     return page;
   };
   const row = (page, id) => page.locator(`[data-keyboard-bead-id="${id}"]`);
@@ -172,6 +172,68 @@ try {
   await bar(page).getByText("4 selected").waitFor();
   await bar(page).getByRole("button", { name: "Clear" }).click();
   await bar(page).waitFor({ state: "detached" });
+
+  // Labels: add and remove on beads that each carry different ones. Every bead keeps its other labels.
+  bd(["update", b, "--add-label", "keep,old"]);
+  bd(["update", c, "--add-label", "old"]);
+  const labelsOf = (id) => [...(show(id).labels ?? [])].sort();
+  await row(page, a).click({ modifiers: ["Meta"] });
+  await row(page, b).click();
+  await row(page, c).click();
+  await bar(page).getByText("3 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  const updateThree = dialog.getByRole("button", { name: /^Update 3 beads/ });
+  await dialog.getByLabel("Add labels").fill("team, urgent");
+  await dialog.getByLabel("Remove labels").fill("team");
+  await dialog.getByRole("alert").waitFor();
+  assert.match(await dialog.getByRole("alert").innerText(), /team is in both Add and Remove/);
+  assert.equal(await updateThree.isDisabled(), true, "the same label in Add and Remove cannot be applied");
+  await dialog.getByLabel("Remove labels").fill("old, archived");
+  assert.equal(await updateThree.isEnabled(), true);
+  if (shots) {
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${shots}/bulk-dialog-labels-desktop.png` });
+  }
+  await updateThree.click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("the three beads gained team and urgent", () => [a, b, c].every((id) => labelsOf(id).includes("team") && labelsOf(id).includes("urgent")));
+  assert.deepEqual(labelsOf(a), ["team", "urgent"]);
+  assert.deepEqual(labelsOf(b), ["keep", "team", "urgent"], "old is removed, keep survives");
+  assert.deepEqual(labelsOf(c), ["team", "urgent"], "old is removed");
+  assert.deepEqual(labelsOf(d), [], "an unticked bead keeps its labels");
+
+  // Bulk close with a reason; the other beads stay open.
+  await row(page, a).click({ modifiers: ["Meta"] });
+  await row(page, c).click();
+  await bar(page).getByText("2 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  assert.equal(await dialog.getByLabel("Close reason (optional)").count(), 0, "no reason field until Closed is chosen");
+  await dialog.getByLabel("Status").selectOption("closed");
+  await dialog.getByLabel("Close reason (optional)").fill("Shipped in the bulk test");
+  await dialog.getByLabel("Add labels").fill("done");
+  if (shots) {
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${shots}/bulk-dialog-close-desktop.png` });
+  }
+  await dialog.getByRole("button", { name: /^Close 2 beads/ }).click();
+  // bd refuses to close a bead that is assigned to someone else, and `a` is alice's: the dialog
+  // says so, `c` is closed, and `a` stays ticked for a retry.
+  await dialog.getByRole("alert").waitFor();
+  assert.match(await dialog.getByRole("alert").innerText(), new RegExp(`1 of 2 could not be updated \\(${a}\\)`));
+  await waitFor("c is closed", () => show(c).status === "closed");
+  assert.notEqual(show(a).status, "closed");
+  bd(["update", a, "--assignee", ""]);
+  await dialog.getByRole("button", { name: /^Close 1 bead$/ }).click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("both beads are closed", () => [a, c].every((id) => show(id).status === "closed"));
+  for (const id of [a, c]) {
+    assert.equal(show(id).close_reason, "Shipped in the bulk test");
+    assert.ok(labelsOf(id).includes("done"), "labels are added on a close as well");
+  }
+  assert.notEqual(show(b).status, "closed", "an unticked bead stays open");
+  assert.notEqual(show(d).status, "closed", "an unticked bead stays open");
   await page.close();
 
   // Phone: Select shows the checkboxes, each a 44px target.
@@ -179,10 +241,10 @@ try {
   page = await openList(phone);
   await page.getByRole("button", { name: "Select", exact: true }).click();
   await bar(page).waitFor();
-  const box = await page.getByRole("checkbox", { name: `Select ${a}` }).locator("xpath=..").boundingBox();
+  const box = await page.getByRole("checkbox", { name: `Select ${b}` }).locator("xpath=..").boundingBox();
   assert.ok(box && box.width >= 44 && box.height >= 44, `checkbox target is at least 44px (${box?.width}x${box?.height})`);
-  await row(page, a).tap();
-  await row(page, c).tap();
+  await row(page, b).tap();
+  await row(page, d).tap();
   await bar(page).getByText("2 selected").waitFor();
   assert.equal(await page.getByRole("dialog").count(), 0, "tapping in Select mode does not open the drawer");
   if (shots) await page.screenshot({ path: `${shots}/bulk-select-phone.png` });
@@ -197,8 +259,8 @@ try {
   await page.getByRole("dialog").getByLabel("Priority").selectOption("1");
   await page.getByRole("dialog").getByRole("button", { name: /^Update 2 beads/ }).tap();
   await page.getByRole("dialog").waitFor({ state: "detached" });
-  await waitFor("the two tapped beads are P1", () => [a, c].every((id) => show(id).priority === 1));
-  assert.equal(show(b).priority, 0, "an unticked bead keeps its priority");
+  await waitFor("the two tapped beads are P1", () => [b, d].every((id) => show(id).priority === 1));
+  assert.equal(show(c).priority, 3, "an unticked bead keeps its priority");
 
   assert.deepEqual(errors, [], "no page errors");
   console.log("PASS bulk edit: Cmd/Ctrl-click and phone Select tick beads; priority, assignee and status apply to exactly those");
