@@ -1,6 +1,6 @@
 // Isolated writable server only. Uses a throwaway bd repo; skips when bd is not installed.
 // Bulk edit in the List view: Cmd/Ctrl-click ticks rows (a plain click still opens the drawer), a
-// bar offers Bulk edit, the dialog changes priority, assignee and status on every ticked bead and
+// bar offers Bulk edit, the dialog changes priority, assignee, status, labels or closes (with a reason) every ticked bead and
 // leaves "No change" fields and unticked beads alone. On a phone the Select button shows 44px
 // checkboxes. Everything is checked against what bd stores.
 import assert from "node:assert/strict";
@@ -46,6 +46,9 @@ try {
   const b = make("bravo bead");
   const c = make("charlie bead");
   const d = make("delta bead", ["--assignee", "alice"]);
+  const e = make("echo bead", ["-l", "keep,old"]);
+  const f = make("foxtrot bead");
+  const g = make("golf bead", ["--assignee", "alice"]);
   const added = await fetch(`${base}/api/projects`, { method: "POST", headers: json, body: JSON.stringify({ path: dir }) });
   assert.equal(added.status, 201);
   projectId = (await added.json()).id;
@@ -165,11 +168,61 @@ try {
   await page.unroute(`**/api/p/${projectId}/beads/${d}`);
   assert.equal(await bar(page).count(), 0, "nothing is left ticked");
 
+  // Labels: add and remove; labels that are not named stay, and a field left on "No change" is not written.
+  await row(page, e).click({ modifiers: ["Meta"] });
+  await row(page, d).click();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  assert.equal(await dialog.getByLabel("Close reason — optional").count(), 0, "the reason field shows only when closing");
+  await dialog.getByLabel("Add labels").fill("team-x, urgent urgent");
+  await dialog.getByLabel("Remove labels").fill("old");
+  await dialog.getByRole("button", { name: /^Update 2 beads/ }).click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("both beads got the new labels and e lost old", () =>
+    [d, e].every((id) => (show(id).labels ?? []).includes("team-x") && (show(id).labels ?? []).includes("urgent")) &&
+    !(show(e).labels ?? []).includes("old"));
+  assert.ok((show(e).labels ?? []).includes("keep"), "a label that was not named is kept");
+  assert.equal(show(e).status, "open", "labels only: status is not written");
+
+  // Bulk close with a reason (and a label) on two beads; an unticked bead stays as it is.
+  await row(page, e).click({ modifiers: ["Meta"] });
+  await row(page, f).click();
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  await dialog.getByLabel("Status").selectOption("closed");
+  await dialog.getByLabel("Close reason — optional").fill("Shipped in the bulk test");
+  await dialog.getByLabel("Add labels").fill("wrapped");
+  await dialog.getByRole("button", { name: /^Update 2 beads/ }).click();
+  await dialog.waitFor({ state: "detached" });
+  await waitFor("both beads are closed with the reason and the label", () =>
+    [e, f].every((id) => show(id).status === "closed" && show(id).close_reason === "Shipped in the bulk test" && (show(id).labels ?? []).includes("wrapped")));
+  assert.equal(show(d).status, "blocked", "an unticked bead is not closed");
+  assert.equal(await bar(page).count(), 0, "the selection is cleared after the close");
+
+  // bd only lets the assignee close a bead someone else holds: that bead is reported and stays open and ticked.
+  await row(page, g).click({ modifiers: ["Meta"] });
+  await bar(page).getByRole("button", { name: "Bulk edit" }).click();
+  await dialog.waitFor();
+  await dialog.getByLabel("Assignee").selectOption("alice");
+  await dialog.getByLabel("Status").selectOption("closed");
+  assert.equal(await dialog.getByLabel("Assignee").isDisabled(), true, "the assignee is not changed together with a close");
+  await dialog.getByRole("button", { name: /^Update 1 bead$/ }).click();
+  await dialog.getByRole("alert").waitFor();
+  assert.match(await dialog.getByRole("alert").innerText(), new RegExp(`1 of 1 could not be updated \\(${g}\\)`));
+  assert.equal(show(g).status, "open", "a bead held by someone else is not closed");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await dialog.waitFor({ state: "detached" });
+  await bar(page).getByText("1 selected").waitFor();
+  await bar(page).getByRole("button", { name: "Clear" }).click();
+  await bar(page).waitFor({ state: "detached" });
+
   // Select all, then Clear.
   assert.equal(await page.getByRole("button", { name: "Select", exact: true }).isVisible(), false, "the Select button is for phones; desktop uses Cmd/Ctrl-click");
   await row(page, a).click({ modifiers: ["Meta"] });
   await bar(page).getByRole("button", { name: /^Select all/ }).click();
-  await bar(page).getByText("4 selected").waitFor();
+  const listed = await page.locator("[data-keyboard-bead-id]").count();
+  await bar(page).getByText(`${listed} selected`).waitFor();
+  assert.ok(listed >= 5, `Select all ticks every listed bead (${listed})`);
   await bar(page).getByRole("button", { name: "Clear" }).click();
   await bar(page).waitFor({ state: "detached" });
   await page.close();

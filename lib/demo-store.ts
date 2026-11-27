@@ -53,8 +53,11 @@ export const demoStore: BeadsStore = {
   },
   async update(id, patch: UpdateInput) {
     const b = find(id);
-    const { due, defer, ...rest } = patch;
+    const { due, defer, addLabels, removeLabels, ...rest } = patch;
     Object.assign(b, rest, { updated_at: nowIso() });
+    // Same order as `bd update`: a replace-all set first, then additions, then removals.
+    if (addLabels?.length) b.labels = [...new Set([...(b.labels ?? []), ...addLabels])];
+    if (removeLabels?.length) b.labels = (b.labels ?? []).filter((l) => !removeLabels.includes(l));
     // `due` is the write-side name; the bead carries it as `due_at` ("" clears, like `bd update --due ""`).
     if (due !== undefined) b.due_at = due || null;
     if (defer !== undefined) b.defer_until = defer || null;

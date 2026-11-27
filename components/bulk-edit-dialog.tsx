@@ -4,16 +4,25 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BrandButton } from "@/components/brand-button";
-import { Button, SelectField } from "@/components/controls";
+import { Button, SelectField, TextArea, TextInput } from "@/components/controls";
 import { useApp } from "@/components/app-context";
 import { useAssigneeNames } from "@/components/assignee-picker";
 import { beadsKey } from "@/hooks/use-beads";
 import { api } from "@/lib/api-client";
-import { BULK_STATUSES, bulkPatch, hasBulkChanges, type BulkChanges, type BulkTarget } from "@/lib/bulk-edit";
+import {
+  BULK_STATUSES,
+  bulkCloses,
+  bulkPatch,
+  hasBulkChanges,
+  parseLabels,
+  type BulkChanges,
+  type BulkTarget,
+} from "@/lib/bulk-edit";
 import { prioLabel, statusLabel } from "@/lib/beads-view";
 
 const NO_CHANGE = "__keep__";
 const UNASSIGNED = "__unassigned__";
+const CLOSED = "closed";
 const labelClass = "text-label font-medium text-[var(--text-2)]";
 
 /**
@@ -101,6 +110,9 @@ function BulkEditForm({
   const [priority, setPriority] = React.useState(NO_CHANGE);
   const [assignee, setAssignee] = React.useState(NO_CHANGE);
   const [status, setStatus] = React.useState(NO_CHANGE);
+  const [addLabels, setAddLabels] = React.useState("");
+  const [removeLabels, setRemoveLabels] = React.useState("");
+  const [closeReason, setCloseReason] = React.useState("");
   // Beads still to do: all of them, then only the ones that failed, so a retry does not redo the rest.
   const [todo, setTodo] = React.useState(ids);
   const [progress, setProgress] = React.useState(0);
@@ -110,7 +122,11 @@ function BulkEditForm({
     priority: priority === NO_CHANGE ? undefined : Number(priority),
     assignee: assignee === NO_CHANGE ? undefined : assignee === UNASSIGNED ? "" : assignee,
     status: status === NO_CHANGE ? undefined : (status as BulkChanges["status"]),
+    addLabels: parseLabels(addLabels),
+    removeLabels: parseLabels(removeLabels),
+    closeReason: closeReason.trim() || undefined,
   };
+  const closing = bulkCloses(changes);
   const count = `${todo.length} bead${todo.length === 1 ? "" : "s"}`;
 
   const apply = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -124,7 +140,9 @@ function BulkEditForm({
     for (const target of todo) {
       setProgress(updated.length + failed.length);
       try {
-        await api.update(target.projectId, target.id, patch);
+        // Other fields first, then the close, so the bead is closed with them already in place.
+        if (Object.keys(patch).length) await api.update(target.projectId, target.id, patch);
+        if (closing) await api.setStatus(target.projectId, target.id, "closed", changes.closeReason);
         updated.push(target);
       } catch (err) {
         failed.push({ target, message: (err as Error).message });
@@ -136,7 +154,9 @@ function BulkEditForm({
     }
     if (updated.length) onDone(updated);
     if (failed.length === 0) {
-      toast.success(`Updated ${updated.length} bead${updated.length === 1 ? "" : "s"} · bd update`);
+      toast.success(
+        `${closing ? "Closed" : "Updated"} ${updated.length} bead${updated.length === 1 ? "" : "s"} · ${closing ? "bd close" : "bd update"}`,
+      );
       onClose();
     } else {
       setTodo(failed.map((f) => f.target));
@@ -170,7 +190,7 @@ function BulkEditForm({
         </label>
         <label className="flex flex-col gap-[6px]">
           <span className={labelClass}>Assignee</span>
-          <SelectField value={assignee} disabled={busy} onChange={(e) => setAssignee(e.target.value)}>
+          <SelectField value={closing ? NO_CHANGE : assignee} disabled={busy || closing} onChange={(e) => setAssignee(e.target.value)}>
             <option value={NO_CHANGE}>No change</option>
             <option value={UNASSIGNED}>Unassigned</option>
             {names.map((n) => (
@@ -179,6 +199,9 @@ function BulkEditForm({
               </option>
             ))}
           </SelectField>
+          {closing && (
+            <span className="text-meta text-[var(--text-3)]">Not changed when closing: bd only lets the assignee close a bead.</span>
+          )}
         </label>
         <label className="flex flex-col gap-[6px]">
           <span className={labelClass}>Status</span>
@@ -189,7 +212,44 @@ function BulkEditForm({
                 {statusLabel(s)}
               </option>
             ))}
+            <option value={CLOSED}>{statusLabel(CLOSED)}</option>
           </SelectField>
+        </label>
+        {closing && (
+          <label className="flex flex-col gap-[6px]">
+            <span className={labelClass}>Close reason — optional</span>
+            <TextArea
+              rows={2}
+              value={closeReason}
+              disabled={busy}
+              onChange={(e) => setCloseReason(e.target.value)}
+              placeholder="Why these beads are closed"
+            />
+          </label>
+        )}
+        <label className="flex flex-col gap-[6px]">
+          <span className={labelClass}>Add labels</span>
+          <TextInput
+            value={addLabels}
+            disabled={busy}
+            onChange={(e) => setAddLabels(e.target.value)}
+            placeholder="No change · separate with commas"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
+        </label>
+        <label className="flex flex-col gap-[6px]">
+          <span className={labelClass}>Remove labels</span>
+          <TextInput
+            value={removeLabels}
+            disabled={busy}
+            onChange={(e) => setRemoveLabels(e.target.value)}
+            placeholder="No change · separate with commas"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
         </label>
         {error && (
           <p role="alert" className="text-label text-destructive">
