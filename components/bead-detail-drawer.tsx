@@ -4,6 +4,7 @@ import { BrandButton } from "@/components/brand-button";
 import { Button, IconButton, LinkButton, SelectField, TextArea, TextInput } from "@/components/controls";
 import { StatusChip, Chip } from "@/components/chip";
 import { useIsMobile } from "@/hooks/use-is-mobile";
+import { useBeadActivity } from "@/hooks/use-beads";
 import { GateApproval } from "@/components/gate-approval";
 import { AssigneeField } from "@/components/assignee-field";
 import { DeferField } from "@/components/defer-field";
@@ -51,7 +52,7 @@ import {
   epicProgress,
   isHumanGate,
   relTime,
-  fmtDate,
+  activityTime,
   fmtDateTime,
   checklistProgress,
   toggleTask,
@@ -433,11 +434,13 @@ function DrawerBody({
   const closeReason = closeReasonOf(bead);
   const comments = newestFirst(bead.comments ?? []);
   const links = reviewLinks(bead);
-  const activity = [
-    { label: `Created by ${bead.created_by || "unknown"}`, time: fmtDate(bead.created_at) },
-    bead.updated_at ? { label: "Last updated", time: fmtDate(bead.updated_at) } : null,
-    bead.closed_at ? { label: "Closed", time: fmtDate(bead.closed_at) } : null,
-  ].filter(Boolean) as { label: string; time: string }[];
+  // Who did what to this bead, newest first (the server sorts; see buildActivity).
+  const {
+    data: activityData,
+    isLoading: activityLoading,
+    isError: activityError,
+  } = useBeadActivity(projectId, bead.id);
+  const activity = activityData?.items ?? [];
 
   // Every label already in use across the project, offered as datalist
   // suggestions so labels converge instead of sprouting near-duplicates.
@@ -1167,14 +1170,31 @@ function DrawerBody({
         {/* Activity */}
         <div>
           <div className={`${fieldLabel} mb-[9px]`}>Activity</div>
-          <div className="flex flex-col gap-2">
-            {activity.map((a, i) => (
-              <div key={i} className="flex items-center gap-[9px] text-label text-[var(--text-2)]">
-                <span className="h-[6px] w-[6px] flex-shrink-0 rounded-full bg-[var(--text-3)]" />
-                <span className="flex-1">{a.label}</span>
-                <span className="font-mono text-meta text-[var(--text-3)]">{a.time}</span>
+          <div data-testid="activity-list" className="flex flex-col gap-2">
+            {activity.map((a) => (
+              <div key={a.id} className="flex items-start gap-[9px] text-label text-[var(--text-2)]">
+                <span className="mt-[7px] h-[6px] w-[6px] flex-shrink-0 rounded-full bg-[var(--text-3)]" />
+                <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                  <span className="font-medium text-[var(--text)]">{a.actor}</span> {a.action}
+                  {a.detail && <span className="block truncate text-[var(--text-3)]">{a.detail}</span>}
+                </span>
+                <span
+                  title={fmtDateTime(a.at)}
+                  className="flex-shrink-0 whitespace-nowrap text-meta text-[var(--text-3)]"
+                >
+                  {activityTime(a.at)}
+                </span>
               </div>
             ))}
+            {activity.length === 0 && (
+              <div className="text-label text-[var(--text-3)]">
+                {activityLoading
+                  ? "Loading activity…"
+                  : activityError
+                    ? "Couldn't load activity."
+                    : "No activity yet."}
+              </div>
+            )}
           </div>
         </div>
       </div>

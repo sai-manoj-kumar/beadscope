@@ -207,7 +207,10 @@ export const api = {
     request<Bead>(`${base(projectId)}/beads/${enc(id)}/archive`, { method: "POST" }),
   doctor: (projectId: string) => request<DoctorResponse>(`${base(projectId)}/doctor`),
 
-  activity: (projectId: string) => request<ActivityResponse>(`${base(projectId)}/activity`),
+  activity: (projectId: string, issueId?: string) =>
+    request<ActivityResponse>(
+      `${base(projectId)}/activity${issueId ? `?issue=${encodeURIComponent(issueId)}` : ""}`,
+    ),
 
   insights: (projectId: string, days: number) =>
     request<InsightsData>(`${base(projectId)}/insights?days=${days}`),

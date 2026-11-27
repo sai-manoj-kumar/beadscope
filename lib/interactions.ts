@@ -109,13 +109,17 @@ function mapFieldChange(ev: RawInteraction, title: string, origin: Origin): Acti
  * interactions.jsonl; creations and comments come from the beads themselves
  * (the log does not record them). When there are no interaction events (e.g.
  * the demo project), status changes are synthesized from bead timestamps so the
- * feed is not empty.
+ * feed is not empty. With `issueId`, only that bead's entries are returned
+ * (the bead drawer's Activity section).
  */
 export function buildActivity(
-  beads: Bead[],
-  events: RawInteraction[],
+  allBeads: Bead[],
+  allEvents: RawInteraction[],
   humanAllowlist: string[],
+  issueId?: string,
 ): ActivityItem[] {
+  const beads = issueId ? allBeads.filter((b) => b.id === issueId) : allBeads;
+  const events = issueId ? allEvents.filter((ev) => ev.issue_id === issueId) : allEvents;
   const byId = new Map(beads.map((b) => [b.id, b]));
   const items: ActivityItem[] = [];
 
@@ -126,9 +130,10 @@ export function buildActivity(
     const item = mapFieldChange(ev, b?.title ?? ev.issue_id, originOf(ev.actor, humanAllowlist));
     if (item) items.push(item);
   }
-  const hasEvents = items.length > 0;
+  // A bead whose close the log did not record still gets a synthesized "closed" entry.
+  const closedLogged = new Set(items.filter((i) => i.action === "closed").map((i) => i.issueId));
 
-  // 2. Creations + comments from the beads (+ closes when we have no log).
+  // 2. Creations + comments from the beads (+ closes the log did not record).
   for (const b of beads) {
     if (b.created_at) {
       items.push({
@@ -154,7 +159,7 @@ export function buildActivity(
         at: c.created_at,
       });
     });
-    if (!hasEvents && b.closed_at) {
+    if (!closedLogged.has(b.id) && b.closed_at) {
       items.push({
         id: `${b.id}-closed`,
         issueId: b.id,

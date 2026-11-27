@@ -328,6 +328,30 @@ export function relTime(iso?: string | null, now: Date = new Date()): string {
   return `${Math.floor(d / 2592000)}mo ago`;
 }
 
+/**
+ * Activity timestamp in the viewer's local time: "just now", "5m ago", "3h ago", "2d ago" for
+ * the past week, then a calendar date such as "24th Nov" (with the year once it is not this
+ * year). Future times (clock skew) read "just now".
+ */
+export function activityTime(iso?: string | null, now: Date = new Date()): string {
+  if (!iso) return "";
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  const d = (now.getTime() - then.getTime()) / 1000;
+  if (d < 60) return "just now";
+  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+  if (d < 7 * 86400) return `${Math.floor(d / 86400)}d ago`;
+  const day = then.getDate();
+  const ordinal =
+    day % 100 >= 11 && day % 100 <= 13
+      ? "th"
+      : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[day % 10] ?? "th";
+  const month = then.toLocaleDateString("en-US", { month: "short" });
+  const year = then.getFullYear() === now.getFullYear() ? "" : ` ${then.getFullYear()}`;
+  return `${day}${ordinal} ${month}${year}`;
+}
+
 export function fmtDate(iso?: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-US", {
