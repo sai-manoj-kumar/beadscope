@@ -25,6 +25,8 @@ export function Column({
   manualSort = true,
   dropTarget = false,
   bulk,
+  folded,
+  onToggleFold,
 }: {
   col: ColumnDef;
   cards: Bead[];
@@ -39,12 +41,13 @@ export function Column({
   dropTarget?: boolean;
   /** Bulk edit state for the board; absent when it is read-only. */
   bulk?: { active: boolean; selected: ReadonlySet<string>; toggle: (id: string) => void };
+  /** Phones fold each column (Done starts folded). The board owns this so Select all can skip folded ones. */
+  folded: boolean;
+  onToggleFold: () => void;
 }) {
   const { setNodeRef } = useDroppable({ id: col.id, disabled: !col.droppable });
-  // Phones stack the columns and fold each one; the long Done column starts folded.
   const mobile = useIsMobile();
-  const [folded, setFolded] = React.useState<boolean | null>(null);
-  const isFolded = mobile && (folded ?? col.id === "done");
+  const isFolded = folded;
   const listId = React.useId();
 
   return (
@@ -55,7 +58,7 @@ export function Column({
           aria-expanded={!isFolded}
           aria-controls={listId}
           disabled={!mobile}
-          onClick={() => setFolded(!isFolded)}
+          onClick={onToggleFold}
           className="flex min-w-0 items-center gap-2 text-left max-md:min-h-11 max-md:flex-1 md:cursor-default"
         >
           <span className="h-[9px] w-[9px] flex-shrink-0 rounded-[3px]" style={{ background: col.color }} />
