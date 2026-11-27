@@ -140,8 +140,9 @@ export function Board() {
 
   // Bulk edit: Cmd/Ctrl-click a card (or Select, on phones) to tick cards, then change them together.
   // Only the cards on screen can be ticked: a hidden Blocked column or a Done window drops its cards.
-  // On phones a folded column hides its cards too, so Select all leaves them out (they stay ticked, and
-  // count again, if the column is unfolded). The long Done column starts folded.
+  // On phones a folded column hides its cards too, so Select all leaves them out (a card ticked by hand
+  // before its column was folded stays ticked and counts again on unfold, unless Select all replaced the ticks
+  // meanwhile). The long Done column starts folded.
   const lanes = useLaneFold(mobile, startsFolded);
   const cardIds = React.useMemo(
     () => shownColumns.filter(({ col }) => !lanes.folded(col.id)).flatMap(({ cards }) => cards.map((b) => b.id)),
